@@ -1,0 +1,17 @@
+# RFD Protocol Dependencies
+# Reality-First Development System
+
+# Core CLI framework
+click>=8.0.0
+
+# YAML frontmatter parsing for specifications
+python-frontmatter>=1.0.0
+
+# Interactive prompts for spec creation
+questionary>=2.0.0
+
+# HTTP client for API validation
+requests>=2.4.0
+
+# YAML processing
+PyYAML>=6.0

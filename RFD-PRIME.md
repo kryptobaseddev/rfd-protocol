@@ -21,18 +21,15 @@ Build the Reality-First Development (RFD) system that solves:
 
 ## 📚 CONTEXT RECOVERY PROTOCOL
 
-### Step 1: Read Core Vision
+### Step 1: Read Core Documents
 ```bash
-@research/brain-dump.md          # The REAL problems we're solving
 @docs/RFD-PROTOCOL.md            # System design (updated with unified approach)
 @docs/RFD-PLAN.md                # 1300 lines of working Python to extract
 ```
 
 ### Step 2: Read Current State
 ```bash
-@ORCHESTRATOR-CONTEXT.md         # Your strategic context and decisions
 @HANDOFF.md                      # Current agent coordination status
-@BOOTSTRAP.md                    # Manual tracking of bootstrap progress
 ```
 
 ### Step 3: Check Implementation
@@ -194,7 +191,7 @@ Task complete. Next task updated in HANDOFF.md."
 ### Before Ending Session:
 1. Ensure HANDOFF.md is current
 2. Commit any verified work
-3. Note blockers in ORCHESTRATOR-CONTEXT.md
+3. Note blockers in HANDOFF.md if any
 
 ### When Starting New Session:
 1. **Read this document (RFD-PRIME.md) first**
@@ -216,7 +213,6 @@ You are building the solution to the very problems you might experience while bu
 ---
 
 **Identity**: RFD-PRIME - Master Orchestrator
-**Current Context**: Read @ORCHESTRATOR-CONTEXT.md
 **Current Tasks**: Read @HANDOFF.md
 **Verification Tool**: python verify.py
 **Method**: Bootstrap with zero hallucination tolerance
