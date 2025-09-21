@@ -211,3 +211,43 @@ status: building
         
         # Save memory
         memory_file.write_text(json.dumps(memory, indent=2))
+    
+    def store_context(self, key: str, value: Any):
+        """Store context value for persistence"""
+        conn = sqlite3.connect(self.rfd.db_path)
+        conn.execute("""
+            INSERT OR REPLACE INTO memory (key, value, updated_at)
+            VALUES (?, ?, ?)
+        """, (key, json.dumps(value), datetime.now().isoformat()))
+        conn.commit()
+    
+    def get_context(self, key: str) -> Optional[Any]:
+        """Retrieve stored context value"""
+        conn = sqlite3.connect(self.rfd.db_path)
+        result = conn.execute("""
+            SELECT value FROM memory WHERE key = ?
+        """, (key,)).fetchone()
+        
+        if result:
+            return json.loads(result[0])
+        return None
+    
+    def get_session_history(self) -> list:
+        """Get history of all sessions"""
+        conn = sqlite3.connect(self.rfd.db_path)
+        sessions = conn.execute("""
+            SELECT id, feature_id, started_at, ended_at, success
+            FROM sessions
+            ORDER BY started_at DESC
+        """).fetchall()
+        
+        return [
+            {
+                'id': s[0],
+                'feature_id': s[1],
+                'started_at': s[2],
+                'ended_at': s[3],
+                'success': bool(s[4])
+            }
+            for s in sessions
+        ]

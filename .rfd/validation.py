@@ -284,12 +284,15 @@ class ValidationEngine:
     def _extract_file_claims(self, text: str) -> List[str]:
         """Extract file paths mentioned in AI claims"""
         patterns = [
-            r'[cC]reated?\s+(?:file\s+)?([^\s]+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))',
-            r'[wW]rote?\s+(?:to\s+)?([^\s]+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))',
-            r'[fF]ile\s+([^\s]+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))',
-            r'`([^\s`]+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))`',
-            r'"([^\s"]+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))"',
-            r'\'([^\s\']+\.(?:py|js|ts|jsx|tsx|md|txt|json|yaml|yml))\'',
+            # Match any file with an extension
+            r'[cC]reated?\s+(?:file\s+)?([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            r'[wW]rote?\s+(?:to\s+)?([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            r'[fF]ile\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            r'`([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)`',
+            r'"([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)"',
+            r"'([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)'",
+            # Also match common files without extensions
+            r'[cC]reated?\s+(Makefile|Dockerfile|Gemfile|Rakefile|Procfile)',
         ]
         
         files = set()
@@ -297,20 +300,31 @@ class ValidationEngine:
             matches = re.findall(pattern, text)
             files.update(matches)
         
-        # Filter out obvious non-paths
-        return [f for f in files if not f.startswith('http') and '://' not in f]
+        # Filter out obvious non-paths and common words
+        filtered = []
+        for f in files:
+            # Skip common false positives
+            if f in ['and', 'with', 'called', 'class', 'function', 'method']:
+                continue
+            if not f.startswith('http') and '://' not in f:
+                filtered.append(f)
+        
+        return filtered
     
     def _extract_function_claims(self, text: str) -> List[Tuple[str, Optional[str]]]:
         """Extract function/class names mentioned in AI claims"""
         patterns = [
+            r'[fF]unction\s+called\s+(\w+)',  # "function called foo"
             r'[fF]unction\s+(\w+)',
             r'[dD]ef\s+(\w+)',
-            r'[cC]lass\s+(\w+)',
+            r'[cC]lass\s+(?:called\s+)?(\w+)',  # "class DataProcessor" or "class called DataProcessor"
             r'[mM]ethod\s+(\w+)',
             r'[iI]mplemented\s+(\w+)',
-            r'[cC]reated\s+(?:function|class|method)\s+(\w+)',
+            r'[cC]reated\s+(?:function|class|method)\s+(?:called\s+)?(\w+)',
             r'`(\w+)\(\)`',  # Function calls in backticks
             r'`class\s+(\w+)`',  # Class definitions in backticks
+            r'(\w+)\s+function',  # "calculate function"
+            r'(\w+)\s+class',  # "DataProcessor class"
         ]
         
         functions = set()
@@ -318,9 +332,20 @@ class ValidationEngine:
             matches = re.findall(pattern, text)
             functions.update(matches)
         
+        # Filter out common false positives
+        filtered_functions = set()
+        for func in functions:
+            # Skip common words that aren't function names
+            if func.lower() in ['and', 'with', 'called', 'function', 'class', 'method', 'a', 'the']:
+                continue
+            # Skip single letters
+            if len(func) < 2:
+                continue
+            filtered_functions.add(func)
+        
         # Try to associate with file hints if mentioned nearby
         result = []
-        for func in functions:
+        for func in filtered_functions:
             file_hint = self._find_file_hint_for_function(func, text)
             result.append((func, file_hint))
         
