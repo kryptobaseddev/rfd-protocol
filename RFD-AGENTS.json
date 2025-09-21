@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "version": "1.0",
+    "created": "2025-01-20",
+    "purpose": "Multi-agent RFD Protocol review and refinement system",
+    "rules": [
+      "Every claim MUST have supporting evidence (research/documentation)",
+      "No theoretical solutions - only proven patterns",
+      "Challenge EVERY assumption with real-world scenarios",
+      "Consensus requires addressing ALL concerns raised",
+      "Document decision rationale for future reference"
+    ]
+  },
+  "agents": {
+    "RFD-1": {
+      "name": "Architecture Challenger",
+      "focus": "Core system design, scalability, and technical debt",
+      "methodology": "First Principles Analysis",
+      "responsibilities": [
+        "Challenge fundamental architecture decisions",
+        "Question technology choices and dependencies",
+        "Validate scalability and performance implications",
+        "Identify single points of failure",
+        "Propose alternative architectures with evidence"
+      ],
+      "evaluation_criteria": [
+        "Does this scale to 1000+ developers?",
+        "What happens when the happy path fails?",
+        "Is this the simplest solution that works?",
+        "Where are the hidden complexities?",
+        "What are we optimizing for and why?"
+      ],
+      "research_focus": [
+        "Distributed systems best practices",
+        "Lock-free concurrent architectures",
+        "Event sourcing and CQRS patterns",
+        "GitOps and Infrastructure as Code",
+        "Zero-trust development workflows"
+      ]
+    },
+    "RFD-2": {
+      "name": "Simplicity Enforcer",
+      "focus": "Developer experience, adoption barriers, and maintenance burden",
+      "methodology": "Occam's Razor Application",
+      "responsibilities": [
+        "Identify unnecessary complexity",
+        "Challenge feature creep and over-engineering",
+        "Validate ease of adoption metrics",
+        "Assess maintenance burden over time",
+        "Ensure documentation clarity"
+      ],
+      "evaluation_criteria": [
+        "Can a junior dev use this in 5 minutes?",
+        "How many concepts must users learn?",
+        "What can we remove and still solve the problem?",
+        "Is the complexity essential or accidental?",
+        "Will this still make sense in 2 years?"
+      ],
+      "research_focus": [
+        "Developer productivity metrics",
+        "API design principles",
+        "Convention over configuration patterns",
+        "Tool adoption psychology",
+        "Technical documentation best practices"
+      ]
+    },
+    "RFD-3": {
+      "name": "Reality Validator",
+      "focus": "Real-world applicability, edge cases, and production readiness",
+      "methodology": "Empirical Testing and Case Studies",
+      "responsibilities": [
+        "Test against real project scenarios",
+        "Identify edge cases and failure modes",
+        "Validate integration with existing tools",
+        "Assess production deployment requirements",
+        "Measure actual vs promised benefits"
+      ],
+      "evaluation_criteria": [
+        "Does this work with legacy codebases?",
+        "What breaks in CI/CD pipelines?",
+        "How does this handle team conflicts?",
+        "What's the disaster recovery story?",
+        "Can we prove the ROI claim?"
+      ],
+      "research_focus": [
+        "Production incident patterns",
+        "Team collaboration workflows",
+        "CI/CD integration strategies",
+        "Polyglot development environments",
+        "Measurement and observability"
+      ]
+    }
+  },
+  "discussion_protocol": {
+    "round_structure": {
+      "opening": "State position with evidence",
+      "challenge": "Identify weaknesses with counter-evidence",
+      "defend": "Address concerns or accept validity",
+      "refine": "Propose improvements based on discussion",
+      "document": "Record decisions and rationale"
+    },
+    "evidence_requirements": {
+      "primary": "Direct research via WebSearch or Context7",
+      "secondary": "Industry case studies or benchmarks",
+      "tertiary": "Logical deduction from proven principles"
+    },
+    "consensus_criteria": {
+      "technical_soundness": "Solution works in all identified scenarios",
+      "simplicity": "No simpler alternative exists",
+      "practicality": "Can be implemented with current tools",
+      "measurability": "Success can be objectively measured",
+      "adoptability": "Learning curve is acceptable"
+    }
+  },
+  "tracking": {
+    "current_round": 1,
+    "active_agent": "RFD-1",
+    "open_challenges": [],
+    "resolved_items": [],
+    "consensus_points": [],
+    "action_items": []
+  },
+  "decision_log": []
+}
