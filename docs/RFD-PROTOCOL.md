@@ -276,28 +276,34 @@ rfd sync          # Sync across sessions
 - Manual execution for immediate use
 - **Purpose**: Prevent hallucination while building rest of system
 
-#### Stage 2: Core CLI Structure (CURRENT FOCUS)
-- Extract from existing RFD-PLAN.md
-- Basic commands: `init`, `check`, `validate`
-- PROJECT.md template generation
-- **Verification**: Use Stage 1 to verify our work
+#### Stage 2: Core CLI Structure ✅ COMPLETE
+- Extracted from RFD-PLAN.md lines 71-494
+- Basic commands: `init`, `check`, `validate`, `session`, `memory`
+- Created `.rfd/rfd.py` with RFD class
+- **Verification**: Used Stage 1 to verify
 
-#### Stage 3: Validation Engine
-- File existence checking
-- Syntax validation
-- Test execution
-- **Verification**: Use Stage 2 CLI to validate
+#### Stage 3: Build Engine ✅ COMPLETE
+- Extracted from RFD-PLAN.md lines 499-605
+- Build automation and compilation handling
+- Created `.rfd/build.py` with BuildEngine class
+- **Verification**: Used Stage 1 & 2 to validate
 
-#### Stage 4: Session Management
+#### Stage 4: Validation Engine ✅ COMPLETE
+- Extracted from RFD-PLAN.md lines 609-847
+- Reality validation and testing
+- Created `.rfd/validate.py` with ValidationEngine class
+- **Note**: May conflict with system `validate` module - handled by sys.path.insert(0)
+
+#### Stage 5: Session Management (CURRENT FOCUS)
+- Extracting from RFD-PLAN.md lines 851-1065
 - SQLite state persistence
 - Context generation for AI
-- Feature tracking
-- **Verification**: Use Stage 3 validation
+- Target: `.rfd/session.py` with SessionManager class
 
-#### Stage 5: Full Integration
-- CLAUDE.md generation
-- Memory persistence
-- Complete workflow
+#### Stage 6: Spec Engine
+- Will extract from RFD-PLAN.md lines 1069-1283
+- Specification management
+- Interactive project setup
 - **Verification**: System validates itself
 
 ### Why Unified Over Tiered

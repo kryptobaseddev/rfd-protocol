@@ -6,10 +6,11 @@ We need RFD to prevent drift and AI hallucination, but we'll experience those pr
 
 ### Current Status
 - ✅ Stage 1: Created `verify.py` for basic verification
-- 🔄 Stage 2: Extracting CLI from code below
-- ⏳ Stage 3: Session management
-- ⏳ Stage 4: Full validation
-- ⏳ Stage 5: Context generation
+- ✅ Stage 2: Extracted CLI structure to `.rfd/rfd.py`
+- ✅ Stage 3: Extracted build engine to `.rfd/build.py`
+- ✅ Stage 4: Extracted validation engine to `.rfd/validate.py`
+- 🔄 Stage 5: Extracting session manager to `.rfd/session.py`
+- ⏳ Stage 6: Spec engine extraction pending
 
 ### How to Use This Document
 1. **Don't try to implement all 1300 lines at once**
@@ -23,17 +24,20 @@ We need RFD to prevent drift and AI hallucination, but we'll experience those pr
 # Stage 1: Basic verification (COMPLETE)
 python verify.py "AI output"  # Verify files exist
 
-# Stage 2: Extract CLI structure (lines 29-453)
-# Copy CLI code to rfd.py, test basic commands
+# Stage 2: Extract CLI structure (lines 71-494) - COMPLETE
+# Copy CLI code to .rfd/rfd.py, test basic commands
 
-# Stage 3: Extract validation (lines 566-806)  
-# Add validation engine, test with Stage 2 CLI
+# Stage 3: Extract build engine (lines 499-605) - COMPLETE
+# Add build automation, test with Stage 2 CLI
 
-# Stage 4: Extract session management (lines 808-1024)
-# Add context generation, test with Stage 3
+# Stage 4: Extract validation engine (lines 609-847) - COMPLETE
+# Add validation engine, test with Stage 3
 
-# Stage 5: Full integration
-# Combine all pieces, dogfood to refine
+# Stage 5: Extract session management (lines 851-1065) - IN PROGRESS
+# Add context generation, test with Stage 4
+
+# Stage 6: Extract spec engine (lines 1069-1283)
+# Add specification management, test with Stage 5
 ```
 
 ---

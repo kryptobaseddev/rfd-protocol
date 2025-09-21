@@ -12,12 +12,14 @@
 ---
 
 ## Current Bootstrap Status
-**Stage**: 1 ✅ COMPLETE - Basic verification (`verify.py`)  
-**Stage**: 2 🔄 IN PROGRESS - Core CLI extraction  
-**Current Focus**: Extract lines 29-453 from RFD-PLAN.md → `rfd.py`  
-**Coordinator**: RFD-1 (Architecture)  
-**Builder**: RFD-2 (Implementation)  
-**Validator**: RFD-3 (Verification)  
+**Stage 1**: ✅ COMPLETE - Basic verification (`verify.py` - standalone tool)  
+**Stage 2**: ✅ COMPLETE - Core CLI (`.rfd/rfd.py`)  
+**Stage 3**: ✅ COMPLETE - Build Engine (`.rfd/build.py`)  
+**Stage 4**: ✅ COMPLETE - Validation Engine (`.rfd/validate.py`)*  
+**Stage 5**: 🔄 IN PROGRESS - Session Manager (`.rfd/session.py`)  
+**Stage 6**: ⏳ PENDING - Spec Engine (`.rfd/spec.py`)
+
+*Note: validate.py may conflict with system modules - rfd.py uses sys.path.insert(0) to handle this  
 
 ---
 
@@ -25,25 +27,25 @@
 
 ### For RFD-2 (Builder):
 ```python
-# TASK: Extract Validation Engine from RFD-PLAN.md
-# SOURCE: /mnt/projects/rfd-protocol/docs/RFD-PLAN.md lines 566-806
-# TARGET: /mnt/projects/rfd-protocol/.rfd/validate.py
+# TASK: Extract Session Manager from RFD-PLAN.md
+# SOURCE: /mnt/projects/rfd-protocol/docs/RFD-PLAN.md lines 808-1024
+# TARGET: /mnt/projects/rfd-protocol/.rfd/session.py
 # 
-# 1. READ source lines 566-806 from RFD-PLAN.md
-# 2. COPY ValidationEngine class exactly as written
-# 3. SAVE as .rfd/validate.py
-# 4. Test: python -m py_compile .rfd/validate.py
-# 5. Verify: python verify.py ".rfd/validate.py"
+# 1. READ source lines 808-1024 from RFD-PLAN.md
+# 2. COPY SessionManager class exactly as written
+# 3. SAVE as .rfd/session.py
+# 4. Test: python -m py_compile .rfd/session.py
+# 5. Verify: python verify.py ".rfd/session.py"
 ```
 
 ### For RFD-3 (Validator):
 ```bash
-# TASK: Verify RFD-2's Validation Engine extraction
+# TASK: Verify RFD-2's Session Manager extraction
 # 
-# 1. Check if .rfd/validate.py exists
-# 2. Run: python verify.py ".rfd/validate.py"
-# 3. Test: python -m py_compile .rfd/validate.py
-# 4. Check imports: python -c "import sys; sys.path.append('.rfd'); import validate"
+# 1. Check if .rfd/session.py exists
+# 2. Run: python verify.py ".rfd/session.py"
+# 3. Test: python -m py_compile .rfd/session.py
+# 4. Check imports: python -c "import sys; sys.path.append('.rfd'); import session"
 # 5. Report: PASS or FAIL with specific issues
 ```
 
@@ -111,10 +113,12 @@ graph LR
 - [ ] Keep all imports and structure
 
 ### After Completion:
-- [ ] Run: `python verify.py "created_file.py"`
+- [ ] Run: `python verify.py "created_file.py"` (our bootstrap verification tool)
 - [ ] Test basic functionality
 - [ ] Git commit immediately if passing
 - [ ] Report status in this document
+
+**Note**: verify.py is our Stage 1 bootstrap tool for checking file existence/syntax. It's NOT part of the .rfd/ system - it's what we use to verify agent work during bootstrap.
 
 ---
 
@@ -185,23 +189,27 @@ git reset --hard HEAD
 - Status: COMMITTED - Git hash 049c6e6
 - **VERIFICATION**: All checks passed, file committed
 
-### Stage 4: ✅ COMPLETE & VALIDATED
+### Stage 4: ✅ COMPLETE & COMMITTED
 - Task: Extract Validation Engine from RFD-PLAN.md
 - Source: Lines 566-806 (ValidationEngine class)
 - Target: .rfd/validate.py
 - Builder: RFD-2 ✅ COMPLETE
 - Validator: RFD-3 ✅ PASS
-- Dependencies: requests, sqlite3
-- **STATUS**: VALIDATED - All checks passed
-  - Created: .rfd/validate.py ✅
-  - Syntax: Valid (py_compile) ✅
-  - verify.py: PASSED ✅
-  - Import test: PASSED ✅
-  - **RFD-3 VALIDATION**: ✅ PASS - File exists, syntax valid, imports successful
-  - **Ready for Git Commit**
+- RFD-Prime: ✅ VERIFIED & COMMITTED
+- Status: COMMITTED - Git hash 98286ff
+- **VERIFICATION**: All checks passed, file committed
 
-### Stage 5-6: ⏳ PENDING
-- Will begin after Stage 4 validates
+### Stage 5: 🔄 IN PROGRESS - Session Manager
+- Task: Extract Session Manager from RFD-PLAN.md
+- Source: Lines 808-1024 (SessionManager class)
+- Target: .rfd/session.py
+- Builder: RFD-2 (ASSIGNED)
+- Validator: RFD-3 (WAITING)
+- Dependencies: sqlite3, json, datetime
+
+### Stage 6: ⏳ PENDING - Spec Engine
+- Source: Lines 1026-1242 (SpecEngine class)
+- Target: .rfd/spec.py
 
 ---
 
