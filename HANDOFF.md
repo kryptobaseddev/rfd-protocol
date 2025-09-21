@@ -15,11 +15,11 @@
 **Stage 1**: ✅ COMPLETE - Basic verification (`verify.py` - standalone tool)  
 **Stage 2**: ✅ COMPLETE - Core CLI (`.rfd/rfd.py`)  
 **Stage 3**: ✅ COMPLETE - Build Engine (`.rfd/build.py`)  
-**Stage 4**: ✅ COMPLETE - Validation Engine (`.rfd/validate.py`)*  
+**Stage 4**: ✅ COMPLETE - Validation Engine (`.rfd/validation.py`)*  
 **Stage 5**: 🔄 IN PROGRESS - Session Manager (`.rfd/session.py`)  
 **Stage 6**: ⏳ PENDING - Spec Engine (`.rfd/spec.py`)
 
-*Note: validate.py may conflict with system modules - rfd.py uses sys.path.insert(0) to handle this  
+*Note: Renamed from validate.py to validation.py to avoid system module conflicts  
 
 ---
 
@@ -81,8 +81,8 @@ graph LR
 - **Dependencies**: subprocess, requests
 
 ### Stage 4: Validation Engine
-- **Source**: RFD-PLAN.md lines 566-806
-- **Target**: `.rfd/validate.py`
+- **Source**: RFD-PLAN.md lines 609-847
+- **Target**: `.rfd/validation.py` (renamed from validate.py to avoid conflicts)
 - **Contains**: ValidationEngine class
 - **Dependencies**: requests, sqlite3
 
@@ -189,10 +189,10 @@ git reset --hard HEAD
 - Status: COMMITTED - Git hash 049c6e6
 - **VERIFICATION**: All checks passed, file committed
 
-### Stage 4: ✅ COMPLETE & COMMITTED
+### Stage 4: ✅ COMPLETE & COMMITTED (RENAMED)
 - Task: Extract Validation Engine from RFD-PLAN.md
-- Source: Lines 566-806 (ValidationEngine class)
-- Target: .rfd/validate.py
+- Source: Lines 609-847 (ValidationEngine class)
+- Target: .rfd/validation.py (renamed to avoid conflicts)
 - Builder: RFD-2 ✅ COMPLETE
 - Validator: RFD-3 ✅ PASS
 - RFD-Prime: ✅ VERIFIED & COMMITTED

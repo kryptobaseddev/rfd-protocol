@@ -29,7 +29,7 @@ class RFD:
         # Load modules
         sys.path.insert(0, str(self.rfd_dir))
         from build import BuildEngine
-        from validate import ValidationEngine
+        from validation import ValidationEngine
         from spec import SpecEngine
         from session import SessionManager
         

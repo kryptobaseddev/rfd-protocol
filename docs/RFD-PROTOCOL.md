@@ -291,8 +291,8 @@ rfd sync          # Sync across sessions
 #### Stage 4: Validation Engine ✅ COMPLETE
 - Extracted from RFD-PLAN.md lines 609-847
 - Reality validation and testing
-- Created `.rfd/validate.py` with ValidationEngine class
-- **Note**: May conflict with system `validate` module - handled by sys.path.insert(0)
+- Created `.rfd/validation.py` with ValidationEngine class (renamed to avoid conflicts)
+- **Note**: Renamed from validate.py to validation.py to prevent system module conflicts
 
 #### Stage 5: Session Management (CURRENT FOCUS)
 - Extracting from RFD-PLAN.md lines 851-1065

@@ -55,7 +55,7 @@ your-project/
 ├── .rfd/                      # Core RFD System (git-ignored)
 │   ├── rfd.py                # Main orchestrator
 │   ├── build.py              # Build automation engine
-│   ├── validate.py           # Validation & truth enforcement
+│   ├── validation.py         # Validation & truth enforcement (renamed to avoid conflicts)
 │   ├── spec.py               # Spec-driven design engine
 │   ├── session.py            # Session & context manager
 │   ├── memory.db             # Persistent state (SQLite)
@@ -608,7 +608,7 @@ class BuildEngine:
         return None
 ```
 
-### Validation Engine: validate.py
+### Validation Engine: validation.py
 
 ```python
 """
