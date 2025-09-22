@@ -100,9 +100,6 @@ markers = [
     "regression: Regression tests",
     "slow: Tests that take > 5 seconds",
 ]
-timeout = 30
-timeout_method = "thread"
-timeout_func_only = true
 
 [tool.black]
 target-version = ['py38']

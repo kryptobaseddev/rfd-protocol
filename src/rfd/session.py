@@ -72,6 +72,10 @@ class SessionManager:
         self.current_session = None
         self.context_dir = self.rfd.rfd_dir / 'context'
     
+    def create_session(self, feature_id: str) -> int:
+        """Create/start new development session - alias for start()"""
+        return self.start(feature_id)
+    
     def start(self, feature_id: str) -> int:
         """Start new development session"""
         # CRITICAL FIX: Validate feature exists in PROJECT.md spec
@@ -94,25 +98,33 @@ class SessionManager:
         
         # Create new session
         conn = sqlite3.connect(self.rfd.db_path)
-        cursor = conn.execute("""
-            INSERT INTO sessions (started_at, feature_id)
-            VALUES (?, ?)
-        """, (datetime.now().isoformat(), feature_id))
-        session_id = cursor.lastrowid
-        conn.commit()
+        try:
+            cursor = conn.execute("""
+                INSERT INTO sessions (started_at, feature_id)
+                VALUES (?, ?)
+            """, (datetime.now().isoformat(), feature_id))
+            session_id = cursor.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
         
         self.current_session = {
             'id': session_id,
             'feature_id': feature_id,
+            'feature': feature_id,  # Backward compatibility
             'started_at': datetime.now().isoformat()
         }
         
         # Update feature status
-        conn.execute("""
-            UPDATE features SET status = 'building'
-            WHERE id = ?
-        """, (feature_id,))
-        conn.commit()
+        conn = sqlite3.connect(self.rfd.db_path)
+        try:
+            conn.execute("""
+                UPDATE features SET status = 'building'
+                WHERE id = ?
+            """, (feature_id,))
+            conn.commit()
+        finally:
+            conn.close()
         
         # Generate context for AI
         self._generate_context(feature_id)

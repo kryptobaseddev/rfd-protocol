@@ -422,6 +422,19 @@ class TestSessionManager(unittest.TestCase):
         from rfd import RFD
         from rfd.session import SessionManager
         
+        # Create a PROJECT.md with test feature
+        project_content = """---
+name: "Test Project"
+features:
+  - id: "test-feature"
+    description: "Test feature"
+    status: "pending"
+---
+# Test Project
+"""
+        with open("PROJECT.md", "w") as f:
+            f.write(project_content)
+        
         rfd = RFD()
         session_mgr = SessionManager(rfd)
         
