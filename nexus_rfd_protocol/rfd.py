@@ -93,8 +93,27 @@ class RFD:
             return {}
         
         with open(project_file, 'r') as f:
-            post = frontmatter.load(f)
-            return post.metadata
+            content = f.read()
+            
+        # Try frontmatter format first
+        try:
+            post = frontmatter.loads(content)
+            if post.metadata:
+                return post.metadata
+        except:
+            pass
+            
+        # Try to find JSON in the content
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        except:
+            pass
+            
+        # Return empty dict if no valid format found
+        return {}
     
     def get_current_state(self) -> Dict[str, Any]:
         """Get complete current project state"""
