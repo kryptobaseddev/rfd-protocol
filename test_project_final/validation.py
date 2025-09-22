@@ -8,6 +8,7 @@ import sqlite3
 import json
 import ast
 import re
+import subprocess
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -288,6 +289,11 @@ class ValidationEngine:
                 'message': f"Modification {mod_claim['type']} in {mod_claim['target']}: {'VERIFIED' if verified else 'FABRICATED - AI LIED ABOUT MODIFICATION!'}"
             })
         
+        # Complex multi-file validation - check cross-file dependencies
+        if len(file_claims) > 1:
+            cross_file_validation = self._validate_cross_file_dependencies(file_claims, function_claims)
+            validation_results.extend(cross_file_validation)
+        
         # Overall pass/fail
         all_passed = all(r['exists'] for r in validation_results)
         return all_passed, validation_results
@@ -306,6 +312,12 @@ class ValidationEngine:
             r'[uU]pdated?\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
             r'[mM]odified?\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
             r'[cC]hanged?\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            # Bullet point file patterns (CRITICAL for catching lists)
+            r'[-*]\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',  # "- filename.ext"
+            r'[-*]\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)\s+with',  # "- filename.ext with..."
+            # Conjunction patterns (CRITICAL for "file1 and file2" cases)
+            r'([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)\s+and\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',  # "file1.py and file2.py"
+            r'([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+),\s*([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',  # "file1.py, file2.py"
             # Also match common files without extensions
             r'[cC]reated?\s+(Makefile|Dockerfile|Gemfile|Rakefile|Procfile)',
         ]
@@ -313,7 +325,14 @@ class ValidationEngine:
         files = set()
         for pattern in patterns:
             matches = re.findall(pattern, text)
-            files.update(matches)
+            # Handle both single matches and tuple matches (for conjunction patterns)
+            for match in matches:
+                if isinstance(match, tuple):
+                    # Conjunction pattern returned multiple files
+                    files.update(match)
+                else:
+                    # Single file match
+                    files.add(match)
         
         # Filter out obvious non-paths and common words
         filtered = []
@@ -549,6 +568,50 @@ class ValidationEngine:
         except Exception:
             return False
     
+    def _validate_cross_file_dependencies(self, file_claims: List[str], function_claims: List[Tuple[str, Optional[str]]]) -> List[Dict[str, Any]]:
+        """Validate dependencies between multiple files"""
+        validation_results = []
+        
+        existing_files = [f for f in file_claims if Path(f).exists()]
+        
+        if not existing_files:
+            return validation_results
+        
+        # Check for common multi-file patterns that might be lies
+        # For example, if claiming auth.py, users.py, config.py but only one exists
+        if len(existing_files) < len(file_claims):
+            missing_count = len(file_claims) - len(existing_files)
+            validation_results.append({
+                'type': 'cross_file',
+                'target': 'multi_file_consistency',
+                'exists': False,
+                'message': f"Multi-file claim inconsistent: {missing_count}/{len(file_claims)} files missing - potential AI hallucination of file set"
+            })
+        
+        # Check for import consistency between files
+        for file_path in existing_files:
+            try:
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                
+                # Look for imports of other claimed files
+                for other_file in file_claims:
+                    if other_file != file_path and other_file.endswith('.py'):
+                        module_name = other_file.replace('.py', '')
+                        # Check if this file imports the other file
+                        if f'import {module_name}' in content or f'from {module_name}' in content:
+                            if not Path(other_file).exists():
+                                validation_results.append({
+                                    'type': 'cross_file',
+                                    'target': f'{file_path} -> {other_file}',
+                                    'exists': False,
+                                    'message': f"Import dependency broken: {file_path} imports {other_file} but {other_file} doesn't exist"
+                                })
+            except Exception:
+                continue
+        
+        return validation_results
+    
     def print_report(self, results: Dict[str, Any]):
         """Print validation report"""
         print("\n=== Validation Report ===\n")
@@ -558,3 +621,96 @@ class ValidationEngine:
             print(f"{icon} {result['test']}: {result['message']}")
         
         print(f"\nOverall: {'✅ PASSING' if results['passing'] else '❌ FAILING'}")
+    
+    def validate_with_git_integration(self, feature: Optional[str] = None, full: bool = False, auto_commit: bool = True) -> Dict[str, Any]:
+        """Run validation with git integration - auto-commit on success, rollback on failure"""
+        # Store current git state for potential rollback
+        initial_commit = self._get_current_commit()
+        
+        # Run validation
+        results = self.validate(feature, full)
+        
+        if results['passing'] and auto_commit:
+            # Auto-commit successful validation
+            commit_msg = f"RFD Validation PASSED: {feature or 'full validation'}"
+            if self._git_commit(commit_msg):
+                results['git_action'] = f'Auto-committed: {commit_msg}'
+            else:
+                results['git_action'] = 'Validation passed but git commit failed'
+        elif not results['passing']:
+            # Validation failed - offer rollback option
+            results['git_action'] = f'Validation FAILED - rollback available to {initial_commit[:8]}'
+            results['rollback_commit'] = initial_commit
+        
+        return results
+    
+    def rollback_to_last_passing(self) -> bool:
+        """Rollback to the last commit that passed validation"""
+        try:
+            # Find the last commit with "RFD Validation PASSED" in the message
+            result = subprocess.run([
+                'git', 'log', '--oneline', '--grep=RFD Validation PASSED', '-1'
+            ], capture_output=True, text=True, check=True)
+            
+            if result.stdout.strip():
+                last_passing_commit = result.stdout.strip().split()[0]
+                return self._git_rollback(last_passing_commit)
+            else:
+                print("No previous passing validation commits found")
+                return False
+        except subprocess.CalledProcessError:
+            print("Error finding last passing validation commit")
+            return False
+    
+    def _get_current_commit(self) -> str:
+        """Get current git commit hash"""
+        try:
+            result = subprocess.run(['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        except subprocess.CalledProcessError:
+            return ""
+    
+    def _git_commit(self, message: str) -> bool:
+        """Commit current changes with message"""
+        try:
+            # Add all changes
+            subprocess.run(['git', 'add', '.'], check=True)
+            
+            # Commit with message
+            subprocess.run(['git', 'commit', '-m', message], check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+    
+    def _git_rollback(self, commit_hash: str) -> bool:
+        """Rollback to specific commit"""
+        try:
+            subprocess.run(['git', 'reset', '--hard', commit_hash], check=True)
+            print(f"Successfully rolled back to {commit_hash}")
+            return True
+        except subprocess.CalledProcessError:
+            print(f"Failed to rollback to {commit_hash}")
+            return False
+    
+    def get_checkpoint_history(self) -> List[Dict[str, str]]:
+        """Get history of validation checkpoints from git log"""
+        try:
+            result = subprocess.run([
+                'git', 'log', '--oneline', '--grep=RFD Validation', '--all'
+            ], capture_output=True, text=True, check=True)
+            
+            history = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    parts = line.split(' ', 1)
+                    if len(parts) == 2:
+                        commit_hash, message = parts
+                        history.append({
+                            'commit': commit_hash,
+                            'message': message,
+                            'status': 'PASSED' if 'PASSED' in message else 'FAILED'
+                        })
+            
+            return history
+        except subprocess.CalledProcessError:
+            return []
