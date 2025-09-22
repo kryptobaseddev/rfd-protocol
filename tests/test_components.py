@@ -135,7 +135,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_validation_engine_initialization(self):
         """Test ValidationEngine initializes correctly"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -147,7 +147,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_validate_ai_claims_detects_lies(self):
         """Test AI claim validation detects false claims"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -167,7 +167,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_validate_ai_claims_confirms_truth(self):
         """Test AI claim validation confirms true claims"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -187,7 +187,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_extract_file_claims(self):
         """Test extraction of file paths from text"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -208,7 +208,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_extract_function_claims(self):
         """Test extraction of function/class names from text"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -230,7 +230,7 @@ class TestValidationEngine(unittest.TestCase):
     def test_verify_function_exists(self):
         """Test function existence verification"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -264,7 +264,7 @@ async def async_function():
     def test_validation_with_mixed_truth_lies(self):
         """Test validation with mix of true and false claims"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -292,7 +292,7 @@ async def async_function():
     def test_check_ai_claim_simple(self):
         """Test simple boolean AI claim check"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -321,7 +321,7 @@ class TestBuildEngine(unittest.TestCase):
     def test_build_engine_initialization(self):
         """Test BuildEngine initializes correctly"""
         from rfd import RFD
-        from build import BuildEngine
+        from rfd.build import BuildEngine
         
         rfd = RFD()
         builder = BuildEngine(rfd)
@@ -332,7 +332,7 @@ class TestBuildEngine(unittest.TestCase):
     def test_detect_stack(self):
         """Test stack detection for different project types"""
         from rfd import RFD
-        from build import BuildEngine
+        from rfd.build import BuildEngine
         
         rfd = RFD()
         builder = BuildEngine(rfd)
@@ -359,7 +359,7 @@ class TestBuildEngine(unittest.TestCase):
     def test_run_tests(self, mock_run):
         """Test running tests for different stacks"""
         from rfd import RFD
-        from build import BuildEngine
+        from rfd.build import BuildEngine
         
         rfd = RFD()
         builder = BuildEngine(rfd)
@@ -379,7 +379,7 @@ class TestBuildEngine(unittest.TestCase):
     def test_compile_code(self, mock_run):
         """Test code compilation"""
         from rfd import RFD
-        from build import BuildEngine
+        from rfd.build import BuildEngine
         
         rfd = RFD()
         builder = BuildEngine(rfd)
@@ -408,7 +408,7 @@ class TestSessionManager(unittest.TestCase):
     def test_session_manager_initialization(self):
         """Test SessionManager initializes correctly"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session_mgr = SessionManager(rfd)
@@ -420,7 +420,7 @@ class TestSessionManager(unittest.TestCase):
     def test_create_session(self):
         """Test session creation"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session_mgr = SessionManager(rfd)
@@ -435,7 +435,7 @@ class TestSessionManager(unittest.TestCase):
     def test_save_and_load_state(self):
         """Test saving and loading session state"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session_mgr = SessionManager(rfd)
@@ -461,7 +461,7 @@ class TestSessionManager(unittest.TestCase):
     def test_update_progress(self):
         """Test progress updates"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session_mgr = SessionManager(rfd)
@@ -477,7 +477,7 @@ class TestSessionManager(unittest.TestCase):
     def test_get_context(self):
         """Test getting session context"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session_mgr = SessionManager(rfd)
@@ -494,7 +494,7 @@ class TestSessionManager(unittest.TestCase):
     def test_session_persistence(self):
         """Test session persists across instances"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         # First session manager
         rfd1 = RFD()
@@ -527,7 +527,7 @@ class TestSpecEngine(unittest.TestCase):
     def test_spec_engine_initialization(self):
         """Test SpecEngine initializes correctly"""
         from rfd import RFD
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)
@@ -538,7 +538,7 @@ class TestSpecEngine(unittest.TestCase):
     def test_validate_spec(self):
         """Test specification validation"""
         from rfd import RFD
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)
@@ -573,7 +573,7 @@ class TestSpecEngine(unittest.TestCase):
     def test_create_spec_interactive(self, mock_questionary):
         """Test interactive spec creation"""
         from rfd import RFD
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)
@@ -598,7 +598,7 @@ class TestSpecEngine(unittest.TestCase):
     def test_add_feature_to_spec(self):
         """Test adding features to specification"""
         from rfd import RFD
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)
@@ -626,7 +626,7 @@ class TestSpecEngine(unittest.TestCase):
     def test_update_feature_status(self):
         """Test updating feature status"""
         from rfd import RFD
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)
@@ -662,7 +662,7 @@ class TestIntegrationBasics(unittest.TestCase):
     def test_rfd_with_validation(self):
         """Test RFD and ValidationEngine work together"""
         from rfd import RFD
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
         
         rfd = RFD()
         validator = ValidationEngine(rfd)
@@ -684,7 +684,7 @@ class TestIntegrationBasics(unittest.TestCase):
     def test_rfd_with_session(self):
         """Test RFD and SessionManager work together"""
         from rfd import RFD
-        from session import SessionManager
+        from rfd.session import SessionManager
         
         rfd = RFD()
         session = SessionManager(rfd)
@@ -700,8 +700,8 @@ class TestIntegrationBasics(unittest.TestCase):
     def test_validation_with_spec(self):
         """Test ValidationEngine uses SpecEngine specs"""
         from rfd import RFD
-        from validation import ValidationEngine
-        from spec import SpecEngine
+        from rfd.validation import ValidationEngine
+        from rfd.spec import SpecEngine
         
         rfd = RFD()
         spec_engine = SpecEngine(rfd)

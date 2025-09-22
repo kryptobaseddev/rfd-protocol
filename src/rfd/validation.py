@@ -229,13 +229,16 @@ class ValidationEngine:
             
             # Check schema
             conn = sqlite3.connect(db_files[0])
-            tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-            
-            self.results.append({
-                'test': 'database',
-                'passed': len(tables) > 0,
-                'message': f"Database has {len(tables)} tables"
-            })
+            try:
+                tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+                
+                self.results.append({
+                    'test': 'database',
+                    'passed': len(tables) > 0,
+                    'message': f"Database has {len(tables)} tables"
+                })
+            finally:
+                conn.close()
     
     def _generate_test_data(self, path: str) -> Dict:
         """Generate test data based on path"""
@@ -349,17 +352,19 @@ class ValidationEngine:
             # Match any file with an extension
             r'[cC]reated?\s+(?:file\s+)?([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
             r'[wW]rote?\s+(?:to\s+)?([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
-            r'[fF]ile\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            r'[mM]ade\s+([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
+            r'[fF]ile[s]?:\s*([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)',
             r'`([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)`',
             r'"([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)"',
             r"'([a-zA-Z0-9_/\-\.]+\.[a-zA-Z0-9]+)'",
             # Also match common files without extensions
             r'[cC]reated?\s+(Makefile|Dockerfile|Gemfile|Rakefile|Procfile)',
+            r'[mM]ade\s+(Makefile|Dockerfile|Gemfile|Rakefile|Procfile)',
         ]
         
         files = set()
         for pattern in patterns:
-            matches = re.findall(pattern, text)
+            matches = re.findall(pattern, text, re.IGNORECASE)
             files.update(matches)
         
         # Filter out obvious non-paths and common words
@@ -371,7 +376,7 @@ class ValidationEngine:
             if not f.startswith('http') and '://' not in f:
                 filtered.append(f)
         
-        return filtered
+        return list(set(filtered))  # Remove duplicates
     
     def _extract_function_claims(self, text: str) -> List[Tuple[str, Optional[str]]]:
         """Extract function/class names mentioned in AI claims"""

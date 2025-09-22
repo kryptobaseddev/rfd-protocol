@@ -46,9 +46,9 @@ class RFD:
     def _init_database(self):
         """Initialize SQLite for state management"""
         conn = sqlite3.connect(self.db_path)
-        
-        # Core tables
-        conn.executescript("""
+        try:
+            # Core tables
+            conn.executescript("""
             CREATE TABLE IF NOT EXISTS features (
                 id TEXT PRIMARY KEY,
                 description TEXT,
@@ -84,7 +84,9 @@ class RFD:
                 updated_at TEXT
             );
         """)
-        conn.commit()
+            conn.commit()
+        finally:
+            conn.close()
     
     def load_project_spec(self) -> Dict[str, Any]:
         """Load and parse PROJECT.md"""
@@ -128,7 +130,8 @@ class RFD:
     def get_features_status(self) -> list:
         """Get status of all features"""
         conn = sqlite3.connect(self.db_path)
-        return conn.execute("""
+        try:
+            return conn.execute("""
             SELECT id, status, 
                    (SELECT COUNT(*) FROM checkpoints 
                     WHERE feature_id = features.id 
@@ -136,6 +139,8 @@ class RFD:
             FROM features
             ORDER BY created_at
         """).fetchall()
+        finally:
+            conn.close()
 
     def checkpoint(self, message: str):
         """Save checkpoint with current state"""
@@ -154,7 +159,8 @@ class RFD:
         
         # Save checkpoint
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
+        try:
+            conn.execute("""
             INSERT INTO checkpoints (feature_id, timestamp, validation_passed, 
                                     build_passed, git_hash, evidence)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -166,7 +172,9 @@ class RFD:
             git_hash,
             json.dumps({'message': message, 'validation': validation, 'build': build})
         ))
-        conn.commit()
+            conn.commit()
+        finally:
+            conn.close()
         
         # Update PROGRESS.md
         progress_file = self.root / 'PROGRESS.md'
@@ -180,31 +188,34 @@ class RFD:
     def revert_to_last_checkpoint(self):
         """Revert to last working checkpoint"""
         conn = sqlite3.connect(self.db_path)
-        # CRITICAL FIX: Allow revert with validation-only checkpoints
-        # Try to find a checkpoint with both validation AND build passing
-        last_good = conn.execute("""
+        try:
+            # CRITICAL FIX: Allow revert with validation-only checkpoints
+            # Try to find a checkpoint with both validation AND build passing
+            last_good = conn.execute("""
             SELECT git_hash, timestamp, validation_passed, build_passed FROM checkpoints
             WHERE validation_passed = 1 AND build_passed = 1
             ORDER BY id DESC LIMIT 1
-        """).fetchone()
-        
-        # If no perfect checkpoint, try validation-only
-        if not last_good:
-            last_good = conn.execute("""
-                SELECT git_hash, timestamp, validation_passed, build_passed FROM checkpoints
-                WHERE validation_passed = 1
-                ORDER BY id DESC LIMIT 1
             """).fetchone()
-        
-        if not last_good:
-            return False, "No checkpoint with passing validation found"
-        
-        git_hash, timestamp, val_passed, build_passed = last_good
-        
-        # Git revert
-        try:
-            subprocess.run(['git', 'reset', '--hard', git_hash], check=True)
-            status = "validation+build" if build_passed else "validation-only"
-            return True, f"Reverted to {status} checkpoint from {timestamp} (Git hash: {git_hash[:7]})"
-        except subprocess.CalledProcessError:
-            return False, "Git revert failed"
+            
+            # If no perfect checkpoint, try validation-only
+            if not last_good:
+                last_good = conn.execute("""
+                    SELECT git_hash, timestamp, validation_passed, build_passed FROM checkpoints
+                    WHERE validation_passed = 1
+                    ORDER BY id DESC LIMIT 1
+                """).fetchone()
+            
+            if not last_good:
+                return False, "No checkpoint with passing validation found"
+            
+            git_hash, timestamp, val_passed, build_passed = last_good
+            
+            # Git revert
+            try:
+                subprocess.run(['git', 'reset', '--hard', git_hash], check=True)
+                status = "validation+build" if build_passed else "validation-only"
+                return True, f"Reverted to {status} checkpoint from {timestamp} (Git hash: {git_hash[:7]})"
+            except subprocess.CalledProcessError:
+                return False, "Git revert failed"
+        finally:
+            conn.close()

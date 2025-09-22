@@ -151,7 +151,7 @@ rfd-protocol/
 #### Core Directories
 
 - **`src/rfd/`**: Modern Python package following PEP standards. This is the main codebase.
-- **`tests/`**: Comprehensive test suite with 77 tests across unit/integration/system categories.
+- **`tests/`**: Comprehensive test suite with 90+ test functions across unit/integration/system categories.
 - **`.rfd/`**: Legacy system directory for backward compatibility. Contains working database and CLI.
 
 #### Documentation Directories

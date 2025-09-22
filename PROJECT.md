@@ -1,23 +1,35 @@
 ---
-name: "Nexus RFD Protocol"
-description: "Reality-First Development protocol for preventing AI hallucination and maintaining project focus"
-version: "1.0.0"
+name: "RFD Protocol Dogfooding"
+description: "Using RFD to fix RFD and achieve 100% test pass rate"
+version: "1.1.0"
+stack:
+  language: "python"
+  framework: "click"
+  database: "sqlite"
+rules:
+  max_files: 30
+  max_loc_per_file: 500
+  must_pass_tests: true
+  no_mocks_in_prod: true
 features:
-  - id: "hallucination_detection"
-    description: "Detect and prevent AI lies about code implementation"
-    status: "complete"
-  - id: "session_persistence"
-    description: "Maintain development context across sessions"
-    status: "complete"
-  - id: "spec_enforcement"
-    description: "Enforce feature development only within defined specifications"
-    status: "complete"
-  - id: "real_validation"
-    description: "Validate actual code implementation rather than theoretical claims"
-    status: "complete"
-  - id: "universal_compatibility"
-    description: "Support all programming languages and frameworks"
-    status: "complete"
+  - id: "session_manager_fixes"
+    description: "Fix all 6 SessionManager test failures"
+    acceptance: "test_get_current_feature, test_save_and_load_state, test_session_manager_initialization, test_session_persistence, test_suggest_next_action, test_update_progress all pass"
+    status: "pending"
+  - id: "spec_engine_fixes"
+    description: "Fix all 4 SpecEngine test failures"
+    acceptance: "test_add_feature_to_spec, test_create_spec_interactive, test_update_feature_status, test_validate_spec all pass"
+    status: "pending"
+  - id: "integration_test_fixes"
+    description: "Fix 12 integration test failures"
+    acceptance: "All tests in test_integration.py pass"
+    status: "pending"
+constraints:
+  - "NO new features until 100% tests pass"
+  - "MUST use RFD workflow for all fixes"
+  - "MUST validate each fix with tests"
+  - "NO mock data in tests"
+  - "MUST maintain backward compatibility"
 ---
 
 # Nexus RFD Protocol v1.0
