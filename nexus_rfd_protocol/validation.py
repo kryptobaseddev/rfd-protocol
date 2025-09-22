@@ -263,12 +263,24 @@ class ValidationEngine:
         
         # Check each claimed file exists
         for file_path in file_claims:
-            exists = Path(file_path).exists()
+            try:
+                # Handle edge cases like extremely long filenames or invalid characters
+                if len(file_path) > 255:  # Most filesystems limit filenames to 255 chars
+                    exists = False
+                    message = f"File {file_path[:50]}...: FILENAME TOO LONG - AI HALLUCINATION!"
+                else:
+                    exists = Path(file_path).exists()
+                    message = f"File {file_path}: {'EXISTS' if exists else 'MISSING - AI HALLUCINATION!'}"
+            except (OSError, ValueError) as e:
+                # Handle filesystem errors, invalid characters, etc.
+                exists = False
+                message = f"File {file_path[:50]}...: INVALID PATH ({str(e)[:50]}) - AI HALLUCINATION!"
+            
             validation_results.append({
                 'type': 'file',
                 'target': file_path,
                 'exists': exists,
-                'message': f"File {file_path}: {'EXISTS' if exists else 'MISSING - AI HALLUCINATION!'}"
+                'message': message
             })
         
         # Check each claimed function/class exists in the files
@@ -276,10 +288,15 @@ class ValidationEngine:
             # If a specific file was mentioned, we need strict verification
             if file_hint:
                 # Strict check: function must be in the specific file mentioned AND file must exist
-                if Path(file_hint).exists():
-                    found = self._check_function_in_file(func_name, file_hint)
-                else:
-                    found = False  # File doesn't exist, so function can't be in it
+                try:
+                    if len(file_hint) > 255:
+                        found = False  # Filename too long
+                    elif Path(file_hint).exists():
+                        found = self._check_function_in_file(func_name, file_hint)
+                    else:
+                        found = False  # File doesn't exist, so function can't be in it
+                except (OSError, ValueError):
+                    found = False  # Invalid path
             else:
                 # No specific file mentioned, search all files
                 found = self._verify_function_exists(func_name, file_hint)
@@ -443,17 +460,26 @@ class ValidationEngine:
             if match:
                 file_path = match.group(1)
                 # Only return if the file actually exists
-                if Path(file_path).exists():
-                    return file_path
+                try:
+                    if len(file_path) <= 255 and Path(file_path).exists():
+                        return file_path
+                except (OSError, ValueError):
+                    # Invalid path, skip
+                    pass
         
         return None
     
     def _verify_function_exists(self, func_name: str, file_hint: Optional[str] = None) -> bool:
         """Verify if a function/class actually exists in the codebase"""
         # If we have a file hint, check there first
-        if file_hint and Path(file_hint).exists():
-            if self._check_function_in_file(func_name, file_hint):
-                return True
+        if file_hint:
+            try:
+                if len(file_hint) <= 255 and Path(file_hint).exists():
+                    if self._check_function_in_file(func_name, file_hint):
+                        return True
+            except (OSError, ValueError):
+                # Invalid path, skip
+                pass
         
         # Search all relevant source code files
         source_extensions = ['*.py', '*.js', '*.ts', '*.go', '*.java', '*.cpp', '*.c', '*.rs', '*.rb', '*.php', '*.swift', '*.kt']
