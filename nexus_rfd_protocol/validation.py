@@ -328,6 +328,18 @@ class ValidationEngine:
             })
         
         # Overall pass/fail
+        # If no claims were detected, this might be suspicious unless it's a very simple statement
+        if not validation_results:
+            # Check if this looks like a claim but wasn't parsed
+            suspicious_keywords = ['created', 'added', 'implemented', 'wrote', 'built', 'made', 'fixed', 'updated', 'modified', 'enhanced']
+            contains_claim = any(keyword in claims.lower() for keyword in suspicious_keywords)
+            if contains_claim:
+                # Looks like a claim but we couldn't parse it - might be hallucination
+                return False, [{'type': 'unparseable_claim', 'target': claims[:50], 'exists': False, 'message': 'Unparseable claim - possible AI hallucination'}]
+            else:
+                # Doesn't look like a claim, pass it through
+                return True, []
+        
         all_passed = all(r['exists'] for r in validation_results)
         return all_passed, validation_results
     
@@ -367,9 +379,13 @@ class ValidationEngine:
         patterns = [
             # Explicit function creation patterns with async support
             r'[cC]reated\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',  # "Created async function foo"
+            r'[cC]reated\s+(\w+)\s+(?:function|method)',                            # "Created foo function"
             r'[aA]dded\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',    # "Added async function foo"
+            r'[aA]dded\s+(\w+)\s+(?:function|method)',                              # "Added foo function"
             r'[iI]mplemented\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',  # "Implemented async function foo"
+            r'[iI]mplemented\s+(\w+)\s+(?:function|method)',                        # "Implemented foo function"
             r'[wW]rote\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',    # "Wrote async function foo"
+            r'[wW]rote\s+(\w+)\s+(?:function|method)',                              # "Wrote foo function"
             
             # Function definition patterns with async and multi-language support
             r'[aA]sync\s+function\s+(\w+)',   # "async function foo"
@@ -389,9 +405,13 @@ class ValidationEngine:
             
             # Class creation patterns
             r'[cC]reated\s+(?:class)\s+(?:called\s+)?(\w+)',  # "Created class Foo"
+            r'[cC]reated\s+(\w+)\s+class',                    # "Created Foo class" 
             r'[aA]dded\s+(?:class)\s+(?:called\s+)?(\w+)',    # "Added class Foo"
+            r'[aA]dded\s+(\w+)\s+class',                      # "Added Foo class"
             r'[iI]mplemented\s+(?:class)\s+(?:called\s+)?(\w+)',  # "Implemented class Foo"
-            r'[cC]lass\s+(?:called\s+)?(\w+)',  # "class DataProcessor" or "class called DataProcessor"
+            r'[iI]mplemented\s+(\w+)\s+class',                # "Implemented Foo class"
+            r'[iI]mplemented\s+(\w+)\s+model',                # "Implemented Foo model"
+            r'[cC]lass\s+(?:called\s+)?(\w+)(?:\s|$)',        # "class DataProcessor" (with word boundary)
             
             # Backtick patterns (code references)
             r'`(\w+)\(\)`',         # Function calls in backticks like `foo()`
@@ -623,6 +643,7 @@ class ValidationEngine:
             # Async/await modifications with better patterns - but avoid when "async function" is literally being created
             (r'[aA]dded\s+async\s+version\s+of\s+(\w+)', 'async_conversion', 'made async version'),
             (r'[iI]mplemented\s+async\s+version\s+of\s+(\w+)', 'async_conversion', 'implemented async version'),
+            (r'[cC]reated\s+async\s+version\s+of\s+(\w+)', 'async_conversion', 'created async version'),
             (r'[cC]onverted\s+(\w+)\s+to\s+async', 'async_conversion', 'converted to async'),
             (r'[aA]dded\s+async/await\s+(?:pattern\s+)?(?:to\s+)?(\w+)', 'async_conversion', 'added async/await'),
             (r'[iI]mplemented\s+async/await\s+(?:pattern\s+)?(?:for\s+)?(\w+)', 'async_conversion', 'implemented async/await'),
@@ -630,6 +651,7 @@ class ValidationEngine:
             # Database connections with variations
             (r'[aA]dded\s+database\s+connection\s+(?:to\s+)?(\w+)', 'database_integration', 'added database connection'),
             (r'[iI]mplemented\s+database\s+(?:integration\s+|connection\s+|persistence\s+)?(?:in\s+)?(\w+)', 'database_integration', 'implemented database integration'),
+            (r'[iI]mplemented\s+(\w+)\s+model\s+with\s+database\s+connection', 'database_integration', 'implemented model with database connection'),
             (r'[aA]dded\s+(?:database\s+)?persistence\s+(?:to\s+)?(\w+)', 'database_integration', 'added database persistence'),
             
             # Input validation and sanitization
