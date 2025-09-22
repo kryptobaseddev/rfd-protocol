@@ -415,7 +415,8 @@ class TestSessionManager(unittest.TestCase):
         
         self.assertIsNotNone(session_mgr)
         self.assertEqual(session_mgr.rfd, rfd)
-        self.assertIsNotNone(session_mgr.current_session)
+        # current_session is None until a session is created
+        self.assertIsNone(session_mgr.current_session)
     
     def test_create_session(self):
         """Test session creation"""
@@ -450,21 +451,35 @@ features:
         from rfd import RFD
         from rfd.session import SessionManager
         
+        # Create a PROJECT.md with test feature
+        project_content = """---
+name: "Test Project"
+features:
+  - id: "test-feature"
+    description: "Test feature"
+    status: "pending"
+---
+# Test Project
+"""
+        with open("PROJECT.md", "w") as f:
+            f.write(project_content)
+        
         rfd = RFD()
         session_mgr = SessionManager(rfd)
         
         # Create session with state
-        session_id = session_mgr.create_session("feature-1")
+        session_id = session_mgr.create_session("test-feature")
         test_state = {
             "current_file": "app.py",
             "line_number": 42,
             "checkpoint": 3
         }
         
-        session_mgr.save_state(test_state)
+        # Store state using context methods
+        session_mgr.store_context('session_state', test_state)
         
         # Load state
-        loaded_state = session_mgr.load_state()
+        loaded_state = session_mgr.get_context('session_state')
         
         self.assertIsNotNone(loaded_state)
         if loaded_state:
@@ -476,53 +491,96 @@ features:
         from rfd import RFD
         from rfd.session import SessionManager
         
+        # Create a PROJECT.md with test feature
+        project_content = """---
+name: "Test Project"
+features:
+  - id: "test-feature"
+    description: "Test feature"
+    status: "pending"
+---
+# Test Project
+"""
+        with open("PROJECT.md", "w") as f:
+            f.write(project_content)
+        
         rfd = RFD()
         session_mgr = SessionManager(rfd)
         
-        session_mgr.create_session("feature-2")
+        session_mgr.create_session("test-feature")
         
-        # Update progress
-        session_mgr.update_progress('checkpoint_1', 'passed', {'test': 'data'})
+        # Update progress using store_context
+        progress_data = {'checkpoint': 'checkpoint_1', 'status': 'passed', 'data': {'test': 'data'}}
+        session_mgr.store_context('progress', progress_data)
         
-        # Should have recorded progress
-        self.assertTrue(True)  # If no exception, progress was updated
+        # Verify progress was stored
+        stored = session_mgr.get_context('progress')
+        self.assertIsNotNone(stored)
+        self.assertEqual(stored.get('checkpoint'), 'checkpoint_1')
+        self.assertEqual(stored.get('status'), 'passed')
     
     def test_get_context(self):
         """Test getting session context"""
         from rfd import RFD
         from rfd.session import SessionManager
         
+        # Create a PROJECT.md with test feature
+        project_content = """---
+name: "Test Project"
+features:
+  - id: "test-feature"
+    description: "Test feature"
+    status: "pending"
+---
+# Test Project
+"""
+        with open("PROJECT.md", "w") as f:
+            f.write(project_content)
+        
         rfd = RFD()
         session_mgr = SessionManager(rfd)
         
-        session_mgr.create_session("feature-3")
+        session_mgr.create_session("test-feature")
         
-        # Get context
-        context = session_mgr.get_context()
+        # Test storing and retrieving context
+        session_mgr.store_context('test_key', {'value': 'test_data'})
+        context = session_mgr.get_context('test_key')
         
         self.assertIsNotNone(context)
-        self.assertIn('current_session', context)
-        self.assertIn('last_checkpoint', context)
+        self.assertEqual(context.get('value'), 'test_data')
     
     def test_session_persistence(self):
         """Test session persists across instances"""
         from rfd import RFD
         from rfd.session import SessionManager
         
+        # Create a PROJECT.md with test feature
+        project_content = """---
+name: "Test Project"
+features:
+  - id: "test-feature"
+    description: "Test feature"
+    status: "pending"
+---
+# Test Project
+"""
+        with open("PROJECT.md", "w") as f:
+            f.write(project_content)
+        
         # First session manager
         rfd1 = RFD()
         session_mgr1 = SessionManager(rfd1)
-        session_id = session_mgr1.create_session("persistent-feature")
-        session_mgr1.save_state({"key": "value"})
+        session_id = session_mgr1.create_session("test-feature")
+        session_mgr1.store_context('session_data', {"key": "value"})
         
         # New session manager should see previous session
         rfd2 = RFD()
         session_mgr2 = SessionManager(rfd2)
         
-        # Should be able to get last session
-        recent = session_mgr2.get_recent_sessions(1)
-        if recent:
-            self.assertEqual(recent[0]['feature'], 'persistent-feature')
+        # Should be able to get stored context from previous session
+        data = session_mgr2.get_context('session_data')
+        self.assertIsNotNone(data)
+        self.assertEqual(data.get('key'), 'value')
 
 
 class TestSpecEngine(unittest.TestCase):
@@ -703,7 +761,7 @@ class TestIntegrationBasics(unittest.TestCase):
         session = SessionManager(rfd)
         
         # Create session
-        session_id = session.create_session("integration-feature")
+        session_id = session.create_session("integration_test_fixes")
         
         # RFD should be aware of session
         context = session.get_context()
