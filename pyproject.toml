@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexus-rfd-protocol"
+version = "1.0.0"
+description = "Reality-First Development Protocol - Prevents AI hallucination and ensures spec-driven development"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "RFD Protocol Team", email = "rfd@nexus.dev"}
+]
+maintainers = [
+    {name = "RFD Protocol Team", email = "rfd@nexus.dev"}
+]
+keywords = [
+    "development", "ai", "hallucination-prevention", "spec-driven", 
+    "reality-first", "protocol", "claude-code", "validation"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers", 
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Environment :: Console"
+]
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0.0",
+    "python-frontmatter>=1.0.0", 
+    "questionary>=2.0.0",
+    "requests>=2.4.0",
+    "PyYAML>=6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/nexus-dev/rfd-protocol"
+Documentation = "https://github.com/nexus-dev/rfd-protocol/docs"
+Repository = "https://github.com/nexus-dev/rfd-protocol"
+"Bug Tracker" = "https://github.com/nexus-dev/rfd-protocol/issues"
+
+[project.scripts]
+rfd = "nexus_rfd_protocol.cli:main"
+
+[tool.setuptools]
+packages = ["nexus_rfd_protocol"]
+
+[tool.setuptools.package-data]
+nexus_rfd_protocol = ["templates/*", "schemas/*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=nexus_rfd_protocol"

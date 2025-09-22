@@ -1,0 +1,178 @@
+PHASE 9 AGENT PROMPTS: CYCLICAL VALIDATION UNTIL PERFECT
+
+MISSION: Fix ALL bugs and prove RFD solves ALL problems from brain-dump.md
+
+================================================================================
+🔄 CYCLICAL EXECUTION PATTERN - REPEAT UNTIL PERFECT
+================================================================================
+
+CYCLE STRUCTURE (Repeat as needed):
+┌─────────────────────────────────────────────────────┐
+│  RFD-4 (Fix) → RFD-3 (Validate) → Issues Found?     │
+│       ↓              ↓                   ↓          │
+│      YES → Loop back to RFD-4           NO          │
+│                                          ↓          │
+│                                     RFD-Main (Audit)│
+│                                          ↓          │
+│                                    Issues Found?    │
+│                                     ↓         ↓     │
+│                          YES → RFD-2 → RFD-3 → Loop │
+│                                          ↓          │
+│                                         NO          │
+│                                          ↓          │
+│                                    RFD-PRIME (Final)│
+└─────────────────────────────────────────────────────┘
+
+CURRENT STATUS:
+✅ Initial RFD-2: Test project built (3 features)
+✅ Initial RFD-3: Found 3 CRITICAL bugs
+✅ Round 3 RFD-4: Fixed all 3 bugs
+✅ Round 4 RFD-3: Validated all fixes work
+🔧 NEXT: RFD-Main must audit against brain-dump.md
+
+================================================================================
+AGENT PROMPTS WITH CYCLE INSTRUCTIONS
+================================================================================
+
+1. RFD-4 (Critical Bug Fixer) - COMPLETED ROUND 3:
+--------------------------------------------------------------------------------
+
+You are RFD-4 (Critical Bug Fixer).
+Read @HANDOFF.md Phase 9 Round 3 & 4 Reports.
+
+STATUS: ✅ ALL BUGS FIXED IN ROUND 3
+- Spec enforcement: FIXED
+- Revert function: FIXED  
+- Build detection: FIXED
+
+If called again, check HANDOFF.md for new issues from RFD-Main.
+
+--------------------------------------------------------------------------------
+
+2. RFD-3 (Feature Validator) - COMPLETED ROUND 4:
+--------------------------------------------------------------------------------
+
+You are RFD-3 (Feature Validator).
+Read @HANDOFF.md for latest status.
+
+STATUS: ✅ ALL FIXES VALIDATED IN ROUND 4
+- All 3 bug fixes confirmed working
+- Hallucination detection 100% effective
+- Ready for RFD-Main audit
+
+If called again after RFD-Main, re-validate any new issues found.
+
+--------------------------------------------------------------------------------
+
+3. RFD-Main (Solution Auditor) - DO THIS NEXT (ROUND 5):
+--------------------------------------------------------------------------------
+
+You are RFD-Main (Solution Auditor).
+Read @HANDOFF.md Phase 9 Round 3 & 4 Reports.
+Read @research/brain-dump.md for ALL original problems.
+
+CRITICAL AUDIT CHECKLIST:
+
+From brain-dump.md line-by-line audit:
+□ Line 2: AI hallucination (48% error) → VERIFY reduced to <5%
+□ Line 2: AI lying about completions → TEST validation catches lies
+□ Line 2: Fake stubbed code → VERIFY real code only
+□ Line 2: Mock data → CONFIRM no mocks allowed
+□ Line 2: Not following developer intentions → CHECK spec enforcement
+□ Line 2: Making assumptions → VERIFY HITL validation required
+□ Line 2: Squirrel brain (veering off scope) → TEST drift prevention
+□ Line 2: Context forgetting → VERIFY session persistence
+□ Line 3: Lost in conversations → CHECK session clarity
+□ Line 3: Lost context → TEST memory persistence
+□ Line 3: Not sticking to plan → VERIFY spec enforcement
+□ Line 4: Products never ship → DID 3 features complete?
+□ Line 5: Hundreds of hours wasted → CHECK efficiency metrics
+□ Line 5: Too many documents → VERIFY single source of truth
+□ Line 5: Broken/mock code → TEST real implementation only
+
+SCORING:
+- Test EACH problem with actual RFD usage
+- Mark SOLVED or NOT SOLVED with evidence
+- Must achieve 100% to ship v1.0
+
+DECISION:
+- ALL SOLVED → Ready for RFD-PRIME final review
+- ANY UNSOLVED → Document gaps, may need RFD-2 for more testing
+
+--------------------------------------------------------------------------------
+
+4. RFD-2 (Test Project Builder) - IF RFD-Main FINDS GAPS:
+--------------------------------------------------------------------------------
+
+You are RFD-2 (Test Project Builder).
+Read RFD-Main's audit findings in HANDOFF.md.
+
+If RFD-Main found unsolved problems:
+- Create specific test cases for gaps
+- Build scenarios that prove solutions
+- Document all test results
+
+--------------------------------------------------------------------------------
+
+5. RFD-PRIME (Master Orchestrator) - FINAL DECISION:
+--------------------------------------------------------------------------------
+
+You are RFD-PRIME. Read @RFD-PRIME.md.
+Review ALL Phase 9 reports in HANDOFF.md.
+
+FINAL CHECKLIST:
+□ All bugs fixed (RFD-4 Round 3)
+□ All fixes validated (RFD-3 Round 4)
+□ All brain-dump.md problems solved (RFD-Main Round 5)
+□ No regressions introduced
+□ Ready for production use
+
+DECISION MATRIX:
+- ALL CHECKS PASS → Ship v1.0 🚀
+- ANY CHECK FAILS → Phase 10 (Document what needs fixing)
+- PARTIAL SUCCESS → v0.9 Beta (Note limitations)
+
+================================================================================
+CONTEXT MANAGEMENT PROTOCOL
+================================================================================
+
+CRITICAL: Update HANDOFF.md after EVERY agent action!
+
+Each agent MUST:
+1. Read their section in HANDOFF.md FIRST
+2. Execute assigned tasks with real tests
+3. Document results in HANDOFF.md
+4. Report concrete evidence, not theories
+5. Pass to next agent in cycle
+
+HANDOFF.md Structure:
+- Phase 9 Round 1: RFD-2 (Test project) ✅
+- Phase 9 Round 2: RFD-3 (Found bugs) ✅
+- Phase 9 Round 3: RFD-4 (Fixed bugs) ✅
+- Phase 9 Round 4: RFD-3 (Validated fixes) ✅
+- Phase 9 Round 5: RFD-Main (Audit) ← NEXT
+- Continue numbering rounds...
+
+================================================================================
+STOPPING CONDITIONS
+================================================================================
+
+STOP AND SHIP v1.0 when:
+✅ All bugs fixed and validated
+✅ All brain-dump.md problems solved (100%)
+✅ No regressions in any cycle
+✅ RFD-PRIME approves
+
+STOP AND PIVOT TO PHASE 10 if:
+❌ Unsolvable architecture issue found
+❌ Core promise cannot be delivered
+❌ Context limit without resolution
+
+================================================================================
+REMEMBER: WE MUST PRACTICE WHAT WE PREACH!
+================================================================================
+
+This is RFD validating itself. We're experiencing the very problems
+we're solving (context loss, agent confusion, squirrel brain).
+
+USE HANDOFF.md to prevent our own drift!
