@@ -47,8 +47,8 @@ class RFD4FinalValidator:
         """Test 1: Can we even import the validation system?"""
         self.log("TEST 1: Import and Basic Validation System", "INFO")
         try:
-            from nexus_rfd_protocol.validation import ValidationEngine
-            from nexus_rfd_protocol.rfd import RFD
+            from rfd.validation import ValidationEngine
+            from rfd.rfd import RFD
             
             # Try to create instances
             rfd = RFD()
@@ -67,8 +67,8 @@ class RFD4FinalValidator:
         results = {}
         
         try:
-            from nexus_rfd_protocol.validation import ValidationEngine
-            from nexus_rfd_protocol.rfd import RFD
+            from rfd.validation import ValidationEngine
+            from rfd.rfd import RFD
             
             rfd = RFD()
             validator = ValidationEngine(rfd)
@@ -115,8 +115,8 @@ class RFD4FinalValidator:
         results = {}
         
         try:
-            from nexus_rfd_protocol.validation import ValidationEngine
-            from nexus_rfd_protocol.rfd import RFD
+            from rfd.validation import ValidationEngine
+            from rfd.rfd import RFD
             
             # Create a temporary test environment
             test_dir = tempfile.mkdtemp(prefix="rfd4_test_")
@@ -233,8 +233,8 @@ func (u *User) GetName() string {
         results = {}
         
         try:
-            from nexus_rfd_protocol.validation import ValidationEngine
-            from nexus_rfd_protocol.rfd import RFD
+            from rfd.validation import ValidationEngine
+            from rfd.rfd import RFD
             
             # Create a large test environment
             test_dir = tempfile.mkdtemp(prefix="rfd4_perf_")
@@ -294,7 +294,7 @@ class Class_{i}_{j}:
         
         try:
             # Check if git integration is actually implemented
-            from nexus_rfd_protocol.rfd import RFD
+            from rfd.rfd import RFD
             
             test_dir = tempfile.mkdtemp(prefix="rfd4_git_")
             old_cwd = os.getcwd()
@@ -356,7 +356,7 @@ class Class_{i}_{j}:
         results = {}
         
         try:
-            from nexus_rfd_protocol.session import SessionManager
+            from rfd.session import SessionManager
             
             test_dir = tempfile.mkdtemp(prefix="rfd4_session_")
             old_cwd = os.getcwd()
@@ -406,7 +406,7 @@ class Class_{i}_{j}:
             os.chdir(test_dir)
             
             try:
-                from nexus_rfd_protocol.rfd import RFD
+                from rfd.rfd import RFD
                 
                 # Step 1: Initialize project
                 rfd = RFD()

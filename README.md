@@ -1,10 +1,11 @@
-# Nexus RFD Protocol
+# RFD Protocol
 
-**Reality-First Development System - Prevents AI hallucination and ensures spec-driven development**
+**Reality-First Development - Prevents AI hallucination and ensures spec-driven development**
 
-[![PyPI version](https://badge.fury.io/py/nexus-rfd-protocol.svg)](https://badge.fury.io/py/nexus-rfd-protocol)
+[![PyPI version](https://badge.fury.io/py/rfd.svg)](https://badge.fury.io/py/rfd)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/rfd-protocol/rfd/workflows/CI/badge.svg)](https://github.com/rfd-protocol/rfd/actions)
 
 ## What is RFD?
 
@@ -23,7 +24,7 @@ RFD (Reality-First Development) is a protocol that **eliminates AI hallucination
 ### Installation
 
 ```bash
-pip install nexus-rfd-protocol
+pip install rfd
 ```
 
 ### Initialize in Your Project

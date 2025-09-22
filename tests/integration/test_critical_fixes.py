@@ -41,7 +41,7 @@ features:
     Path("PROJECT.md").write_text(project_md)
     
     # Initialize RFD
-    from nexus_rfd_protocol.rfd import RFD
+    from rfd.rfd import RFD
     rfd = RFD()
     
     # Test 1: Valid feature should work
@@ -96,7 +96,7 @@ features:
     subprocess.run(["git", "add", "."], capture_output=True)
     subprocess.run(["git", "commit", "-m", "Initial"], capture_output=True)
     
-    from nexus_rfd_protocol.rfd import RFD
+    from rfd.rfd import RFD
     rfd = RFD()
     
     # Create a checkpoint with validation passing but build failing
@@ -161,7 +161,7 @@ def test_another_pass():
     assert 1 + 1 == 2
 """)
     
-    from nexus_rfd_protocol.rfd import RFD
+    from rfd.rfd import RFD
     rfd = RFD()
     
     # Check build status

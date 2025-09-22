@@ -6,9 +6,9 @@ Tests each problem from brain-dump.md against RFD solution
 
 import sys
 from pathlib import Path
-from nexus_rfd_protocol.validation import ValidationEngine
-from nexus_rfd_protocol.session import SessionManager
-from nexus_rfd_protocol.rfd import RFD
+from rfd.validation import ValidationEngine
+from rfd.session import SessionManager
+from rfd.rfd import RFD
 
 def test_hallucination_detection():
     """Test: AI hallucination (48% error) → Verify reduced to <5%"""

@@ -9,9 +9,9 @@ import tempfile
 import shutil
 from pathlib import Path
 import json
-from nexus_rfd_protocol.validation import ValidationEngine
-from nexus_rfd_protocol.session import SessionManager
-from nexus_rfd_protocol.rfd import RFD
+from rfd.validation import ValidationEngine
+from rfd.session import SessionManager
+from rfd.rfd import RFD
 
 def test_empty_spec():
     """Test: What happens when PROJECT.md is empty or malformed?"""

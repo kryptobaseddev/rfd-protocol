@@ -14,10 +14,10 @@ import click
 import frontmatter
 from typing import Dict, Any, Optional
 
-from build import BuildEngine
-from validation import ValidationEngine
-from spec import SpecEngine
-from session import SessionManager
+from .build import BuildEngine
+from .validation import ValidationEngine
+from .spec import SpecEngine
+from .session import SessionManager
 
 class RFD:
     """Main RFD orchestrator - coordinates all subsystems"""
@@ -87,133 +87,33 @@ class RFD:
         conn.commit()
     
     def load_project_spec(self) -> Dict[str, Any]:
-        """Load and parse PROJECT.md - supports both frontmatter and standard markdown"""
+        """Load and parse PROJECT.md"""
         project_file = self.root / 'PROJECT.md'
         if not project_file.exists():
             return {}
         
         with open(project_file, 'r') as f:
             content = f.read()
-        
+            
         # Try frontmatter format first
         try:
             post = frontmatter.loads(content)
-            if post.metadata:  # Has frontmatter
+            if post.metadata:
                 return post.metadata
         except:
             pass
-        
-        # Parse as standard markdown
-        return self._parse_markdown_spec(content)
-    
-    def _parse_markdown_spec(self, content: str) -> Dict[str, Any]:
-        """Parse standard markdown PROJECT.md into spec format"""
-        lines = content.split('\n')
-        spec = {
-            'version': '1.0',
-            'name': '',
-            'description': '',
-            'features': [],
-            'stack': {},
-            'rules': {}
-        }
-        
-        current_section = None
-        current_feature = None
-        current_feature_content = []
-        
-        for line in lines:
-            line = line.strip()
             
-            # Main title (h1)
-            if line.startswith('# ') and not spec['name']:
-                spec['name'] = line[2:].strip()
+        # Try to find JSON in the content
+        try:
+            import re
+            json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
+        except:
+            pass
             
-            # Section headers (h2)
-            elif line.startswith('## '):
-                section_title = line[3:].strip().lower()
-                if 'overview' in section_title:
-                    current_section = 'overview'
-                elif 'feature' in section_title:
-                    current_section = 'features'
-                elif 'technology' in section_title or 'stack' in section_title:
-                    current_section = 'stack'
-                else:
-                    current_section = section_title
-                continue
-            
-            # Feature headers (h3)
-            elif line.startswith('### '):
-                if current_section == 'features':
-                    # Save previous feature
-                    if current_feature:
-                        spec['features'].append(current_feature)
-                    
-                    # Start new feature
-                    feature_title = line[4:].strip()
-                    feature_id = self._generate_feature_id(feature_title)
-                    current_feature = {
-                        'id': feature_id,
-                        'title': feature_title,
-                        'description': '',
-                        'acceptance': [],
-                        'status': 'pending'
-                    }
-                    current_feature_content = []
-                continue
-            
-            # Content processing
-            if current_section == 'overview' and line and not line.startswith('#'):
-                if spec['description']:
-                    spec['description'] += ' ' + line
-                else:
-                    spec['description'] = line
-            
-            elif current_section == 'features' and current_feature:
-                if line.startswith('**Description**:'):
-                    current_feature['description'] = line.replace('**Description**:', '').strip()
-                elif line.startswith('**Acceptance Criteria**:'):
-                    current_feature_content.append('CRITERIA_START')
-                elif line.startswith('- ') and 'CRITERIA_START' in current_feature_content:
-                    current_feature['acceptance'].append(line[2:].strip())
-                elif line and not line.startswith('**') and not line.startswith('###'):
-                    current_feature_content.append(line)
-            
-            elif current_section == 'stack' and line and not line.startswith('#'):
-                # Parse technology stack info
-                if 'python' in line.lower():
-                    spec['stack']['language'] = 'python'
-                if 'flask' in line.lower():
-                    spec['stack']['framework'] = 'flask'
-                if 'json' in line.lower() and 'file' in line.lower():
-                    spec['stack']['database'] = 'json'
-        
-        # Save last feature
-        if current_feature:
-            spec['features'].append(current_feature)
-        
-        return spec
-    
-    def _generate_feature_id(self, title: str) -> str:
-        """Generate feature ID from title"""
-        title = title.lower().strip()
-        
-        # If title already looks like an ID (no spaces, underscores ok), use as-is
-        if ' ' not in title and not title.startswith('feature'):
-            return title
-        
-        # Extract feature name after "feature N:"
-        if ':' in title:
-            title = title.split(':', 1)[1].strip()
-        
-        # Remove "feature N" prefix if present
-        import re
-        title = re.sub(r'^feature\s+\d+\s*:?\s*', '', title)
-        
-        # Convert to snake_case
-        feature_id = re.sub(r'[^a-z0-9\s]', '', title)
-        feature_id = re.sub(r'\s+', '_', feature_id.strip())
-        return feature_id
+        # Return empty dict if no valid format found
+        return {}
     
     def get_current_state(self) -> Dict[str, Any]:
         """Get complete current project state"""

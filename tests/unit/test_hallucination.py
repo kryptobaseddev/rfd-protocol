@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Test hallucination detection by making false claims"""
 
-from nexus_rfd_protocol.validation import ValidationEngine
-from nexus_rfd_protocol.rfd import RFD
+from rfd.validation import ValidationEngine
+from rfd.rfd import RFD
 
 # Create RFD instance and ValidationEngine
 rfd = RFD()

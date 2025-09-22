@@ -11,9 +11,9 @@ import shutil
 from pathlib import Path
 import json
 import re
-from nexus_rfd_protocol.validation import ValidationEngine
-from nexus_rfd_protocol.session import SessionManager
-from nexus_rfd_protocol.rfd import RFD
+from rfd.validation import ValidationEngine
+from rfd.session import SessionManager
+from rfd.rfd import RFD
 
 class RFD2VerificationTest:
     def __init__(self):
