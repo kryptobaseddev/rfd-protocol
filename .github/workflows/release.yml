@@ -90,7 +90,7 @@ jobs:
       - name: Lint check
         run: |
           ruff check src tests || echo "Linting issues - continuing"
-          black --check src tests || echo "Format issues - continuing"
+          ruff format --check src tests || echo "Format issues - continuing"
         continue-on-error: true  # During dogfooding phase
 
   build:
