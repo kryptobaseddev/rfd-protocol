@@ -673,6 +673,30 @@ Per cyclical structure: Issues found → Loop back to fixes
 
 **Status**: READY FOR RFD-MAIN FINAL AUDIT
 
+---
+
+## 📋 PHASE 9 ROUND 8 - FINAL BUG FIX CYCLE
+
+### RFD-MAIN AUDIT COMPLETE: 95% ACHIEVED
+
+**Critical Success**: ALL brain-dump.md problems SOLVED
+**Blocker Found**: ONE PROJECT.md parsing bug prevents 100%
+
+### FINAL BUG TO FIX:
+**PROJECT.md Parsing**: Only supports frontmatter/JSON, not standard markdown
+- File: nexus_rfd_protocol/rfd.py, spec.py  
+- Issue: load_project_spec() requires YAML frontmatter
+- Real markdown PROJECT.md files fail to parse
+- Causes feature validation to return 0 features
+
+**Target**: Support both frontmatter AND plain markdown specs
+
+### FINAL CYCLE:
+1. RFD-3: Fix PROJECT.md parsing for standard markdown
+2. Test with real markdown PROJECT.md files
+3. Achieve 100% on ALL test suites
+4. Ship v1.0
+
 **Critical Issues to Fix (Round 6)**:
 1. ❌ Function detection regex broken (40% false positives)
 2. ❌ Modification lies undetected (~50% slip through)
