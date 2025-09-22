@@ -258,6 +258,9 @@ class ValidationEngine:
         function_claims = self._extract_function_claims(claims)
         modification_claims = self._extract_modification_claims(claims)
         
+        # Check for vague/comprehensive claims that are often hallucinations
+        vague_claims = self._detect_vague_claims(claims)
+        
         # Check each claimed file exists
         for file_path in file_claims:
             exists = Path(file_path).exists()
@@ -270,7 +273,17 @@ class ValidationEngine:
         
         # Check each claimed function/class exists in the files
         for func_name, file_hint in function_claims:
-            found = self._verify_function_exists(func_name, file_hint)
+            # If a specific file was mentioned, we need strict verification
+            if file_hint:
+                # Strict check: function must be in the specific file mentioned AND file must exist
+                if Path(file_hint).exists():
+                    found = self._check_function_in_file(func_name, file_hint)
+                else:
+                    found = False  # File doesn't exist, so function can't be in it
+            else:
+                # No specific file mentioned, search all files
+                found = self._verify_function_exists(func_name, file_hint)
+            
             validation_results.append({
                 'type': 'function',
                 'target': func_name,
@@ -286,6 +299,15 @@ class ValidationEngine:
                 'target': f"{target} ({modification_type})",
                 'exists': verified,
                 'message': f"Modification '{details}' to {target}: {'VERIFIED' if verified else 'NOT FOUND - AI HALLUCINATION!'}"
+            })
+        
+        # Check vague claims that are likely hallucinations
+        for claim_type, claim_text, is_likely_hallucination in vague_claims:
+            validation_results.append({
+                'type': 'vague_claim',
+                'target': f"{claim_type}",
+                'exists': not is_likely_hallucination,
+                'message': f"Vague claim '{claim_text}': {'SUSPICIOUS - LIKELY HALLUCINATION' if is_likely_hallucination else 'ACCEPTABLE'}"
             })
         
         # Overall pass/fail
@@ -324,19 +346,29 @@ class ValidationEngine:
     
     def _extract_function_claims(self, text: str) -> List[Tuple[str, Optional[str]]]:
         """Extract function/class names mentioned in AI claims"""
-        # Better patterns that avoid false positives
+        # Enhanced patterns that handle async, JS, Go, and other languages
         patterns = [
-            # Explicit function creation patterns
-            r'[cC]reated\s+(?:function|method)\s+(?:called\s+)?(\w+)',  # "Created function foo" or "Created function called foo"
-            r'[aA]dded\s+(?:function|method)\s+(?:called\s+)?(\w+)',    # "Added function foo"
-            r'[iI]mplemented\s+(?:function|method)\s+(?:called\s+)?(\w+)',  # "Implemented function foo"
-            r'[wW]rote\s+(?:function|method)\s+(?:called\s+)?(\w+)',    # "Wrote function foo"
+            # Explicit function creation patterns with async support
+            r'[cC]reated\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',  # "Created async function foo"
+            r'[aA]dded\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',    # "Added async function foo"
+            r'[iI]mplemented\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',  # "Implemented async function foo"
+            r'[wW]rote\s+(?:async\s+)?(?:function|method)\s+(?:called\s+)?(\w+)',    # "Wrote async function foo"
             
-            # Function definition patterns
+            # Function definition patterns with async and multi-language support
+            r'[aA]sync\s+function\s+(\w+)',   # "async function foo"
             r'[fF]unction\s+called\s+(\w+)',  # "function called foo"
-            r'[fF]unction\s+(\w+)',           # "function foo"
+            r'[fF]unction\s+(\w+)',           # "function foo" - but NOT "async version of function"
             r'[mM]ethod\s+(\w+)',             # "method foo"
-            r'[dD]ef\s+(\w+)',                # "def foo"
+            r'[dD]ef\s+(\w+)',                # "def foo" (Python)
+            r'[aA]sync\s+def\s+(\w+)',        # "async def foo" (Python)
+            
+            # JavaScript/TypeScript patterns
+            r'function\s+(\w+)\s*\(',         # JavaScript function declarations
+            r'const\s+(\w+)\s*=.*?=>\s*{',    # Arrow functions
+            r'(\w+)\s*:\s*function',          # Object method definitions
+            
+            # Go patterns
+            r'func\s+(\w+)\s*\(',             # Go functions
             
             # Class creation patterns
             r'[cC]reated\s+(?:class)\s+(?:called\s+)?(\w+)',  # "Created class Foo"
@@ -347,7 +379,10 @@ class ValidationEngine:
             # Backtick patterns (code references)
             r'`(\w+)\(\)`',         # Function calls in backticks like `foo()`
             r'`def\s+(\w+)`',       # Function definitions in backticks like `def foo`
+            r'`async\s+def\s+(\w+)`', # Async function definitions in backticks
             r'`class\s+(\w+)`',     # Class definitions in backticks like `class Foo`
+            r'`function\s+(\w+)`',  # JavaScript functions in backticks
+            r'`func\s+(\w+)`',      # Go functions in backticks
         ]
         
         functions = set()
@@ -362,6 +397,12 @@ class ValidationEngine:
             'created', 'added', 'implemented', 'wrote', 'def', 'async', 'return', 'returns',
             'error', 'handling', 'version', 'database', 'connection', 'init', 'self'
         }
+        
+        # Special filtering for async version patterns which should be treated as modifications
+        for func in list(functions):
+            # Check if this is part of an "async version" pattern
+            if re.search(rf'async\s+version\s+of\s+{func}', text, re.IGNORECASE):
+                functions.discard(func)  # Remove from function list (will be caught by modification detection)
         
         for func in functions:
             # Skip common words that aren't function names
@@ -385,17 +426,25 @@ class ValidationEngine:
     
     def _find_file_hint_for_function(self, func_name: str, text: str) -> Optional[str]:
         """Try to find which file a function was claimed to be in"""
-        # Look for patterns like "function foo in file.py"
+        # Look for explicit patterns that indicate file association with the function
         patterns = [
-            rf'{func_name}.*?in\s+([^\s]+\.py)',
-            rf'([^\s]+\.py).*?{func_name}',
-            rf'{func_name}.*?to\s+([^\s]+\.py)',
+            # "function foo in file.py" - more specific patterns
+            rf'{func_name}.*?\bin\s+([^\s,]+\.[a-zA-Z0-9]+)',
+            rf'in\s+([^\s,]+\.[a-zA-Z0-9]+).*?{func_name}',
+            rf'{func_name}.*?\bto\s+([^\s,]+\.[a-zA-Z0-9]+)',
+            # "Created function foo in file.py" patterns
+            rf'[cC]reated.*?{func_name}.*?\bin\s+([^\s,]+\.[a-zA-Z0-9]+)',
+            rf'[aA]dded.*?{func_name}.*?\bin\s+([^\s,]+\.[a-zA-Z0-9]+)',
+            rf'[iI]mplemented.*?{func_name}.*?\bin\s+([^\s,]+\.[a-zA-Z0-9]+)',
         ]
         
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                return match.group(1)
+                file_path = match.group(1)
+                # Only return if the file actually exists
+                if Path(file_path).exists():
+                    return file_path
         
         return None
     
@@ -403,35 +452,132 @@ class ValidationEngine:
         """Verify if a function/class actually exists in the codebase"""
         # If we have a file hint, check there first
         if file_hint and Path(file_hint).exists():
-            try:
-                with open(file_hint, 'r') as f:
-                    content = f.read()
-                    # Check for function/class definition
-                    if re.search(rf'^\s*def\s+{func_name}\s*\(', content, re.MULTILINE):
-                        return True
-                    if re.search(rf'^\s*class\s+{func_name}\s*[:\(]', content, re.MULTILINE):
-                        return True
-                    # Also check for async functions
-                    if re.search(rf'^\s*async\s+def\s+{func_name}\s*\(', content, re.MULTILINE):
-                        return True
-            except:
-                pass
+            if self._check_function_in_file(func_name, file_hint):
+                return True
         
-        # Otherwise search all Python files
-        for py_file in Path('.').rglob('*.py'):
-            try:
-                with open(py_file, 'r') as f:
-                    content = f.read()
-                    if re.search(rf'^\s*def\s+{func_name}\s*\(', content, re.MULTILINE):
+        # Search all relevant source code files
+        source_extensions = ['*.py', '*.js', '*.ts', '*.go', '*.java', '*.cpp', '*.c', '*.rs', '*.rb', '*.php', '*.swift', '*.kt']
+        for pattern in source_extensions:
+            for source_file in Path('.').rglob(pattern):
+                try:
+                    if self._check_function_in_file(func_name, str(source_file)):
                         return True
-                    if re.search(rf'^\s*class\s+{func_name}\s*[:\(]', content, re.MULTILINE):
-                        return True
-                    if re.search(rf'^\s*async\s+def\s+{func_name}\s*\(', content, re.MULTILINE):
-                        return True
-            except:
-                continue
+                except:
+                    continue
         
         return False
+    
+    def _check_function_in_file(self, func_name: str, file_path: str) -> bool:
+        """Check if a function exists in a specific file, handling multiple languages"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            file_ext = Path(file_path).suffix.lower()
+            
+            # Python patterns
+            if file_ext == '.py':
+                patterns = [
+                    rf'^\s*def\s+{func_name}\s*\(',
+                    rf'^\s*async\s+def\s+{func_name}\s*\(',
+                    rf'^\s*class\s+{func_name}\s*[:\(]'
+                ]
+            
+            # JavaScript/TypeScript patterns
+            elif file_ext in ['.js', '.ts']:
+                patterns = [
+                    rf'^\s*function\s+{func_name}\s*\(',
+                    rf'^\s*async\s+function\s+{func_name}\s*\(',
+                    rf'^\s*const\s+{func_name}\s*=',
+                    rf'^\s*let\s+{func_name}\s*=',
+                    rf'^\s*var\s+{func_name}\s*=',
+                    rf'^\s*{func_name}\s*:\s*function',
+                    rf'^\s*{func_name}\s*\(',  # Method definitions
+                    rf'^\s*class\s+{func_name}\s*{{',
+                ]
+            
+            # Go patterns
+            elif file_ext == '.go':
+                patterns = [
+                    rf'^\s*func\s+{func_name}\s*\(',
+                    rf'^\s*func\s+\(\w+\s+\*?\w+\)\s+{func_name}\s*\(',  # Method definitions
+                    rf'^\s*type\s+{func_name}\s+struct',  # Struct definitions
+                    rf'^\s*type\s+{func_name}\s+interface',  # Interface definitions
+                ]
+            
+            # Java patterns
+            elif file_ext == '.java':
+                patterns = [
+                    rf'^\s*(?:public\s+|private\s+|protected\s+)?(?:static\s+)?(?:\w+\s+)*{func_name}\s*\(',
+                    rf'^\s*(?:public\s+|private\s+|protected\s+)?class\s+{func_name}\s*{{',
+                    rf'^\s*(?:public\s+|private\s+|protected\s+)?interface\s+{func_name}\s*{{',
+                ]
+            
+            # C/C++ patterns
+            elif file_ext in ['.c', '.cpp', '.h', '.hpp']:
+                patterns = [
+                    rf'^\s*(?:\w+\s+)*{func_name}\s*\(',
+                    rf'^\s*class\s+{func_name}\s*{{',
+                    rf'^\s*struct\s+{func_name}\s*{{',
+                ]
+            
+            # Rust patterns
+            elif file_ext == '.rs':
+                patterns = [
+                    rf'^\s*fn\s+{func_name}\s*\(',
+                    rf'^\s*pub\s+fn\s+{func_name}\s*\(',
+                    rf'^\s*struct\s+{func_name}\s*{{',
+                    rf'^\s*pub\s+struct\s+{func_name}\s*{{',
+                    rf'^\s*trait\s+{func_name}\s*{{',
+                    rf'^\s*impl.*{func_name}',
+                ]
+            
+            # Ruby patterns
+            elif file_ext == '.rb':
+                patterns = [
+                    rf'^\s*def\s+{func_name}\s*[\(\n]',
+                    rf'^\s*class\s+{func_name}\s*[<\n]',
+                    rf'^\s*module\s+{func_name}\s*\n',
+                ]
+            
+            # PHP patterns
+            elif file_ext == '.php':
+                patterns = [
+                    rf'^\s*function\s+{func_name}\s*\(',
+                    rf'^\s*(?:public\s+|private\s+|protected\s+)?function\s+{func_name}\s*\(',
+                    rf'^\s*class\s+{func_name}\s*{{',
+                ]
+            
+            # Swift patterns
+            elif file_ext == '.swift':
+                patterns = [
+                    rf'^\s*func\s+{func_name}\s*\(',
+                    rf'^\s*class\s+{func_name}\s*{{',
+                    rf'^\s*struct\s+{func_name}\s*{{',
+                    rf'^\s*protocol\s+{func_name}\s*{{',
+                ]
+            
+            # Kotlin patterns
+            elif file_ext == '.kt':
+                patterns = [
+                    rf'^\s*fun\s+{func_name}\s*\(',
+                    rf'^\s*class\s+{func_name}\s*[{{:]',
+                    rf'^\s*interface\s+{func_name}\s*{{',
+                    rf'^\s*object\s+{func_name}\s*{{',
+                ]
+            
+            else:
+                # Default pattern for unknown file types
+                patterns = [rf'\b{func_name}\b']
+            
+            # Check if any pattern matches
+            for pattern in patterns:
+                if re.search(pattern, content, re.MULTILINE):
+                    return True
+            
+            return False
+        except:
+            return False
     
     def _extract_modification_claims(self, text: str) -> List[Tuple[str, str, str, Optional[str]]]:
         """
@@ -440,42 +586,74 @@ class ValidationEngine:
         """
         modification_claims = []
         
-        # Patterns for different types of modifications
+        # Enhanced patterns for different types of modifications
         patterns = [
-            # Error handling additions
-            (r'[aA]dded\s+error\s+handling\s+to\s+(\w+)', 'error_handling', 'added error handling'),
+            # Error handling additions - more comprehensive patterns
+            (r'[aA]dded\s+(?:comprehensive\s+)?error\s+handling\s+(?:to\s+|throughout\s+)?(\w+)', 'error_handling', 'added error handling'),
             (r'[aA]dded\s+try[/-]catch\s+(?:to\s+)?(\w+)', 'error_handling', 'added try-catch'),
-            (r'[iI]mplemented\s+error\s+handling\s+(?:in\s+)?(\w+)', 'error_handling', 'implemented error handling'),
+            (r'[iI]mplemented\s+(?:comprehensive\s+)?error\s+handling\s+(?:in\s+|throughout\s+)?(\w+)', 'error_handling', 'implemented error handling'),
+            (r'[aA]dded\s+exception\s+handling\s+(?:to\s+)?(\w+)', 'error_handling', 'added exception handling'),
             
-            # Async/await modifications  
-            (r'[aA]dded\s+async\s+(?:version\s+of\s+)?(\w+)', 'async_conversion', 'made async'),
-            (r'[iI]mplemented\s+async\s+(?:version\s+of\s+)?(\w+)', 'async_conversion', 'implemented async'),
+            # Async/await modifications with better patterns - but avoid when "async function" is literally being created
+            (r'[aA]dded\s+async\s+version\s+of\s+(\w+)', 'async_conversion', 'made async version'),
+            (r'[iI]mplemented\s+async\s+version\s+of\s+(\w+)', 'async_conversion', 'implemented async version'),
             (r'[cC]onverted\s+(\w+)\s+to\s+async', 'async_conversion', 'converted to async'),
+            (r'[aA]dded\s+async/await\s+(?:pattern\s+)?(?:to\s+)?(\w+)', 'async_conversion', 'added async/await'),
+            (r'[iI]mplemented\s+async/await\s+(?:pattern\s+)?(?:for\s+)?(\w+)', 'async_conversion', 'implemented async/await'),
             
-            # Database connections
-            (r'[aA]dded\s+database\s+connection\s+to\s+(\w+)', 'database_integration', 'added database connection'),
-            (r'[iI]mplemented\s+database\s+(?:integration\s+)?(?:in\s+)?(\w+)', 'database_integration', 'implemented database integration'),
+            # Database connections with variations
+            (r'[aA]dded\s+database\s+connection\s+(?:to\s+)?(\w+)', 'database_integration', 'added database connection'),
+            (r'[iI]mplemented\s+database\s+(?:integration\s+|connection\s+|persistence\s+)?(?:in\s+)?(\w+)', 'database_integration', 'implemented database integration'),
+            (r'[aA]dded\s+(?:database\s+)?persistence\s+(?:to\s+)?(\w+)', 'database_integration', 'added database persistence'),
             
-            # Input validation
-            (r'[aA]dded\s+(?:input\s+)?validation\s+to\s+(\w+)', 'input_validation', 'added input validation'),
-            (r'[iI]mplemented\s+(?:input\s+)?validation\s+(?:in\s+)?(\w+)', 'input_validation', 'implemented input validation'),
+            # Input validation and sanitization
+            (r'[aA]dded\s+(?:input\s+)?validation\s+(?:and\s+sanitization\s+)?(?:to\s+)?(\w+)', 'input_validation', 'added input validation'),
+            (r'[iI]mplemented\s+(?:input\s+)?validation\s+(?:and\s+sanitization\s+)?(?:in\s+)?(\w+)', 'input_validation', 'implemented input validation'),
+            (r'[aA]dded\s+(?:data\s+)?sanitization\s+(?:to\s+)?(\w+)', 'input_validation', 'added sanitization'),
             
-            # Logging additions
-            (r'[aA]dded\s+logging\s+to\s+(\w+)', 'logging', 'added logging'),
-            (r'[iI]mplemented\s+logging\s+(?:in\s+)?(\w+)', 'logging', 'implemented logging'),
+            # Logging additions with variations
+            (r'[aA]dded\s+(?:comprehensive\s+)?logging\s+(?:to\s+|throughout\s+)?(\w+)', 'logging', 'added logging'),
+            (r'[iI]mplemented\s+(?:comprehensive\s+)?logging\s+(?:in\s+|throughout\s+)?(\w+)', 'logging', 'implemented logging'),
+            (r'[aA]dded\s+logging\s+framework\s+(?:to\s+)?(\w+)', 'logging', 'added logging framework'),
+            
+            # Authentication and security
+            (r'[aA]dded\s+authentication\s+(?:check\s+|middleware\s+)?(?:to\s+)?(\w+)', 'authentication', 'added authentication'),
+            (r'[iI]mplemented\s+authentication\s+(?:middleware\s+)?(?:for\s+)?(\w+)', 'authentication', 'implemented authentication'),
+            (r'[aA]dded\s+(?:security\s+)?(?:JWT\s+)?token\s+validation\s+(?:to\s+)?(\w+)', 'authentication', 'added token validation'),
+            
+            # Caching and performance
+            (r'[aA]dded\s+caching\s+(?:layer\s+)?(?:to\s+)?(\w+)', 'caching', 'added caching'),
+            (r'[iI]mplemented\s+caching\s+(?:layer\s+)?(?:in\s+)?(\w+)', 'caching', 'implemented caching'),
+            (r'[iI]ntegrated\s+(?:caching\s+layer\s+)?(?:with\s+)?Redis\s+(?:for\s+)?(\w+)', 'caching', 'integrated caching'),
             
             # Performance optimizations
-            (r'[oO]ptimized\s+(\w+)', 'optimization', 'optimized performance'),
+            (r'[oO]ptimized\s+(?:the\s+)?(\w+)', 'optimization', 'optimized performance'),
             (r'[iI]mproved\s+performance\s+of\s+(\w+)', 'optimization', 'improved performance'),
+            (r'[eE]nhanced\s+(?:the\s+)?(\w+)\s+(?:for\s+better\s+)?performance', 'optimization', 'enhanced performance'),
             
-            # General modifications
+            # Configuration and environment
+            (r'[aA]dded\s+configuration\s+management\s+(?:to\s+)?(\w+)', 'configuration', 'added configuration'),
+            (r'[iI]mplemented\s+(?:configuration\s+management\s+)?(?:with\s+)?environment\s+variables\s+(?:for\s+)?(\w+)', 'configuration', 'implemented configuration'),
+            
+            # Rate limiting and security
+            (r'[iI]mplemented\s+rate\s+limiting\s+(?:to\s+prevent\s+abuse\s+)?(?:for\s+)?(\w+)', 'rate_limiting', 'implemented rate limiting'),
+            (r'[aA]dded\s+rate\s+limiting\s+(?:to\s+)?(\w+)', 'rate_limiting', 'added rate limiting'),
+            
+            # Testing and documentation
+            (r'[aA]dded\s+(?:comprehensive\s+)?(?:unit\s+)?tests\s+(?:with\s+\d+%\s+code\s+coverage\s+)?(?:for\s+)?(\w+)', 'testing', 'added tests'),
+            (r'[cC]reated\s+(?:comprehensive\s+)?API\s+documentation\s+(?:with\s+OpenAPI/Swagger\s+)?(?:for\s+)?(\w+)', 'documentation', 'created documentation'),
+            
+            # Graceful shutdown and error handling
+            (r'[iI]mplemented\s+graceful\s+shutdown\s+handling\s+(?:for\s+)?(\w+)', 'shutdown_handling', 'implemented graceful shutdown'),
+            
+            # General modifications - broader patterns
             (r'[mM]odified\s+(\w+)', 'general_modification', 'modified'),
             (r'[uU]pdated\s+(\w+)', 'general_modification', 'updated'),
             (r'[eE]nhanced\s+(\w+)', 'general_modification', 'enhanced'),
             (r'[iI]mproved\s+(\w+)', 'general_modification', 'improved'),
             
             # Bug fixes
-            (r'[fF]ixed\s+(?:bug\s+in\s+)?(\w+)', 'bug_fix', 'fixed bug'),
+            (r'[fF]ixed\s+(?:bug\s+in\s+|memory\s+leak\s+in\s+)?(\w+)', 'bug_fix', 'fixed bug'),
             (r'[rR]esolved\s+(?:issue\s+in\s+)?(\w+)', 'bug_fix', 'resolved issue'),
         ]
         
@@ -487,6 +665,73 @@ class ValidationEngine:
                 modification_claims.append((mod_type, match, description, file_hint))
         
         return modification_claims
+    
+    def _detect_vague_claims(self, text: str) -> List[Tuple[str, str, bool]]:
+        """
+        Detect vague/comprehensive claims that are often AI hallucinations.
+        Returns list of (claim_type, claim_text, is_likely_hallucination) tuples.
+        """
+        vague_patterns = [
+            # Comprehensive claims that are too broad to verify
+            (r'[aA]dded\s+comprehensive\s+(\w+)\s+throughout\s+(?:the\s+)?application', 'comprehensive_throughout', True),
+            (r'[iI]mplemented\s+comprehensive\s+(\w+)\s+throughout\s+(?:the\s+)?application', 'comprehensive_throughout', True),
+            (r'[aA]dded\s+(\w+)\s+throughout\s+(?:the\s+)?(?:application|codebase|system)', 'added_throughout', True),
+            
+            # Input validation claims that are too broad
+            (r'[aA]dded\s+input\s+validation\s+and\s+sanitization\s+to\s+all\s+user-facing\s+functions?', 'all_user_facing', True),
+            (r'[iI]mplemented\s+input\s+validation\s+(?:and\s+sanitization\s+)?for\s+all\s+(?:user\s+)?inputs?', 'all_inputs', True),
+            
+            # Authentication claims that are too broad
+            (r'[aA]dded\s+authentication\s+middleware\s+with\s+JWT\s+token\s+validation', 'auth_middleware_jwt', True),
+            (r'[iI]mplemented\s+authentication\s+system\s+with\s+(?:JWT\s+)?tokens?', 'auth_system', True),
+            
+            # Performance claims that are too vague
+            (r'[iI]mplemented\s+async/await\s+pattern\s+for\s+better\s+performance', 'async_for_performance', True),
+            (r'[oO]ptimized\s+(?:the\s+)?algorithm\s+for\s+better\s+time\s+complexity', 'optimized_algorithm', True),
+            
+            # Testing claims that are too broad
+            (r'[aA]dded\s+comprehensive\s+unit\s+tests\s+with\s+\d+%\s+code\s+coverage', 'comprehensive_tests', True),
+            (r'[iI]mplemented\s+(?:comprehensive\s+)?testing\s+suite\s+(?:with\s+\d+%\s+coverage)?', 'testing_suite', True),
+            
+            # Documentation claims
+            (r'[cC]reated\s+comprehensive\s+API\s+documentation\s+with\s+OpenAPI/Swagger', 'api_documentation', True),
+            (r'[aA]dded\s+(?:comprehensive\s+)?documentation\s+throughout\s+(?:the\s+)?(?:codebase|application)', 'comprehensive_docs', True),
+            
+            # Configuration claims
+            (r'[aA]dded\s+configuration\s+management\s+with\s+environment\s+variables', 'config_management', True),
+            (r'[iI]mplemented\s+graceful\s+shutdown\s+handling', 'graceful_shutdown', True),
+            
+            # Security claims
+            (r'[iI]mplemented\s+rate\s+limiting\s+to\s+prevent\s+abuse', 'rate_limiting', True),
+            (r'[aA]dded\s+(?:comprehensive\s+)?security\s+measures', 'security_measures', True),
+            
+            # Database claims that are too broad
+            (r'[cC]reated\s+database\s+connection\s+pool\s+with\s+automatic\s+retry\s+logic', 'db_connection_pool', True),
+            (r'[iI]mplemented\s+database\s+(?:layer\s+)?with\s+(?:automatic\s+)?(?:connection\s+)?pooling', 'db_layer_pooling', True),
+            
+            # Caching claims
+            (r'[iI]ntegrated\s+caching\s+layer\s+with\s+Redis\s+for\s+improved\s+performance', 'redis_caching', True),
+            (r'[iI]mplemented\s+caching\s+(?:layer\s+)?(?:with\s+\w+\s+)?for\s+(?:improved\s+)?performance', 'caching_performance', True),
+            
+            # Error handling that's too broad
+            (r'[eE]nhanced\s+error\s+messages\s+to\s+be\s+more\s+user-friendly', 'user_friendly_errors', True),
+            
+            # General "improvement" claims
+            (r'[eE]nhanced\s+(?:the\s+)?overall\s+(?:performance|user\s+experience|security)', 'enhanced_overall', True),
+            (r'[iI]mproved\s+(?:overall\s+)?(?:performance|efficiency|user\s+experience)', 'improved_overall', True),
+        ]
+        
+        vague_claims = []
+        for pattern, claim_type, is_hallucination in vague_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            for match in matches:
+                # Get the full match text for display
+                full_match = re.search(pattern, text, re.IGNORECASE)
+                if full_match:
+                    claim_text = full_match.group(0)
+                    vague_claims.append((claim_type, claim_text, is_hallucination))
+        
+        return vague_claims
     
     def _verify_modification_claim(self, modification_type: str, target: str, details: str, file_hint: Optional[str] = None) -> bool:
         """
@@ -575,46 +820,129 @@ class ValidationEngine:
         """Verify if a specific type of modification exists in the function content"""
         
         if modification_type == 'error_handling':
-            # Look for try/except blocks, error handling patterns
-            has_try_except = 'try:' in function_content and 'except' in function_content
-            # Be more strict - look for actual error handling code, not just keywords in comments
-            has_raise = 'raise ' in function_content  # Actual raise statement
-            has_exception_handling = 'except' in function_content and ':' in function_content
-            has_assert = 'assert ' in function_content  # Actual assert statement
-            
-            return has_try_except or has_raise or has_exception_handling or has_assert
+            # Much stricter error handling detection
+            has_try_except = 'try:' in function_content and ('except ' in function_content or 'except:' in function_content)
+            has_raise = re.search(r'\braise\s+\w+', function_content)  # Actual raise statement
+            has_exception_import = 'Exception' in function_content or 'Error' in function_content
+            # Must have actual structured error handling, not just print statements
+            return has_try_except and (has_raise or has_exception_import)
         
         elif modification_type == 'async_conversion':
-            # Check if function is actually async
-            return 'async def' in function_content or 'await' in function_content
+            # Function must actually be async
+            is_async_function = 'async def' in function_content
+            has_await = 'await ' in function_content
+            return is_async_function and has_await
         
         elif modification_type == 'database_integration':
-            # Look for database-related code
-            db_keywords = ['connect', 'cursor', 'execute', 'query', 'database', 'db', 'sql']
-            return any(keyword in function_content.lower() for keyword in db_keywords)
+            # Look for actual database connection code, not just keywords
+            db_connection_patterns = [
+                r'\.connect\(',
+                r'\.cursor\(',
+                r'\.execute\(',
+                r'sqlite3\.',
+                r'psycopg2\.',
+                r'mysql\.',
+                r'Session\(',
+                r'engine\.',
+                r'connection\s*='
+            ]
+            return any(re.search(pattern, function_content) for pattern in db_connection_patterns)
         
         elif modification_type == 'input_validation':
-            # Look for validation patterns
-            validation_keywords = ['validate', 'check', 'assert', 'isinstance', 'type', 'len(']
-            return any(keyword in function_content.lower() for keyword in validation_keywords)
+            # Look for actual validation code, not just type hints
+            validation_patterns = [
+                r'isinstance\(',
+                r'type\(.*\)\s*==',
+                r'if\s+not\s+\w+:',
+                r'assert\s+\w+',
+                r'raise\s+ValueError',
+                r'raise\s+TypeError',
+                r'\.isdigit\(',
+                r'len\(.*\)\s*[<>=]'
+            ]
+            return any(re.search(pattern, function_content) for pattern in validation_patterns)
         
         elif modification_type == 'logging':
-            # Look for logging statements
-            logging_keywords = ['log', 'print', 'debug', 'info', 'warning', 'error', 'logger']
-            return any(keyword in function_content.lower() for keyword in logging_keywords)
+            # Must have actual logging imports and calls, not just print
+            logging_patterns = [
+                r'import\s+logging',
+                r'from\s+logging',
+                r'logger\.',
+                r'logging\.',
+                r'log\.',
+                r'getLogger\('
+            ]
+            has_logging_import = any(re.search(pattern, function_content) for pattern in logging_patterns)
+            has_logging_call = re.search(r'(logger|logging)\.(debug|info|warning|error|critical)', function_content)
+            return has_logging_import or has_logging_call
+        
+        elif modification_type == 'authentication':
+            # Look for actual authentication code
+            auth_patterns = [
+                r'token',
+                r'auth',
+                r'jwt',
+                r'session',
+                r'login',
+                r'verify',
+                r'@login_required',
+                r'@auth',
+                r'Authentication',
+                r'Authorization'
+            ]
+            return any(re.search(pattern, function_content, re.IGNORECASE) for pattern in auth_patterns)
+        
+        elif modification_type == 'caching':
+            # Look for actual caching implementation
+            cache_patterns = [
+                r'cache',
+                r'redis',
+                r'memcache',
+                r'@lru_cache',
+                r'@cache',
+                r'Cache',
+                r'get.*cache',
+                r'set.*cache'
+            ]
+            return any(re.search(pattern, function_content, re.IGNORECASE) for pattern in cache_patterns)
         
         elif modification_type == 'optimization':
-            # This is hard to verify automatically, so we're conservative
-            # Look for common optimization patterns
-            opt_keywords = ['cache', 'memo', 'optimization', 'efficient', 'fast']
-            return any(keyword in function_content.lower() for keyword in opt_keywords)
+            # Very conservative - require explicit optimization indicators
+            opt_patterns = [
+                r'@lru_cache',
+                r'@cache',
+                r'cache',
+                r'optimize',
+                r'performance',
+                r'efficient',
+                r'O\([nN]\)',  # Big O notation
+                r'complexity'
+            ]
+            return any(re.search(pattern, function_content, re.IGNORECASE) for pattern in opt_patterns)
+        
+        elif modification_type == 'configuration':
+            # Look for environment variables or config patterns
+            config_patterns = [
+                r'os\.environ',
+                r'getenv',
+                r'config',
+                r'settings',
+                r'\.env',
+                r'environ',
+                r'Config'
+            ]
+            return any(re.search(pattern, function_content, re.IGNORECASE) for pattern in config_patterns)
+        
+        elif modification_type in ['rate_limiting', 'testing', 'documentation', 'shutdown_handling']:
+            # These require very specific implementations
+            return False  # Very conservative - likely AI hallucination
         
         elif modification_type in ['general_modification', 'bug_fix']:
-            # For general modifications, we can't really verify without knowing the original
-            # This is conservative - we assume the AI might be lying unless we have clear evidence
-            # In a real system, you'd compare against git history or previous versions
-            return False  # Conservative approach - assume lying unless proven otherwise
+            # For general modifications, we can't verify without original code
+            # Be very conservative - assume lying unless we have git history
+            return False
         
+        # Default to false for unknown modification types
         return False
     
     def print_report(self, results: Dict[str, Any]):
