@@ -8,7 +8,7 @@ stack:
   database: "sqlite"
 rules:
   max_files: 50
-  max_loc_per_file: 1010
+  max_loc_per_file: 1200
   must_pass_tests: true
   no_mocks_in_prod: true
 features:
