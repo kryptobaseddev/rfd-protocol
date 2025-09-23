@@ -25,9 +25,32 @@ def cli(ctx):
     ctx.obj = RFD()
 
 @cli.command()
+@click.option('--wizard', is_flag=True, help='Run interactive initialization wizard')
+@click.option('--from-prd', type=click.Path(exists=True), help='Initialize from PRD document')
+@click.option('--mode', type=click.Choice(['0-to-1', 'exploration', 'brownfield']), 
+              default='0-to-1', help='Development mode')
 @click.pass_obj
-def init(rfd):
+def init(rfd, wizard, from_prd, mode):
     """Initialize RFD in current directory"""
+    
+    # Use new wizard if requested or if importing from PRD
+    if wizard or from_prd:
+        from .init_wizard import InitWizard
+        wizard_runner = InitWizard(rfd)
+        
+        if from_prd:
+            # Direct PRD import
+            from pathlib import Path
+            project_info = wizard_runner.spec_generator.ingest_prd(Path(from_prd))
+            generated = wizard_runner.spec_generator.generate_full_specification(project_info, mode)
+            wizard_runner.create_base_files(project_info)
+            click.echo("✅ Project initialized from PRD!")
+        else:
+            # Run full wizard
+            wizard_runner.run()
+        return
+    
+    # Original simple init
     click.echo("🚀 Initializing RFD System...")
     
     # Create default files if not exist
@@ -52,9 +75,12 @@ def init(rfd):
     click.echo("\n→ Next: rfd spec review")
 
 @cli.command()
-@click.argument('action', type=click.Choice(['create', 'review', 'validate']))
+@click.argument('action', type=click.Choice(['create', 'review', 'validate', 'generate']))
+@click.option('--type', 'spec_type', 
+              type=click.Choice(['constitution', 'phases', 'api', 'guidelines', 'adr', 'all']),
+              help='Type of specification to generate')
 @click.pass_obj
-def spec(rfd, action):
+def spec(rfd, action, spec_type):
     """Manage project specification"""
     if action == 'create':
         rfd.spec.create_interactive()
@@ -62,6 +88,61 @@ def spec(rfd, action):
         rfd.spec.review()
     elif action == 'validate':
         rfd.spec.validate()
+    elif action == 'generate':
+        from .spec_generator import SpecGenerator
+        from .init_wizard import InitWizard
+        
+        generator = SpecGenerator(rfd)
+        wizard = InitWizard(rfd)
+        
+        # Load project info from PROJECT.md
+        project_info = wizard.collect_project_info() if not Path('PROJECT.md').exists() else {
+            'name': rfd.load_project_spec().get('name', 'Project'),
+            'description': rfd.load_project_spec().get('description', ''),
+            'requirements': [f['description'] for f in rfd.load_project_spec().get('features', [])],
+            'goals': rfd.load_project_spec().get('goals', []),
+            'constraints': rfd.load_project_spec().get('constraints', [])
+        }
+        
+        if spec_type == 'all' or not spec_type:
+            generated = generator.generate_full_specification(project_info)
+            click.echo("✅ Generated all specifications:")
+            for name, path in generated.items():
+                click.echo(f"   - {path}")
+        elif spec_type == 'constitution':
+            doc = generator.generate_project_constitution(project_info)
+            path = Path('specs/CONSTITUTION.md')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(doc)
+            click.echo(f"✅ Generated: {path}")
+        elif spec_type == 'phases':
+            phases = generator.generate_phase_breakdown(project_info)
+            doc = generator._format_phases_document(phases)
+            path = Path('specs/PHASES.md')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(doc)
+            click.echo(f"✅ Generated: {path}")
+        elif spec_type == 'api':
+            endpoints = generator.generate_api_contracts(project_info)
+            doc = generator._format_api_document(endpoints)
+            path = Path('specs/API_CONTRACT.md')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(doc)
+            click.echo(f"✅ Generated: {path}")
+        elif spec_type == 'guidelines':
+            tech_stack = generator.generate_tech_stack_recommendations(project_info)
+            doc = generator.generate_development_guidelines(project_info, tech_stack)
+            path = Path('specs/DEVELOPMENT_GUIDELINES.md')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(doc)
+            click.echo(f"✅ Generated: {path}")
+        elif spec_type == 'adr':
+            tech_stack = generator.generate_tech_stack_recommendations(project_info)
+            doc = generator._format_adr(tech_stack)
+            path = Path('specs/ADR-001-tech-stack.md')
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(doc)
+            click.echo(f"✅ Generated: {path}")
 
 @cli.command()
 @click.argument('feature_id', required=False)
