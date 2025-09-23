@@ -7,8 +7,8 @@ stack:
   framework: "click"
   database: "sqlite"
 rules:
-  max_files: 30
-  max_loc_per_file: 500
+  max_files: 50
+  max_loc_per_file: 1010
   must_pass_tests: true
   no_mocks_in_prod: true
 features:

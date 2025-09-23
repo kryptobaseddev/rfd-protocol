@@ -18,6 +18,7 @@ from .build import BuildEngine
 from .validation import ValidationEngine
 from .spec import SpecEngine
 from .session import SessionManager
+from .project_updater import ProjectUpdater
 
 class RFD:
     """Main RFD orchestrator - coordinates all subsystems"""
@@ -36,6 +37,7 @@ class RFD:
         self.validator = ValidationEngine(self)
         self.spec = SpecEngine(self)
         self.session = SessionManager(self)
+        self.project_updater = ProjectUpdater(self)
     
     def _init_structure(self):
         """Create RFD directory structure"""

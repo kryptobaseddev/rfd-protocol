@@ -1,0 +1,396 @@
+# PROJECT.md Schema Documentation
+
+## Overview
+PROJECT.md is the single source of truth for your project specification in RFD. It uses YAML frontmatter with markdown content.
+
+## Complete Schema Definition
+
+```yaml
+---
+# Required Fields
+name: string                    # Project name (required)
+description: string              # Brief description (required, max 100 words)
+version: string                  # Project version following semver (required)
+
+# Technology Stack (required, but extensible)
+stack:
+  language: string               # Primary language (python, javascript, go, rust, etc.)
+  framework: string              # Main framework (fastapi, express, rails, etc.)
+  database: string               # Database type (sqlite, postgresql, mongodb, etc.)
+  
+  # Optional stack extensions
+  runtime: string                # Runtime environment (node, deno, bun, python3.11)
+  package_manager: string        # Package manager (npm, yarn, pnpm, pip, cargo)
+  test_framework: string         # Testing framework (pytest, jest, mocha, etc.)
+  build_tool: string             # Build tool (webpack, vite, make, cargo)
+  deployment: string             # Deployment target (docker, kubernetes, vercel, etc.)
+  ci_cd: string                  # CI/CD platform (github-actions, gitlab-ci, jenkins)
+  monitoring: string             # Monitoring solution (datadog, newrelic, prometheus)
+  
+# Validation Rules (required)
+rules:
+  max_files: integer             # Maximum number of files allowed
+  max_loc_per_file: integer      # Maximum lines per file
+  must_pass_tests: boolean       # Whether tests must pass for checkpoint
+  no_mocks_in_prod: boolean      # Prohibit mock data in production code
+  
+  # Optional validation rules
+  min_test_coverage: integer     # Minimum test coverage percentage (0-100)
+  max_complexity: integer        # Maximum cyclomatic complexity
+  require_types: boolean         # Require type annotations/declarations
+  require_docs: boolean          # Require documentation for public APIs
+  max_dependencies: integer      # Maximum number of dependencies
+  security_scan: boolean         # Run security scanning on checkpoints
+
+# Features (required, at least 1)
+features:
+  - id: string                   # Unique feature identifier (required)
+    description: string          # What this feature does (required)
+    acceptance: string           # Acceptance criteria (required)
+    status: enum                 # pending|building|testing|complete|blocked
+    priority: enum               # critical|high|medium|low (optional)
+    assigned_to: string          # Developer/team assigned (optional)
+    depends_on: [string]         # Feature dependencies by ID (optional)
+    estimated_hours: number      # Time estimate (optional)
+    actual_hours: number         # Actual time spent (optional)
+    
+# Constraints (optional but recommended)
+constraints:
+  - string                       # List of project constraints/rules
+
+# API Contract (optional, for web services)
+api_contract:
+  base_url: string               # Base URL for API
+  version: string                # API version
+  auth_type: string              # none|basic|bearer|oauth2|api_key
+  rate_limit: object             # Rate limiting rules
+  health_check: string           # Health check endpoint path
+  
+  endpoints:
+    - method: string             # HTTP method (GET, POST, PUT, DELETE, etc.)
+      path: string               # Endpoint path
+      description: string        # What this endpoint does
+      auth_required: boolean     # Whether auth is required
+      validates: string          # Validation/response format
+      request_schema: object     # Request body schema (JSON Schema)
+      response_schema: object    # Response schema (JSON Schema)
+      errors: [object]           # Possible error responses
+
+# Database Schema (optional)
+database_schema:
+  tables:
+    - name: string               # Table name
+      description: string        # Table purpose
+      columns: [object]          # Column definitions
+      indexes: [string]          # Index definitions
+      relationships: [object]    # Foreign key relationships
+
+# Environment Configuration (optional)
+environments:
+  development:
+    variables: object            # Environment variables
+    services: [string]           # Required services
+    ports: [integer]             # Port mappings
+  staging:
+    variables: object
+    services: [string]
+    ports: [integer]
+  production:
+    variables: object
+    services: [string]
+    ports: [integer]
+
+# Team Information (optional)
+team:
+  lead: string                   # Project lead
+  developers: [string]           # Developer list
+  reviewers: [string]            # Code reviewers
+  stakeholders: [string]         # Project stakeholders
+
+# Milestones (optional)
+milestones:
+  - id: string                   # Milestone ID
+    name: string                 # Milestone name
+    due_date: date               # Target date (YYYY-MM-DD)
+    features: [string]           # Feature IDs in this milestone
+    status: enum                 # planned|active|complete|delayed
+
+# Metrics (optional, auto-populated by RFD)
+metrics:
+  total_checkpoints: integer     # Total checkpoints created
+  passing_checkpoints: integer   # Checkpoints that passed validation
+  failed_checkpoints: integer    # Checkpoints that failed
+  drift_incidents: integer       # Number of drift detections
+  avg_feature_time: number       # Average time per feature (hours)
+  test_coverage: number          # Current test coverage percentage
+  code_quality_score: number     # Aggregate quality score
+
+# RFD Configuration (optional)
+rfd_config:
+  auto_validate: boolean         # Run validation on every checkpoint
+  strict_mode: boolean           # Fail fast on any violation
+  session_timeout: integer       # Session timeout in minutes
+  checkpoint_frequency: string   # hourly|daily|on_commit|manual
+  backup_enabled: boolean        # Enable checkpoint backups
+  sync_enabled: boolean          # Enable cross-session sync
+---
+
+# Project Name
+
+[Markdown content describing the project in detail]
+```
+
+## Field Descriptions
+
+### Required Fields
+
+#### `name`
+- **Type**: string
+- **Required**: Yes
+- **Description**: The official name of your project
+- **Example**: `"RFD Protocol"`
+
+#### `description`
+- **Type**: string
+- **Required**: Yes
+- **Description**: Brief description of what the project does (max 100 words)
+- **Example**: `"Reality-First Development protocol that prevents AI hallucination"`
+
+#### `version`
+- **Type**: string
+- **Required**: Yes
+- **Description**: Project version following semantic versioning
+- **Example**: `"1.0.0"`
+
+### Stack Configuration
+
+The `stack` section is required but highly extensible:
+
+#### Core Stack Fields (Required)
+- `language`: Primary programming language
+- `framework`: Main application framework
+- `database`: Database system
+
+#### Extended Stack Fields (Optional)
+- `runtime`: Specific runtime version
+- `package_manager`: Package management tool
+- `test_framework`: Testing framework
+- `build_tool`: Build system
+- `deployment`: Deployment platform
+- `ci_cd`: CI/CD platform
+- `monitoring`: Monitoring solution
+
+### Validation Rules
+
+#### Required Rules
+- `max_files`: Maximum file count limit
+- `max_loc_per_file`: Maximum lines per file
+- `must_pass_tests`: Whether tests must pass
+- `no_mocks_in_prod`: Prohibit mock data
+
+#### Optional Rules
+- `min_test_coverage`: Minimum coverage percentage
+- `max_complexity`: Cyclomatic complexity limit
+- `require_types`: Enforce type annotations
+- `require_docs`: Enforce documentation
+- `max_dependencies`: Dependency limit
+- `security_scan`: Enable security scanning
+
+### Features
+
+Each feature must have:
+- `id`: Unique identifier
+- `description`: What it does
+- `acceptance`: How to verify completion
+- `status`: Current status
+
+Optional feature fields:
+- `priority`: Feature priority
+- `assigned_to`: Developer assigned
+- `depends_on`: Dependencies
+- `estimated_hours`: Time estimate
+- `actual_hours`: Actual time spent
+
+## Updating PROJECT.md
+
+### Manual Updates
+Edit PROJECT.md directly for:
+- Major feature additions
+- Stack changes
+- Rule modifications
+- Constraint updates
+
+### Automatic Updates
+RFD automatically updates:
+- Feature status
+- Metrics
+- Checkpoint counts
+- Time tracking
+
+### Using RFD Commands
+
+```bash
+# Update feature status
+rfd feature update <feature_id> --status complete
+
+# Add new feature
+rfd feature add
+
+# Update metrics
+rfd metrics update
+
+# Validate schema
+rfd spec validate
+```
+
+## Examples
+
+### Minimal PROJECT.md
+```yaml
+---
+name: "My API"
+description: "Simple REST API"
+version: "0.1.0"
+stack:
+  language: python
+  framework: fastapi
+  database: sqlite
+rules:
+  max_files: 50
+  max_loc_per_file: 500
+  must_pass_tests: true
+  no_mocks_in_prod: true
+features:
+  - id: health_check
+    description: "Basic health check endpoint"
+    acceptance: "GET /health returns 200"
+    status: pending
+---
+```
+
+### Full PROJECT.md
+```yaml
+---
+name: "Enterprise Platform"
+description: "Multi-tenant SaaS platform"
+version: "2.1.0"
+stack:
+  language: typescript
+  framework: nestjs
+  database: postgresql
+  runtime: node-20
+  package_manager: pnpm
+  test_framework: jest
+  build_tool: webpack
+  deployment: kubernetes
+  ci_cd: github-actions
+  monitoring: datadog
+rules:
+  max_files: 200
+  max_loc_per_file: 500
+  must_pass_tests: true
+  no_mocks_in_prod: true
+  min_test_coverage: 80
+  max_complexity: 10
+  require_types: true
+  require_docs: true
+  max_dependencies: 50
+  security_scan: true
+features:
+  - id: user_auth
+    description: "User authentication system"
+    acceptance: "Users can signup, login, logout"
+    status: complete
+    priority: critical
+    assigned_to: "@john"
+    estimated_hours: 40
+    actual_hours: 45
+  - id: billing
+    description: "Subscription billing"
+    acceptance: "Process payments via Stripe"
+    status: building
+    priority: high
+    assigned_to: "@sarah"
+    depends_on: ["user_auth"]
+    estimated_hours: 60
+constraints:
+  - "Must be GDPR compliant"
+  - "Support 10,000 concurrent users"
+  - "99.9% uptime SLA"
+api_contract:
+  base_url: "https://api.example.com"
+  version: "v2"
+  auth_type: bearer
+  health_check: "/health"
+  endpoints:
+    - method: POST
+      path: "/auth/signup"
+      description: "Register new user"
+      auth_required: false
+      validates: "returns 201 with user object"
+team:
+  lead: "@alice"
+  developers: ["@john", "@sarah", "@bob"]
+  reviewers: ["@alice", "@charlie"]
+milestones:
+  - id: mvp
+    name: "MVP Release"
+    due_date: 2024-03-01
+    features: ["user_auth", "billing"]
+    status: active
+---
+```
+
+## Schema Validation
+
+RFD validates PROJECT.md on:
+- Every `rfd init`
+- Every `rfd checkpoint`
+- Every `rfd validate`
+- Every `rfd spec validate`
+
+Validation checks:
+- Required fields present
+- Field types correct
+- Enum values valid
+- Dependencies exist
+- No circular dependencies
+- Constraints logical
+
+## Best Practices
+
+1. **Start minimal**: Begin with required fields only
+2. **Expand gradually**: Add optional fields as needed
+3. **Keep it truthful**: Update status accurately
+4. **Version properly**: Follow semantic versioning
+5. **Document constraints**: Be explicit about limitations
+6. **Track metrics**: Use RFD's automatic tracking
+
+## Migration Guide
+
+### From v1 to v2 Schema
+```bash
+# Backup current PROJECT.md
+cp PROJECT.md PROJECT.md.backup
+
+# Run migration
+rfd migrate project-schema
+
+# Validate new schema
+rfd spec validate
+```
+
+### Adding Custom Fields
+RFD preserves unknown fields, allowing custom extensions:
+
+```yaml
+---
+# Standard fields...
+
+# Custom fields (preserved but not validated)
+custom:
+  client_name: "Acme Corp"
+  contract_value: 100000
+  internal_code: "PROJ-123"
+---
+```

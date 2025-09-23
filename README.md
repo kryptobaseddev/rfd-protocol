@@ -4,7 +4,7 @@
 
 [![CI Pipeline](https://github.com/kryptobaseddev/rfd-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/kryptobaseddev/rfd-protocol/actions/workflows/ci.yml)
 [![Release Pipeline](https://github.com/kryptobaseddev/rfd-protocol/actions/workflows/release.yml/badge.svg)](https://github.com/kryptobaseddev/rfd-protocol/actions/workflows/release.yml)
-[![PyPI version](https://badge.fury.io/py/rfd.svg)](https://badge.fury.io/py/rfd)
+[![PyPI version](https://badge.fury.io/py/rfd-protocol.svg)](https://pypi.org/project/rfd-protocol/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -26,13 +26,13 @@ RFD (Reality-First Development) is a protocol that **eliminates AI hallucination
 
 #### Option 1: Via pip (Recommended)
 ```bash
-pip install rfd
+pip install rfd-protocol
 ```
 
 #### Option 2: From source
 ```bash
-git clone https://github.com/rfd-protocol/rfd.git
-cd rfd
+git clone https://github.com/kryptobaseddev/rfd-protocol.git
+cd rfd-protocol
 pip install -e .
 ```
 
@@ -247,31 +247,81 @@ rfd memory reset           # Clear AI memory
 
 ## Specification Format
 
-RFD uses frontmatter-based PROJECT.md files:
+RFD uses YAML frontmatter in PROJECT.md as the single source of truth. See [PROJECT_SCHEMA.md](docs/PROJECT_SCHEMA.md) for complete schema documentation.
 
-```markdown
+### Quick Schema Reference
+
+```yaml
 ---
-version: "1.0"
-name: "My API"
+# Required Fields
+name: "Project Name"
+description: "Brief project description"
+version: "1.0.0"
+
+# Stack (extensible beyond these core fields)
+stack:
+  language: python          # Required
+  framework: fastapi        # Required  
+  database: postgresql      # Required
+  runtime: python-3.11      # Optional
+  package_manager: pip      # Optional
+  test_framework: pytest    # Optional
+  deployment: docker        # Optional
+
+# Validation Rules
+rules:
+  max_files: 50
+  max_loc_per_file: 500
+  must_pass_tests: true
+  no_mocks_in_prod: true
+  min_test_coverage: 80     # Optional
+  require_types: true       # Optional
+
+# Features (at least 1 required)
+features:
+  - id: feature_id
+    description: "What this feature does"
+    acceptance: "How to verify it works"
+    status: pending          # pending|building|testing|complete
+    priority: high           # Optional: critical|high|medium|low
+    depends_on: []           # Optional: feature dependencies
+
+# Constraints (recommended)
+constraints:
+  - "Must support 1000 concurrent users"
+  - "API response time < 200ms"
+  - "GDPR compliant"
+---
+
+# Project Name
+
+Detailed project documentation in markdown...
+```
+
+### Customizing Schema After Init
+
+After running `rfd init`, you can modify PROJECT.md to:
+
+1. **Extend the stack** - Add runtime, package_manager, deployment fields
+2. **Add validation rules** - Set coverage requirements, complexity limits
+3. **Define API contracts** - Document endpoints and schemas
+4. **Set team info** - Track developers and responsibilities
+5. **Create milestones** - Plan release schedules
+
+Example: Adding custom stack fields:
+```bash
+# Edit PROJECT.md and add under stack:
 stack:
   language: python
   framework: fastapi
-  database: sqlite
-features:
-  - id: user_auth
-    description: "User signup and login"
-    acceptance: "POST /signup returns 201, POST /login returns token"
-    status: pending
-rules:
-  max_files: 20
-  max_loc_per_file: 200
-  must_pass_tests: true
----
-
-# My API Project
-
-This API handles user authentication and data management.
+  database: postgresql
+  runtime: python-3.11        # Added
+  package_manager: poetry      # Added
+  deployment: kubernetes       # Added
+  monitoring: prometheus       # Added
 ```
+
+RFD automatically validates schema changes and preserves custom fields.
 
 ## Getting Started Guide
 
@@ -456,8 +506,8 @@ RFD Protocol is open source. Contributions welcome!
 ### Development Setup
 
 ```bash
-git clone https://github.com/rfd-protocol/rfd.git
-cd rfd
+git clone https://github.com/kryptobaseddev/rfd-protocol.git
+cd rfd-protocol
 pip install -e ".[dev]"
 pytest  # Run tests
 ```
@@ -468,9 +518,9 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## Support
 
-- **GitHub Issues**: [Report bugs](https://github.com/rfd-protocol/rfd/issues)
+- **GitHub Issues**: [Report bugs](https://github.com/kryptobaseddev/rfd-protocol/issues)
 - **Documentation**: [Full docs](docs/)
-- **Discord**: [Community chat](https://discord.gg/rfd-protocol)
+- **Discord**: Coming soon
 
 ---
 

@@ -138,6 +138,9 @@ class SessionManager:
         
         session_id = self.current_session['id']
         
+        # Create session snapshot before ending
+        self._create_session_snapshot(session_id, success)
+        
         # Update session record
         conn = sqlite3.connect(self.rfd.db_path)
         conn.execute("""
@@ -332,6 +335,85 @@ status: building
         
         # Save memory
         memory_file.write_text(json.dumps(memory, indent=2))
+    
+    def _create_session_snapshot(self, session_id: int, success: bool):
+        """Create a snapshot of the current session state"""
+        # Create snapshots directory (renamed from checkpoints)
+        snapshot_dir = self.context_dir / 'snapshots'
+        snapshot_dir.mkdir(exist_ok=True)
+        
+        # Generate snapshot filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        feature_id = self.current_session.get('feature_id', 'unknown')
+        snapshot_file = snapshot_dir / f"session_{session_id}_{feature_id}_{timestamp}.json"
+        
+        # Gather all session data
+        snapshot_data = {
+            'session_id': session_id,
+            'feature_id': feature_id,
+            'started_at': self.current_session.get('started_at'),
+            'ended_at': datetime.now().isoformat(),
+            'success': success,
+            'context': {},
+            'memory': {},
+            'validation': {},
+            'checkpoints': []
+        }
+        
+        # Add current context
+        context_file = self.context_dir / 'current.md'
+        if context_file.exists():
+            snapshot_data['context'] = {
+                'content': context_file.read_text(),
+                'last_modified': datetime.fromtimestamp(context_file.stat().st_mtime).isoformat()
+            }
+        
+        # Add memory state
+        memory_file = self.context_dir / 'memory.json'
+        if memory_file.exists():
+            snapshot_data['memory'] = json.loads(memory_file.read_text())
+        
+        # Add validation results
+        if hasattr(self.rfd, 'validator'):
+            validation = self.rfd.validator.validate(feature=feature_id)
+            snapshot_data['validation'] = validation
+        
+        # Add checkpoints from this session
+        conn = sqlite3.connect(self.rfd.db_path)
+        checkpoints = conn.execute("""
+            SELECT timestamp, validation_passed, build_passed, git_hash, evidence
+            FROM checkpoints
+            WHERE feature_id = ?
+            ORDER BY timestamp DESC
+            LIMIT 10
+        """, (feature_id,)).fetchall()
+        
+        snapshot_data['checkpoints'] = [
+            {
+                'timestamp': cp[0],
+                'validation_passed': bool(cp[1]),
+                'build_passed': bool(cp[2]),
+                'git_hash': cp[3],
+                'evidence': json.loads(cp[4]) if cp[4] else {}
+            }
+            for cp in checkpoints
+        ]
+        
+        # Save snapshot
+        snapshot_file.write_text(json.dumps(snapshot_data, indent=2))
+        
+        # Also migrate old checkpoints directory if it exists
+        old_checkpoint_dir = self.context_dir / 'checkpoints'
+        if old_checkpoint_dir.exists() and old_checkpoint_dir.is_dir():
+            # Rename to snapshots if empty
+            if not list(old_checkpoint_dir.iterdir()):
+                old_checkpoint_dir.rmdir()
+            else:
+                # Move any existing files
+                import shutil
+                for old_file in old_checkpoint_dir.iterdir():
+                    if old_file.is_file():
+                        shutil.move(str(old_file), str(snapshot_dir / old_file.name))
     
     def store_context(self, key: str, value: Any):
         """Store context value for persistence"""
