@@ -2,6 +2,33 @@
 
 <!-- version list -->
 
+## v2.0.2 (2025-09-23)
+
+### Bug Fixes
+
+- Test semantic release trigger for v2.0.2
+  ([`fb7aa41`](https://github.com/kryptobaseddev/rfd-protocol/commit/fb7aa417deee55e1b045e4de001bf6e213fd2c70))
+
+### Chores
+
+- Clean up duplicate files and update original plan
+  ([`d67ed91`](https://github.com/kryptobaseddev/rfd-protocol/commit/d67ed91fd1667e85c9c7cd6b30fbf1cb0f6f7bda))
+
+- Organize documentation and preserve RFD system files
+  ([`4985863`](https://github.com/kryptobaseddev/rfd-protocol/commit/4985863b53e78dfe29f45a0ce204b5add959721b))
+
+### Documentation
+
+- Complete session handoff and plan consolidation
+  ([`0ec4101`](https://github.com/kryptobaseddev/rfd-protocol/commit/0ec4101ab1489f554f0b66ccb70e38749ef56867))
+
+- Ready for PyPI publishing summary
+  ([`0e660ae`](https://github.com/kryptobaseddev/rfd-protocol/commit/0e660ae6b4db713b9afe7e546ff3b99b7ab000d6))
+
+- Updated session plan for PyPI publishing and dogfooding
+  ([`dc557c7`](https://github.com/kryptobaseddev/rfd-protocol/commit/dc557c740fd04f9b648b92012bcb62b56d09066f))
+
+
 ## v2.0.1 (2025-09-23)
 
 ### Bug Fixes
