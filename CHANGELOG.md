@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.0.1 (2025-09-23)
+
+### Bug Fixes
+
+- Add --version flag support to CLI
+  ([`59670d7`](https://github.com/kryptobaseddev/rfd-protocol/commit/59670d7d6a1476c0bf057e904a8fde761ae2ad4a))
+
+
 ## v2.0.0 (2025-09-23)
 
 ### Bug Fixes
