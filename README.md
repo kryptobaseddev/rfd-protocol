@@ -10,74 +10,101 @@
 
 ## What is RFD?
 
-RFD (Reality-First Development) is a protocol that **eliminates AI hallucination** in software development by enforcing concrete reality checkpoints. Instead of trusting AI claims about what was implemented, RFD validates that code actually runs, tests pass, and features work.
+RFD (Reality-First Development) is a protocol that **eliminates AI hallucination** and **prevents squirrel-brain** in software development by enforcing concrete reality checkpoints. Instead of trusting AI claims about what was implemented, RFD validates that code actually runs, tests pass, and features work.
 
 ### Core Benefits
 
 - **🎯 Prevents AI Hallucination**: Drops error rate from 48% to ~0%
+- **🧠 Eliminates Squirrel Brain**: Can't drift from defined features
 - **📋 Spec-Driven Development**: Features must be specified before implementation
 - **✅ Reality Checkpoints**: Every change is validated against working code
-- **🔄 Session Persistence**: Context maintained across Claude Code sessions
+- **🔄 Session Persistence**: Context maintained across all sessions
 - **🌍 Universal Drop-in**: Works with any tech stack (25+ languages)
+- **🔒 Recovery Guaranteed**: Always recoverable from any state
 
-## Quick Start
+## 📚 Documentation
+
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - 5-minute tutorial
+- **[CLI Reference](docs/CLI_REFERENCE.md)** - All commands documented
+- **[Claude Code Guide](docs/CLAUDE_CODE_GUIDE.md)** - AI integration guide
+- **[PROJECT.md Schema](docs/PROJECT_SCHEMA.md)** - Complete configuration reference
+- **[Documentation Index](docs/README.md)** - All documentation
+
+## Quick Start (2 Minutes)
 
 ### Installation
 
-#### Option 1: Via pip (Recommended)
 ```bash
+# Install from PyPI
 pip install rfd-protocol
+
+# Or upgrade to latest
+pip install --upgrade rfd-protocol
 ```
 
-#### Option 2: From source
-```bash
-git clone https://github.com/kryptobaseddev/rfd-protocol.git
-cd rfd-protocol
-pip install -e .
-```
+### Initialize Your Project
 
-### Initialize in Your Project
-
-#### For a new project:
 ```bash
-mkdir my-project && cd my-project
+# RECOMMENDED: Use the interactive wizard
+rfd init --wizard
+
+# Or quick init for simple projects
 rfd init
+
+# For existing projects
+rfd init --wizard --mode brownfield
+
+# From a PRD/requirements doc
+rfd init --from-prd requirements.md
 ```
 
-#### For an existing project:
+### Start Development
+
 ```bash
-cd your-existing-project/
-rfd init
+# Check your status
+rfd check
+
+# Start working on a feature
+rfd session start hello_world
+
+# Build and validate
+rfd build
+rfd validate
+
+# Save your progress
+rfd checkpoint "Feature working"
+
+# End your session
+rfd session end
 ```
 
-This creates:
-- `PROJECT.md` - Your project specification
-- `CLAUDE.md` - Claude Code integration config
-- `PROGRESS.md` - Build progress tracking
-- `.rfd/` - RFD system directory
+## How RFD Prevents Squirreling
 
-### Basic Workflow
+RFD makes it **impossible** to lose focus or claim false progress:
 
-1. **Define specifications first**:
-   ```bash
-   rfd spec create
-   ```
+```yaml
+# PROJECT.md locks your features
+features:
+  - id: user_auth
+    acceptance: "Users can login"  # ← Must be proven
+    status: building               # ← Can't work on others
+```
 
-2. **Start feature development**:
-   ```bash
-   rfd session start user_auth
-   ```
+**Try to squirrel?** RFD stops you:
+```bash
+rfd session start random_feature
+❌ Error: Feature 'random_feature' not found in PROJECT.md
 
-3. **Build and validate continuously**:
-   ```bash
-   rfd build
-   rfd validate
-   ```
+rfd checkpoint "Did something"  
+❌ Error: Validation failed - cannot checkpoint
+```
 
-4. **Save working checkpoints**:
-   ```bash
-   rfd checkpoint "User auth working"
-   ```
+**Reality enforcement:**
+- ✅ Code must compile/run
+- ✅ Tests must pass  
+- ✅ APIs must respond
+- ❌ No mocks or stubs
+- ❌ No theoretical progress
 
 ## Project Architecture
 
@@ -199,22 +226,53 @@ RFD continuously validates:
 
 ## Integration with Claude Code
 
-RFD is designed to work seamlessly with [Claude Code](https://claude.ai/code):
+RFD is **specifically designed** to prevent AI hallucination and keep Claude on track:
 
-1. **Install RFD** in your project: `rfd init`
-2. **Claude Code reads** `CLAUDE.md` automatically
-3. **AI follows RFD workflow** - validates every change
-4. **Context persists** in `.rfd/context/memory.json`
+### Starting a Claude Session
 
-### Example Claude Code Session
+Say this to Claude:
+```
+Continue the RFD project. Run 'rfd check' and follow the current session.
+```
+
+### What Claude Will Do Automatically
+
+1. **Check Status**: `rfd check` - Know exactly where you left off
+2. **Read Context**: Reviews `.rfd/context/current.md` for your task
+3. **Follow Spec**: Reads acceptance criteria from PROJECT.md
+4. **Validate Reality**: Runs `rfd validate` after every change
+5. **Save Progress**: Runs `rfd checkpoint` when tests pass
+
+### Why This Prevents Hallucination
 
 ```bash
-# AI automatically follows this workflow:
-rfd check                    # Check current status
-rfd build                    # Implement features  
-rfd validate                 # Verify everything works
-rfd checkpoint "Feature X"   # Save progress
+# Claude claims: "I implemented the feature"
+rfd validate
+❌ feature_login: No endpoint found
+❌ tests: 0/5 passing
+# Reality: Nothing was actually implemented
+
+# Claude can't fake progress:
+rfd checkpoint "Added login"
+❌ Cannot checkpoint - validation failing
 ```
+
+### Session Recovery
+
+```bash
+# New Claude session after restart:
+"Continue the RFD session"
+
+# Claude automatically:
+rfd check
+> Session: user_auth (started yesterday)
+> Last checkpoint: "Login endpoint working"
+> Next: Implement password reset
+
+# Continues exactly where you left off!
+```
+
+**See [Claude Code Guide](docs/CLAUDE_CODE_GUIDE.md) for complete integration details.**
 
 ## Command Reference
 
