@@ -15,8 +15,10 @@ import frontmatter
 from typing import Dict, Any, Optional
 
 from .rfd import RFD
+from . import __version__
 
 @click.group()
+@click.version_option(version=__version__, prog_name='rfd')
 @click.pass_context
 def cli(ctx):
     """RFD: Reality-First Development System"""
