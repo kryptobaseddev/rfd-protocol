@@ -16,9 +16,10 @@ This document describes the secrets required for the CI/CD pipelines to work pro
    - Used for testing package publishing
    - Optional but recommended
 
-### For GitHub Release Automation
+### For GitHub Release Automation  
 
-The workflow uses the default `GITHUB_TOKEN` which is automatically provided.
+The workflow uses the default `GITHUB_TOKEN` which is automatically provided by GitHub Actions.
+This is NOT a secret you need to create - it's automatically available in all workflows.
 
 ## Setting up Secrets
 
