@@ -5,7 +5,7 @@ A protocol that prevents AI hallucination in software development by enforcing
 concrete reality checkpoints.
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "RFD Team"
 __email__ = "team@rfd-protocol.dev"
 __description__ = "Reality-First Development Protocol"

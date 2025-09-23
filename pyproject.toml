@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rfd-protocol"
-version = "1.0.0"
+version = "2.0.0"
 description = "Reality-First Development Protocol - Prevents AI hallucination and ensures spec-driven development"
 readme = "README.md"
 license = {text = "MIT"}
