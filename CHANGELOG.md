@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v2.2.0 (2025-09-23)
+
+### Chores
+
+- Adjust line limit to accommodate spec generator
+  ([`949b49b`](https://github.com/kryptobaseddev/rfd-protocol/commit/949b49b8bc11658f7b60f9f8c95cdadd2a81d01f))
+
+### Features
+
+- Comprehensive spec generation and enhanced initialization for v2.0.3
+  ([`2f27505`](https://github.com/kryptobaseddev/rfd-protocol/commit/2f275059144e21e873b81b3fae54e4245b8578ef))
+
+
 ## v2.1.0 (2025-09-23)
 
 ### Features
