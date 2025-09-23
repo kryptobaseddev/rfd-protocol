@@ -69,20 +69,26 @@ rfd --version
 
 ### 7. Dogfooding Test - Use RFD on Itself
 ```bash
-# Clone fresh copy
-git clone https://github.com/kryptobaseddev/rfd-protocol rfd-test
-cd rfd-test
-
-# Install RFD from PyPI
+# Test 1: Fresh directory
+mkdir ~/rfd-dogfood-test
+cd ~/rfd-dogfood-test
 pip install rfd-protocol
-
-# Use RFD to manage its own development
 rfd init
-rfd spec create
-rfd build
+rfd check
 rfd validate
 
-# This proves the tool works on itself!
+# Test 2: On RFD repository itself
+git clone https://github.com/kryptobaseddev/rfd-protocol rfd-dogfood
+cd rfd-dogfood
+rfd check
+rfd validate
+
+# Current validation issues to fix using RFD:
+# - Too many files (48 > 30 max)
+# - Files too long (9 files > 500 lines)
+
+# Use RFD to track fixing these issues
+rfd checkpoint "Starting file consolidation"
 ```
 
 ## Success Criteria
