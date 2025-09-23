@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.1.0 (2025-09-23)
+
+### Features
+
+- Major RFD improvements for true dogfooding
+  ([`703b01e`](https://github.com/kryptobaseddev/rfd-protocol/commit/703b01ec4630afed8995b6961bdd756a4d897c22))
+
+
 ## v2.0.2 (2025-09-23)
 
 ### Bug Fixes
