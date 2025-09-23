@@ -159,26 +159,35 @@ class SpecEngine:
         
         conn.commit()
     
-    def validate(self) -> bool:
+    def validate(self, spec=None) -> bool:
         """Validate spec against Spec Kit standards"""
-        spec = self.rfd.load_project_spec()
+        if spec is None:
+            spec = self.rfd.load_project_spec()
+        
+        # Return list of errors for testing
+        errors = []
         
         required_fields = ['version', 'name', 'stack', 'features']
         for field in required_fields:
             if field not in spec:
-                print(f"❌ Missing required field: {field}")
-                return False
+                error_msg = f"Missing required field: {field}"
+                errors.append(error_msg)
+                print(f"❌ {error_msg}")
         
         # Validate features
-        if len(spec['features']) == 0:
-            print("❌ No features defined")
-            return False
+        if 'features' not in spec or len(spec['features']) == 0:
+            error_msg = "No features defined"
+            errors.append(error_msg)
+            print(f"❌ {error_msg}")
         
-        if len(spec['features']) > 3:
+        if 'features' in spec and len(spec['features']) > 3:
             print("⚠️  Warning: More than 3 features for v1")
         
-        print("✅ Spec is valid")
-        return True
+        if not errors:
+            print("✅ Spec is valid")
+            return []  # Return empty list for no errors
+        
+        return errors  # Return list of errors
     
     def review(self):
         """Display spec in readable format"""
@@ -212,3 +221,34 @@ class SpecEngine:
         print("\n🚫 Constraints:")
         for constraint in spec.get('constraints', []):
             print(f"  • {constraint}")
+    
+    def add_feature(self, spec: Dict, feature: Dict) -> Dict:
+        """Add a new feature to the spec"""
+        if 'features' not in spec:
+            spec['features'] = []
+        spec['features'].append(feature)
+        return spec
+    
+    def update_feature_status(self, spec: Dict, feature_id: str, status: str) -> Dict:
+        """Update the status of a feature"""
+        if 'features' in spec:
+            for feature in spec['features']:
+                if feature.get('id') == feature_id:
+                    feature['status'] = status
+        return spec
+    
+    def validate_spec(self, spec: Dict) -> bool:
+        """Validate a spec structure"""
+        required_fields = ['name', 'features']
+        for field in required_fields:
+            if field not in spec:
+                return False
+        return True
+    
+    def create_spec_interactive(self) -> Dict:
+        """Alias for create_interactive for backward compatibility"""
+        return self.create_interactive()
+    
+    def create(self) -> Dict:
+        """Alias for create_interactive for backward compatibility"""
+        return self.create_interactive()
