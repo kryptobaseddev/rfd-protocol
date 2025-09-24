@@ -2,6 +2,27 @@
 
 <!-- version list -->
 
+## v3.0.0 (2025-09-24)
+
+### Chores
+
+- Bump version to 2.4.0 for release
+  ([`c0b36bd`](https://github.com/kryptobaseddev/rfd-protocol/commit/c0b36bde54c67e745eb4a6b3c1435c3c42cd3cda))
+
+### Documentation
+
+- Comprehensive documentation suite for RFD v2.1.0
+  ([`430521f`](https://github.com/kryptobaseddev/rfd-protocol/commit/430521fa5e4edfdd5b3ca1c8eb79a1b5af6255c0))
+
+### Features
+
+- Major enhancements - WAL mode, /rfd-analyze command, comprehensive docs
+  ([`2f06f4d`](https://github.com/kryptobaseddev/rfd-protocol/commit/2f06f4debd96609bcaed34dcbd830ba5898f8c46))
+
+- Major RFD improvements - migration system, auto-handoff, and proper architecture
+  ([`0edaac7`](https://github.com/kryptobaseddev/rfd-protocol/commit/0edaac76dd7fe92c0da919c2ecbbf79a6c0c327c))
+
+
 ## v2.2.0 (2025-09-23)
 
 ### Chores
