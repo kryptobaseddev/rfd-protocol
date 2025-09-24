@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v4.1.0 (2025-09-24)
+
+### Documentation
+
+- Improve README with clearer problem statement and better structure
+  ([`f9f0418`](https://github.com/kryptobaseddev/rfd-protocol/commit/f9f041830e72ebed9763f4509cf94656d3e5df6c))
+
+### Features
+
+- Major CLI refactor v4.1.0 - cleaner command structure
+  ([`156e3bc`](https://github.com/kryptobaseddev/rfd-protocol/commit/156e3bcb716f12aebcf6f84af4b13163c279f4bd))
+
+
 ## v4.0.0 (2025-09-24)
 
 ### Features
