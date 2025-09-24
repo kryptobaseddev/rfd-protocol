@@ -73,9 +73,9 @@ class RFD4FinalValidator:
             # Edge Case 1: Unicode/special characters
             unicode_claim = "Created function 🚀_test_函数 in файл.py with 特殊字符"
             passed, details = validator.validate_ai_claims(unicode_claim)
-            results[
-                "unicode_handling"
-            ] = not passed  # Should fail since file doesn't exist
+            results["unicode_handling"] = (
+                not passed
+            )  # Should fail since file doesn't exist
             self.log(
                 f"Unicode claim handling: {'PASS' if results['unicode_handling'] else 'FAIL'}",
                 "PASS" if results["unicode_handling"] else "FAIL",
@@ -221,9 +221,9 @@ func (u *User) GetName() string {
                 - Custom format string parsing
                 """
                 passed4, details4 = validator.validate_ai_claims(partial_truth)
-                results[
-                    "partial_truth_detection"
-                ] = not passed4  # Should catch the lies
+                results["partial_truth_detection"] = (
+                    not passed4
+                )  # Should catch the lies
 
                 self.log(
                     f"Complex deception detection: {sum(results.values())}/{len(results)} caught"
@@ -474,9 +474,9 @@ class Class_{i}_{j}:
                     passed, details = validator.validate_ai_claims(
                         "Created comprehensive authentication system with OAuth2, JWT, and social login in auth_system.py"
                     )
-                    results[
-                        "hallucination_prevention"
-                    ] = not passed  # Should be False (caught the lie)
+                    results["hallucination_prevention"] = (
+                        not passed
+                    )  # Should be False (caught the lie)
                 else:
                     results["hallucination_prevention"] = False
 

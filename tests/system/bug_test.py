@@ -169,14 +169,16 @@ def test_subtle_lies():
             validator = ValidationEngine(rfd)
 
             # Create a file with specific content
-            (temp_path / "app.py").write_text("""
+            (temp_path / "app.py").write_text(
+                """
 def process_user_data(data):
     return {"processed": True}
 
 class UserManager:
     def __init__(self):
         self.users = []
-""")
+"""
+            )
 
             # Test subtle lies
             lies = [

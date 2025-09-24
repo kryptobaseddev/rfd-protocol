@@ -219,9 +219,7 @@ class SpecEngine:
             status_icon = (
                 "✅"
                 if f["status"] == "complete"
-                else "🔨"
-                if f["status"] == "building"
-                else "⭕"
+                else "🔨" if f["status"] == "building" else "⭕"
             )
             print(f"  {status_icon} {f['id']}")
             print(f"      {f['description']}")

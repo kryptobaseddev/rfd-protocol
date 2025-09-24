@@ -79,13 +79,15 @@ class ProjectUpdater:
         ).fetchone()[0]
 
         # Average feature time (in hours)
-        avg_time_result = conn.execute("""
+        avg_time_result = conn.execute(
+            """
             SELECT AVG(
                 CAST((julianday(completed_at) - julianday(created_at)) * 24 AS REAL)
             )
             FROM features
             WHERE completed_at IS NOT NULL
-        """).fetchone()[0]
+        """
+        ).fetchone()[0]
 
         avg_feature_time = round(avg_time_result, 2) if avg_time_result else 0
 
@@ -269,10 +271,12 @@ class ProjectUpdater:
         changes = []
 
         # Sync features
-        db_features = conn.execute("""
+        db_features = conn.execute(
+            """
             SELECT id, description, acceptance_criteria, status, created_at, completed_at
             FROM features
-        """).fetchall()
+        """
+        ).fetchall()
 
         project_features = {f["id"]: f for f in post.metadata.get("features", [])}
 

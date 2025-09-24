@@ -101,12 +101,14 @@ class TestRFDCore(unittest.TestCase):
             "rules": {"max_files": 100, "max_loc_per_file": 500},
         }
 
-        Path("RFD-SPEC.md").write_text(f"""---
+        Path("RFD-SPEC.md").write_text(
+            f"""---
 {json.dumps(spec_content)}
 ---
 
 # Test Specification
-""")
+"""
+        )
 
         # Load spec
         spec = rfd.load_project_spec()
@@ -198,7 +200,7 @@ class TestValidationEngine(unittest.TestCase):
         ]
 
         for text, expected in test_cases:
-            files = validator._extract_file_claims(text)
+            files = validator.ai_validator._extract_file_claims(text)
             for exp in expected:
                 self.assertIn(exp, files, f"Should extract {exp} from '{text}'")
 
@@ -219,7 +221,7 @@ class TestValidationEngine(unittest.TestCase):
         ]
 
         for text, expected in test_cases:
-            functions = validator._extract_function_claims(text)
+            functions = validator.ai_validator._extract_function_claims(text)
             func_names = [f[0] for f in functions]
             for exp in expected:
                 self.assertIn(exp, func_names, f"Should extract {exp} from '{text}'")
@@ -767,11 +769,13 @@ class TestIntegrationBasics(unittest.TestCase):
         }
 
         # Save spec
-        Path("RFD-SPEC.md").write_text(f"""---
+        Path("RFD-SPEC.md").write_text(
+            f"""---
 {json.dumps(spec)}
 ---
 # Test Spec
-""")
+"""
+        )
 
         # Load and validate
         rfd.spec = rfd.load_project_spec()

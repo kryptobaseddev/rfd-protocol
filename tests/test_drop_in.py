@@ -95,10 +95,12 @@ class TestDropInCompatibility(unittest.TestCase):
         """RFD should work in a Python project"""
         # Create a typical Python project
         Path("requirements.txt").write_text("flask==2.0.0\npytest==7.0.0\n")
-        Path("setup.py").write_text("""
+        Path("setup.py").write_text(
+            """
 from setuptools import setup
 setup(name='test-project', version='1.0.0')
-""")
+"""
+        )
         Path("app.py").write_text("def main(): pass")
         Path("tests").mkdir()
         Path("tests/test_app.py").write_text("def test_main(): pass")

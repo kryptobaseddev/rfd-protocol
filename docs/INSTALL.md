@@ -13,7 +13,11 @@ This guide covers installing and setting up the Nexus RFD Protocol in new projec
 ### Method 1: pip install (Recommended)
 
 ```bash
-pip install nexus-rfd-protocol
+# Install globally for all projects
+pip install rfd-protocol
+
+# Or with pipx for isolated environment
+pipx install rfd-protocol
 ```
 
 Verify installation:
@@ -21,22 +25,26 @@ Verify installation:
 rfd --version
 ```
 
-### Method 2: pipx install (Isolated)
+### Method 2: Development Install
 
-For global CLI access without affecting your Python environment:
-
-```bash
-pipx install nexus-rfd-protocol
-```
-
-### Method 3: Development Install
-
-For contributing or local development:
+For contributing to RFD itself:
 
 ```bash
-git clone https://github.com/nexus-dev/rfd-protocol.git
+git clone https://github.com/kryptobaseddev/rfd-protocol.git
 cd rfd-protocol
 pip install -e .
+# Now 'rfd' command uses your development version
+```
+
+### Method 3: Project-Specific Install
+
+For using RFD in a specific project only:
+
+```bash
+cd your-project/
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install rfd-protocol
 ```
 
 ## Project Setup
@@ -166,12 +174,14 @@ stack:
 
 ## Directory Structure After Install
 
+### After `rfd init` in YOUR Project:
+
 ```
 your-project/
 ├── PROJECT.md              # ← Project specification (edit this)
 ├── CLAUDE.md               # ← Claude Code integration
 ├── PROGRESS.md             # ← Build history (auto-updated)
-├── .rfd/                   # ← RFD system files
+├── .rfd/                   # ← RFD system files (auto-created)
 │   ├── memory.db           #   SQLite database for state
 │   └── context/            #   AI context and memory
 │       ├── current.md      #   Current session info
@@ -181,6 +191,8 @@ your-project/
 ├── package.json           # ← Your dependencies (if JS/TS)
 └── [your source code]     # ← Your actual project files
 ```
+
+**Note**: RFD itself is installed globally (or in venv). It does NOT copy its source files into your project.
 
 ## Common Setup Patterns
 

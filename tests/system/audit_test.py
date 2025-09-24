@@ -82,10 +82,12 @@ def test_context_persistence():
     conn = sqlite3.connect(rfd.db_path)
 
     # Check sessions table exists
-    cursor = conn.execute("""
+    cursor = conn.execute(
+        """
         SELECT name FROM sqlite_master
         WHERE type='table' AND name='sessions'
-    """)
+    """
+    )
 
     if cursor.fetchone():
         print("✅ PASS: Session persistence database exists")

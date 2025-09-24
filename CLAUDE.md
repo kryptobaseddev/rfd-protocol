@@ -1,6 +1,5 @@
 ---
 # Claude Code Configuration
-model: claude-3-5-sonnet-20241022
 temperature: 0.2
 max_tokens: 4000
 tools: enabled

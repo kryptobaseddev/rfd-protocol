@@ -28,15 +28,19 @@ class BuildEngine:
         # Add more frameworks
 
         return {"passing": False, "message": "No tests found and unknown stack"}
-    
+
     def detect_stack(self) -> Dict[str, str]:
         """Detect the technology stack of the project"""
         from pathlib import Path
-        
+
         stack = {}
-        
+
         # Check for Python
-        if Path("requirements.txt").exists() or Path("pyproject.toml").exists() or Path("setup.py").exists():
+        if (
+            Path("requirements.txt").exists()
+            or Path("pyproject.toml").exists()
+            or Path("setup.py").exists()
+        ):
             stack["language"] = "python"
             if Path("manage.py").exists():
                 stack["framework"] = "django"
@@ -49,7 +53,7 @@ class BuildEngine:
                                 stack["framework"] = "fastapi"
                 except:
                     pass
-            
+
             # Check pyproject.toml for dependencies
             if not stack.get("framework") and Path("pyproject.toml").exists():
                 try:
@@ -65,12 +69,13 @@ class BuildEngine:
                             stack["framework"] = "click"
                 except:
                     pass
-        
+
         # Check for JavaScript
         elif Path("package.json").exists():
             stack["language"] = "javascript"
             try:
                 import json
+
                 with open("package.json") as f:
                     pkg = json.load(f)
                     deps = pkg.get("dependencies", {})
@@ -82,21 +87,21 @@ class BuildEngine:
                         stack["framework"] = "react"
             except:
                 pass
-        
+
         # Check for Go
         elif Path("go.mod").exists():
             stack["language"] = "go"
-        
+
         # Check for Rust
         elif Path("Cargo.toml").exists():
             stack["language"] = "rust"
-        
+
         # Check for Ruby
         elif Path("Gemfile").exists():
             stack["language"] = "ruby"
-        
+
         return stack
-    
+
     def run_tests(self) -> Dict[str, Any]:
         """Run tests for the current project"""
         # Detect stack dynamically if not in spec
@@ -104,7 +109,7 @@ class BuildEngine:
         if not language:
             detected_stack = self.detect_stack()
             language = detected_stack.get("language", "")
-        
+
         if language == "python":
             return self._run_python_tests()
         elif language in ["javascript", "typescript"]:
@@ -113,75 +118,79 @@ class BuildEngine:
             return self._run_go_tests()
         elif language == "rust":
             return self._run_rust_tests()
-        
+
         return {"success": False, "message": f"No test runner for {language}"}
-    
+
     def _run_python_tests(self) -> Dict[str, Any]:
         """Run Python tests"""
         import subprocess
-        
+
         # Try pytest first
         try:
             result = subprocess.run(["pytest"], capture_output=True, text=True)
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except FileNotFoundError:
             pass
-        
+
         # Try unittest
         try:
-            result = subprocess.run(["python", "-m", "unittest"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["python", "-m", "unittest"], capture_output=True, text=True
+            )
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except:
             pass
-        
+
         return {"success": False, "message": "No test runner found"}
-    
+
     def _run_javascript_tests(self) -> Dict[str, Any]:
         """Run JavaScript tests"""
         import subprocess
-        
+
         try:
             result = subprocess.run(["npm", "test"], capture_output=True, text=True)
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except:
             return {"success": False, "message": "npm test failed"}
-    
+
     def _run_go_tests(self) -> Dict[str, Any]:
         """Run Go tests"""
         import subprocess
-        
+
         try:
-            result = subprocess.run(["go", "test", "./..."], capture_output=True, text=True)
+            result = subprocess.run(
+                ["go", "test", "./..."], capture_output=True, text=True
+            )
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except:
             return {"success": False, "message": "go test failed"}
-    
+
     def _run_rust_tests(self) -> Dict[str, Any]:
         """Run Rust tests"""
         import subprocess
-        
+
         try:
             result = subprocess.run(["cargo", "test"], capture_output=True, text=True)
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "errors": result.stderr
+                "errors": result.stderr,
             }
         except:
             return {"success": False, "message": "cargo test failed"}
@@ -422,9 +431,11 @@ class BuildEngine:
             )
             return {
                 "success": result.returncode == 0,
-                "message": "Python syntax check passed"
-                if result.returncode == 0
-                else result.stderr,
+                "message": (
+                    "Python syntax check passed"
+                    if result.returncode == 0
+                    else result.stderr
+                ),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -449,9 +460,9 @@ class BuildEngine:
             )
             return {
                 "success": result.returncode == 0,
-                "message": "Go build successful"
-                if result.returncode == 0
-                else result.stderr,
+                "message": (
+                    "Go build successful" if result.returncode == 0 else result.stderr
+                ),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -464,9 +475,9 @@ class BuildEngine:
             )
             return {
                 "success": result.returncode == 0,
-                "message": "Rust build successful"
-                if result.returncode == 0
-                else result.stderr,
+                "message": (
+                    "Rust build successful" if result.returncode == 0 else result.stderr
+                ),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}

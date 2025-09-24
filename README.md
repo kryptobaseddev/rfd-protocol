@@ -134,38 +134,20 @@ rfd-protocol/
 │   ├── system/             # End-to-end workflow tests
 │   └── fixtures/           # Test data and sample projects
 │
-├── .rfd/                   # 🏛️ LEGACY SYSTEM (for compatibility)
-│   ├── rfd.py              # Legacy CLI entry point
-│   ├── validation.py       # Legacy validation engine
-│   ├── session.py          # Legacy session management
-│   ├── build.py            # Legacy build engine
-│   ├── spec.py             # Legacy spec management
-│   ├── memory.db           # SQLite persistent state
-│   └── context/            # Session context files
-│
 ├── docs/                   # 📚 DOCUMENTATION
 │   ├── AGENTS.md           # Agent orchestration definitions
 │   ├── CLAUDE.md           # Claude Code CLI configuration
 │   ├── INSTALL.md          # Installation instructions
 │   ├── RFD-PROTOCOL.md     # Core protocol specification
 │   ├── @RFD-PROTOCOL.md    # Protocol summary
-│   ├── RFD-PLAN.md         # Development roadmap
-│   └── archive/            # Historical documents
+│   └── RFD-PLAN.md         # Development roadmap
 │
 ├── tools/                  # 🔧 DEVELOPMENT TOOLS
 │   ├── comprehensive_audit.py    # Codebase audit tool
 │   └── detailed_bug_analysis.py  # Bug analysis tool
 │
-├── research/               # 📖 RESEARCH & BACKGROUND
-│   ├── brain-dump.md       # Original problem statement
-│   ├── CONSENSUS-FINAL.md  # Design decisions
-│   └── round-*/            # Development phases
-│
 ├── scripts/                # 📜 LEGACY SCRIPTS
 │   └── [legacy tools]      # Historical development scripts
-│
-├── nexus_rfd_protocol/     # 🔄 TRANSITION PACKAGE
-│   └── [legacy modules]    # Old package structure (being phased out)
 │
 ├── .github/workflows/      # 🚀 CI/CD PIPELINE
 │   ├── ci.yml             # Continuous integration

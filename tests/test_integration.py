@@ -62,11 +62,13 @@ class TestEndToEndWorkflow(unittest.TestCase):
         }
 
         # Save spec
-        Path("RFD-SPEC.md").write_text(f"""---
+        Path("RFD-SPEC.md").write_text(
+            f"""---
 {json.dumps(spec)}
 ---
 # E2E Test Project
-""")
+"""
+        )
 
         # 3. Start session for feature
         session_mgr = SessionManager(rfd)
@@ -74,13 +76,15 @@ class TestEndToEndWorkflow(unittest.TestCase):
         self.assertIsNotNone(session_id)
 
         # 4. Build phase - create some code
-        Path("auth.py").write_text("""
+        Path("auth.py").write_text(
+            """
 def signup(email, password):
     return {'email': email, 'status': 'created'}
 
 def login(email, password):
     return {'email': email, 'status': 'authenticated'}
-""")
+"""
+        )
 
         # 5. Validate phase
         validator = ValidationEngine(rfd)
@@ -98,7 +102,8 @@ def login(email, password):
         )
 
         # 7. Run tests (simulated)
-        Path("test_auth.py").write_text("""
+        Path("test_auth.py").write_text(
+            """
 import auth
 
 def test_signup():
@@ -108,7 +113,8 @@ def test_signup():
 def test_login():
     result = auth.login('test@example.com', 'pass123')
     assert result['status'] == 'authenticated'
-""")
+"""
+        )
 
         # 8. Final validation
         build_engine = BuildEngine(rfd)
@@ -220,10 +226,12 @@ def test_login():
             ],
         }
 
-        Path("RFD-SPEC.md").write_text(f"""---
+        Path("RFD-SPEC.md").write_text(
+            f"""---
 {json.dumps(spec)}
 ---
-""")
+"""
+        )
 
         # Load spec
         rfd.spec = rfd.load_project_spec()
@@ -294,7 +302,8 @@ def test_login():
         from rfd import RFD
 
         # Create a Flask project structure
-        Path("app.py").write_text("""
+        Path("app.py").write_text(
+            """
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -309,11 +318,13 @@ def create_user():
 
 if __name__ == '__main__':
     app.run(debug=True)
-""")
+"""
+        )
 
         Path("requirements.txt").write_text("flask==2.0.0\npytest==7.0.0\n")
 
-        Path("test_app.py").write_text("""
+        Path("test_app.py").write_text(
+            """
 import pytest
 from app import app
 
@@ -332,7 +343,8 @@ def test_create_user(client):
     response = client.post('/api/users')
     assert response.status_code == 200
     assert response.json['status'] == 'created'
-""")
+"""
+        )
 
         # Initialize RFD
         rfd = RFD()
@@ -379,7 +391,8 @@ def test_create_user(client):
             )
         )
 
-        Path("index.js").write_text("""
+        Path("index.js").write_text(
+            """
 const express = require('express');
 const app = express();
 
@@ -399,9 +412,11 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-""")
+"""
+        )
 
-        Path("index.test.js").write_text("""
+        Path("index.test.js").write_text(
+            """
 const request = require('supertest');
 const app = require('./index');
 
@@ -418,7 +433,8 @@ describe('API Tests', () => {
         expect(response.body.status).toBe('created');
     });
 });
-""")
+"""
+        )
 
         # Initialize RFD
         rfd = RFD()

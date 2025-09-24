@@ -1,27 +1,41 @@
 ---
-session_id: 1
-feature: system_cleanup
-started: 2025-09-22T21:30:00
-status: active
+session_id: 2
+feature: rfd_core_features
+started: 2025-09-23T18:43:23.889813
+status: building
 ---
 
-# Current Session: RFD System Cleanup
+# Current Session: rfd_core_features
 
-## Objective
-Clean up duplicate code, organize files, and make RFD actually work properly.
+## Feature Specification
+Implement missing RFD features for true dogfooding
 
-## Tasks Completed
-- ✅ Removed nexus_rfd_protocol duplicate directory  
-- ✅ Cleaned up root directory files
-- ✅ Renamed rfd-new to rfd (clean naming)
-- ✅ Removed old database files
-- ✅ Fixed broken symlinks
+**Acceptance Criteria:**
+Tasks and phases display in status command, slash commands auto-execute, resume functionality works
 
-## Current Focus
-Setting up proper RFD system for true dogfooding.
+## Current Status
+```
+./rfd validate --feature rfd_core_features
+✅ max_files: 35 files (max: 50)
+❌ feature_rfd_core_features: Implement missing RFD features for true dogfooding - pending
+✅ database: Database found: .rfd/memory.db
+```
 
-## Next Steps
-1. Test all RFD commands work
-2. Implement missing features (tasks, phases, resume)
-3. Fix slash commands to use correct paths
-4. Start using RFD to manage RFD development
+## Required Actions
+1. Make all validation tests pass
+2. Ensure code follows PROJECT.md constraints
+3. No mocks - use real implementations
+
+## Commands
+```bash
+./rfd build          # Build current feature
+./rfd validate       # Check if tests pass
+./rfd checkpoint     # Save working state
+```
+
+## Constraints from PROJECT.md
+- NO new features until 100% tests pass
+- MUST use RFD workflow for all fixes
+- MUST validate each fix with tests
+- NO mock data in tests
+- MUST maintain backward compatibility

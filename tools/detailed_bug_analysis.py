@@ -169,12 +169,14 @@ def test_build_detection_accuracy():
         print(f"Result: {result2}")
 
         # Create a failing test
-        (temp_path / "test_fail.py").write_text("""
+        (temp_path / "test_fail.py").write_text(
+            """
 import pytest
 
 def test_should_fail():
     assert False, "This test always fails"
-""")
+"""
+        )
         print("\nTesting with failing test...")
         result3 = builder._check_tests()
         print(f"Result: {result3}")

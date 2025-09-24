@@ -90,13 +90,15 @@ def test_revert_validation_only():
     subprocess.run(["git", "config", "user.name", "Test User"], capture_output=True)
 
     # Create PROJECT.md
-    Path("PROJECT.md").write_text("""---
+    Path("PROJECT.md").write_text(
+        """---
 name: Test Project
 features:
   - id: test_feature
     description: Test
 ---
-# Test""")
+# Test"""
+    )
 
     subprocess.run(["git", "add", "."], capture_output=True)
     subprocess.run(["git", "commit", "-m", "Initial"], capture_output=True)
@@ -151,7 +153,8 @@ def test_build_detection():
     os.chdir(test_dir)
 
     # Create PROJECT.md
-    Path("PROJECT.md").write_text("""---
+    Path("PROJECT.md").write_text(
+        """---
 name: Test Project
 stack:
   language: python
@@ -160,16 +163,19 @@ features:
   - id: test_feature
     description: Test
 ---
-# Test""")
+# Test"""
+    )
 
     # Create a simple test file
-    Path("test_sample.py").write_text("""
+    Path("test_sample.py").write_text(
+        """
 def test_always_passes():
     assert True
 
 def test_another_pass():
     assert 1 + 1 == 2
-""")
+"""
+    )
 
     from rfd.rfd import RFD
 

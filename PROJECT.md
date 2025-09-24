@@ -7,6 +7,15 @@ constraints:
 - MUST maintain backward compatibility
 description: Using RFD to fix RFD and achieve 100% test pass rate
 features:
+- acceptance: Detects and blocks mock data in code, enforces real implementations
+  description: Mock data detection and prevention system
+  id: mock_detection
+  status: pending
+- acceptance: Tasks and phases display in status command, slash commands auto-execute,
+    resume functionality works
+  description: Implement missing RFD features for true dogfooding
+  id: rfd_core_features
+  status: complete
 - acceptance: test_get_current_feature, test_save_and_load_state, test_session_manager_initialization,
     test_session_persistence, test_suggest_next_action, test_update_progress all pass
   description: Fix all 6 SessionManager test failures

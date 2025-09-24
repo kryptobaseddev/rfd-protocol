@@ -57,9 +57,11 @@ class ValidationEngine:
         return {
             "passing": results["passing"],
             "failed_count": sum(1 for r in results["results"] if not r["passed"]),
-            "message": "All validations passing"
-            if results["passing"]
-            else "Validation failures detected",
+            "message": (
+                "All validations passing"
+                if results["passing"]
+                else "Validation failures detected"
+            ),
         }
 
     def check_ai_claim(self, claim: str) -> bool:
@@ -86,9 +88,18 @@ class ValidationEngine:
         # Original rule-based validation
         if "max_files" in rules:
             # Exclude virtual environments and common build directories
-            exclude_dirs = {'.venv', 'venv', 'env', '.env', 'build', 'dist', '__pycache__'}
+            exclude_dirs = {
+                ".venv",
+                "venv",
+                "env",
+                ".env",
+                "build",
+                "dist",
+                "__pycache__",
+            }
             files = [
-                f for f in Path(".").glob("**/*.py")
+                f
+                for f in Path(".").glob("**/*.py")
                 if not any(part in exclude_dirs for part in f.parts)
             ]
             passed = len(files) <= rules["max_files"]
@@ -103,7 +114,15 @@ class ValidationEngine:
         # Lines per file
         if "max_loc_per_file" in rules:
             # Exclude virtual environments and common build directories
-            exclude_dirs = {'.venv', 'venv', 'env', '.env', 'build', 'dist', '__pycache__'}
+            exclude_dirs = {
+                ".venv",
+                "venv",
+                "env",
+                ".env",
+                "build",
+                "dist",
+                "__pycache__",
+            }
             for f in Path(".").glob("**/*.py"):
                 if ".rfd" in str(f) or any(part in exclude_dirs for part in f.parts):
                     continue

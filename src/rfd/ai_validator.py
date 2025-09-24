@@ -10,10 +10,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 class AIClaimValidator:
     """Validates AI claims about files and functions"""
-    
+
     def __init__(self):
         pass
-    
+
     def validate_ai_claims(self, claims: str) -> Tuple[bool, List[Dict[str, Any]]]:
         """
         Validate AI claims about file and function creation
@@ -25,7 +25,7 @@ class AIClaimValidator:
         file_claims = self._extract_file_claims(claims)
         function_claims = self._extract_function_claims(claims)
         modification_claims = self._extract_modification_claims(claims)
-        
+
         # Check for vague/comprehensive claims that are often hallucinations
         vague_claims = self._detect_vague_claims(claims)
         for claim_text, claim_type, is_vague in vague_claims:
@@ -50,7 +50,9 @@ class AIClaimValidator:
                     "type": "file_claim",
                     "path": file_path,
                     "valid": exists,
-                    "reason": "File exists" if exists else "File does not exist - AI lied!",
+                    "reason": (
+                        "File exists" if exists else "File does not exist - AI lied!"
+                    ),
                 }
             )
 
@@ -61,7 +63,9 @@ class AIClaimValidator:
                 # Strict check: function must be in the specific file mentioned AND file must exist
                 try:
                     if Path(file_hint).exists():
-                        found_in_file = self._check_function_in_file(func_name, file_hint)
+                        found_in_file = self._check_function_in_file(
+                            func_name, file_hint
+                        )
                         validation_results.append(
                             {
                                 "type": "function_claim",
@@ -99,9 +103,11 @@ class AIClaimValidator:
                         "type": "function_claim",
                         "function": func_name,
                         "valid": exists,
-                        "reason": "Function exists"
-                        if exists
-                        else "Function not found anywhere - AI lied!",
+                        "reason": (
+                            "Function exists"
+                            if exists
+                            else "Function not found anywhere - AI lied!"
+                        ),
                     }
                 )
 
@@ -186,7 +192,9 @@ class AIClaimValidator:
             matches = re.findall(pattern, text, re.IGNORECASE | re.MULTILINE)
             for match in matches:
                 if isinstance(match, tuple):
-                    func_name = match[0] if match[0] else match[1] if len(match) > 1 else None
+                    func_name = (
+                        match[0] if match[0] else match[1] if len(match) > 1 else None
+                    )
                 else:
                     func_name = match
 
@@ -203,9 +211,35 @@ class AIClaimValidator:
                 continue
             # Skip common words
             if func_name.lower() in [
-                "and", "or", "if", "for", "while", "with", "as", "in", "to", "from",
-                "class", "method", "a", "the", "in", "to", "of", "is", "are", "be",
-                "been", "being", "have", "has", "had", "do", "does", "did", "will",
+                "and",
+                "or",
+                "if",
+                "for",
+                "while",
+                "with",
+                "as",
+                "in",
+                "to",
+                "from",
+                "class",
+                "method",
+                "a",
+                "the",
+                "in",
+                "to",
+                "of",
+                "is",
+                "are",
+                "be",
+                "been",
+                "being",
+                "have",
+                "has",
+                "had",
+                "do",
+                "does",
+                "did",
+                "will",
             ]:
                 continue
             filtered.append((func_name, file_hint))
@@ -481,7 +515,9 @@ class AIClaimValidator:
                     with open(py_file, "r", encoding="utf-8", errors="ignore") as f:
                         content = f.read()
                         if (
-                            re.search(rf"^\s*def\s+{target}\s*\(", content, re.MULTILINE)
+                            re.search(
+                                rf"^\s*def\s+{target}\s*\(", content, re.MULTILINE
+                            )
                             or re.search(
                                 rf"^\s*class\s+{target}\s*[:\(]", content, re.MULTILINE
                             )
@@ -520,22 +556,37 @@ class AIClaimValidator:
 
             elif modification_type == "logging":
                 # Must have actual logging imports and calls, not just print
-                has_logging = "logger" in function_content or "logging" in function_content
+                has_logging = (
+                    "logger" in function_content or "logging" in function_content
+                )
                 return has_logging
 
             elif modification_type == "input_validation":
                 # Look for actual validation code
                 validation_indicators = [
-                    "isinstance(", "type(", "assert ", "raise ValueError", 
-                    "raise TypeError", ".isdigit(", "len("
+                    "isinstance(",
+                    "type(",
+                    "assert ",
+                    "raise ValueError",
+                    "raise TypeError",
+                    ".isdigit(",
+                    "len(",
                 ]
                 return any(ind in function_content for ind in validation_indicators)
 
             elif modification_type == "database_integration":
                 # Look for database-related code
                 db_indicators = [
-                    "cursor", "execute", "commit", "rollback", "query",
-                    "SELECT", "INSERT", "UPDATE", "DELETE", "connection"
+                    "cursor",
+                    "execute",
+                    "commit",
+                    "rollback",
+                    "query",
+                    "SELECT",
+                    "INSERT",
+                    "UPDATE",
+                    "DELETE",
+                    "connection",
                 ]
                 return any(ind in function_content for ind in db_indicators)
 

@@ -16,7 +16,7 @@ print(
 )
 if details:
     for detail in details:
-        print(f"  - {detail['message']}")
+        print(f"  - {detail.get('reason', detail)}")
 
 # Test 2: True claim about existing file
 true_claim = "Created test_hallucination.py with imports"
@@ -26,7 +26,7 @@ print(
 )
 if details:
     for detail in details:
-        print(f"  - {detail['message']}")
+        print(f"  - {detail.get('reason', detail)}")
 
 # Test 3: Mixed claims
 mixed_claim = """
@@ -39,4 +39,4 @@ print(
 )
 if details:
     for detail in details:
-        print(f"  - {detail['message']}")
+        print(f"  - {detail.get('reason', detail)}")

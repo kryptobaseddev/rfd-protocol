@@ -11,9 +11,19 @@ from typing import Any, Dict, List
 import frontmatter
 
 try:
-    from .spec_formatter import APIEndpoint, ProjectPhase, SpecFormatter, TechStackDecision
+    from .spec_formatter import (
+        APIEndpoint,
+        ProjectPhase,
+        SpecFormatter,
+        TechStackDecision,
+    )
 except ImportError:
-    from spec_formatter import APIEndpoint, ProjectPhase, SpecFormatter, TechStackDecision
+    from spec_formatter import (
+        APIEndpoint,
+        ProjectPhase,
+        SpecFormatter,
+        TechStackDecision,
+    )
 
 
 class SpecGenerator:
@@ -107,7 +117,7 @@ class SpecGenerator:
 
     def generate_project_constitution(self, project_info: Dict[str, Any]) -> str:
         """Generate PROJECT CONSTITUTION document"""
-        
+
         constitution = f"""# PROJECT CONSTITUTION
 **{project_info['name'].upper()}**
 *Generated: {datetime.now().strftime("%Y-%m-%d")}*
@@ -212,10 +222,7 @@ class SpecGenerator:
 
         # Phase 0: Foundation
         foundation = ProjectPhase(
-            id="phase-0",
-            name="Foundation & Setup",
-            type="planning",
-            duration_weeks=1
+            id="phase-0", name="Foundation & Setup", type="planning", duration_weeks=1
         )
         foundation.dependencies = []
         foundation.deliverables = [
@@ -242,10 +249,7 @@ class SpecGenerator:
 
         # Phase 1: Core Data Model
         data_model = ProjectPhase(
-            id="phase-1",
-            name="Core Data Model",
-            type="development",
-            duration_weeks=2
+            id="phase-1", name="Core Data Model", type="development", duration_weeks=2
         )
         data_model.dependencies = ["phase-0"]
         data_model.deliverables = [
@@ -276,7 +280,7 @@ class SpecGenerator:
                 id=f"phase-{i}",
                 name=f"Feature: {feature[:50]}",
                 type="development",
-                duration_weeks=2
+                duration_weeks=2,
             )
             feature_phase.dependencies = [f"phase-{i-1}"]
             feature_phase.deliverables = [
@@ -306,7 +310,7 @@ class SpecGenerator:
             id=f"phase-{len(phases)}",
             name="Integration & Polish",
             type="testing",
-            duration_weeks=2
+            duration_weeks=2,
         )
         integration.dependencies = [phases[-1].id]
         integration.deliverables = [
@@ -336,7 +340,7 @@ class SpecGenerator:
             id=f"phase-{len(phases)}",
             name="Deployment & Launch",
             type="deployment",
-            duration_weeks=1
+            duration_weeks=1,
         )
         deployment.dependencies = [phases[-1].id]
         deployment.deliverables = [
@@ -376,82 +380,131 @@ class SpecGenerator:
 
         # Language decision
         language_decision = TechStackDecision(
-            category="language",
-            choice="",
-            rationale=""
+            category="language", choice="", rationale=""
         )
-        
+
         if "real-time" in all_text or "websocket" in all_text:
             language_decision.choice = "Node.js/TypeScript"
-            language_decision.rationale = "Excellent real-time support and unified language across stack"
-            language_decision.alternatives_considered = ["Python + Django Channels", "Go", "Elixir"]
+            language_decision.rationale = (
+                "Excellent real-time support and unified language across stack"
+            )
+            language_decision.alternatives_considered = [
+                "Python + Django Channels",
+                "Go",
+                "Elixir",
+            ]
         elif "machine learning" in all_text or "ai" in all_text or "data" in all_text:
             language_decision.choice = "Python"
             language_decision.rationale = "Rich ecosystem for ML/AI and data processing"
             language_decision.alternatives_considered = ["R", "Julia", "Java"]
         elif "mobile" in all_text:
             language_decision.choice = "React Native/TypeScript"
-            language_decision.rationale = "Cross-platform mobile development with code reuse"
-            language_decision.alternatives_considered = ["Flutter", "Native (Swift/Kotlin)", "Ionic"]
+            language_decision.rationale = (
+                "Cross-platform mobile development with code reuse"
+            )
+            language_decision.alternatives_considered = [
+                "Flutter",
+                "Native (Swift/Kotlin)",
+                "Ionic",
+            ]
         else:
             language_decision.choice = "Python"
-            language_decision.rationale = "Rapid development, extensive libraries, strong community"
+            language_decision.rationale = (
+                "Rapid development, extensive libraries, strong community"
+            )
             language_decision.alternatives_considered = ["Node.js", "Ruby", "Go"]
 
-        language_decision.constraints = ["Team expertise", "Ecosystem maturity", "Performance requirements"]
-        language_decision.risks = ["Learning curve for team members", "Potential performance bottlenecks"]
+        language_decision.constraints = [
+            "Team expertise",
+            "Ecosystem maturity",
+            "Performance requirements",
+        ]
+        language_decision.risks = [
+            "Learning curve for team members",
+            "Potential performance bottlenecks",
+        ]
         tech_stack.append(language_decision)
 
         # Framework decision
         framework_decision = TechStackDecision(
-            category="framework",
-            choice="",
-            rationale=""
+            category="framework", choice="", rationale=""
         )
-        
+
         if language_decision.choice == "Python":
             if "api" in all_text or "rest" in all_text:
                 framework_decision.choice = "FastAPI"
-                framework_decision.rationale = "Modern, fast, automatic documentation, async support"
-                framework_decision.alternatives_considered = ["Django REST", "Flask", "Falcon"]
+                framework_decision.rationale = (
+                    "Modern, fast, automatic documentation, async support"
+                )
+                framework_decision.alternatives_considered = [
+                    "Django REST",
+                    "Flask",
+                    "Falcon",
+                ]
             else:
                 framework_decision.choice = "Django"
-                framework_decision.rationale = "Batteries included, rapid development, strong security"
-                framework_decision.alternatives_considered = ["Flask", "FastAPI", "Pyramid"]
+                framework_decision.rationale = (
+                    "Batteries included, rapid development, strong security"
+                )
+                framework_decision.alternatives_considered = [
+                    "Flask",
+                    "FastAPI",
+                    "Pyramid",
+                ]
         elif "TypeScript" in language_decision.choice:
             framework_decision.choice = "NestJS"
-            framework_decision.rationale = "Enterprise-grade, modular architecture, TypeScript-first"
+            framework_decision.rationale = (
+                "Enterprise-grade, modular architecture, TypeScript-first"
+            )
             framework_decision.alternatives_considered = ["Express", "Fastify", "Koa"]
 
-        framework_decision.constraints = ["Learning curve", "Community support", "Plugin ecosystem"]
-        framework_decision.risks = ["Framework limitations", "Version upgrade complexity"]
+        framework_decision.constraints = [
+            "Learning curve",
+            "Community support",
+            "Plugin ecosystem",
+        ]
+        framework_decision.risks = [
+            "Framework limitations",
+            "Version upgrade complexity",
+        ]
         tech_stack.append(framework_decision)
 
         # Database decision
-        db_decision = TechStackDecision(
-            category="database",
-            choice="",
-            rationale=""
-        )
-        
+        db_decision = TechStackDecision(category="database", choice="", rationale="")
+
         if "graph" in all_text or "relationship" in all_text:
             db_decision.choice = "Neo4j"
             db_decision.rationale = "Optimized for relationship-heavy data"
-            db_decision.alternatives_considered = ["PostgreSQL with graph extensions", "ArangoDB"]
+            db_decision.alternatives_considered = [
+                "PostgreSQL with graph extensions",
+                "ArangoDB",
+            ]
         elif "real-time" in all_text or "chat" in all_text:
             db_decision.choice = "PostgreSQL + Redis"
-            db_decision.rationale = "PostgreSQL for persistence, Redis for real-time features"
+            db_decision.rationale = (
+                "PostgreSQL for persistence, Redis for real-time features"
+            )
             db_decision.alternatives_considered = ["MongoDB", "CassandraDB"]
         elif "analytics" in all_text or "reporting" in all_text:
             db_decision.choice = "PostgreSQL"
-            db_decision.rationale = "Excellent analytical capabilities, window functions, extensions"
-            db_decision.alternatives_considered = ["ClickHouse", "TimescaleDB", "Snowflake"]
+            db_decision.rationale = (
+                "Excellent analytical capabilities, window functions, extensions"
+            )
+            db_decision.alternatives_considered = [
+                "ClickHouse",
+                "TimescaleDB",
+                "Snowflake",
+            ]
         else:
             db_decision.choice = "PostgreSQL"
             db_decision.rationale = "Reliable, feature-rich, excellent performance"
             db_decision.alternatives_considered = ["MySQL", "MongoDB", "SQLite"]
 
-        db_decision.constraints = ["Data volume", "Query complexity", "Scaling requirements"]
+        db_decision.constraints = [
+            "Data volume",
+            "Query complexity",
+            "Scaling requirements",
+        ]
         db_decision.risks = ["Migration complexity", "Operational overhead"]
         tech_stack.append(db_decision)
 
@@ -460,20 +513,20 @@ class SpecGenerator:
     def generate_api_contracts(self, project_info: Dict[str, Any]) -> List[APIEndpoint]:
         """Generate API contract specifications"""
         endpoints = []
-        
+
         # Extract entities from requirements
         entities = self._extract_entities(project_info.get("requirements", []))
-        
+
         # Generate CRUD endpoints for each entity
         for entity in entities[:5]:  # Limit to 5 main entities
             entity_lower = entity.lower()
             entity_plural = entity_lower + "s"
-            
+
             # GET all
             get_all = APIEndpoint(
                 method="GET",
                 path=f"/api/{entity_plural}",
-                description=f"Retrieve all {entity_plural}"
+                description=f"Retrieve all {entity_plural}",
             )
             get_all.auth_required = True
             get_all.rate_limit = "100 requests per minute"
@@ -481,44 +534,45 @@ class SpecGenerator:
             get_all.response_schema = {
                 "type": "object",
                 "properties": {
-                    "data": {"type": "array", "items": {"$ref": f"#/definitions/{entity}"}},
+                    "data": {
+                        "type": "array",
+                        "items": {"$ref": f"#/definitions/{entity}"},
+                    },
                     "total": {"type": "integer"},
                     "page": {"type": "integer"},
-                    "limit": {"type": "integer"}
-                }
+                    "limit": {"type": "integer"},
+                },
             }
             get_all.errors = [
                 {"code": 401, "message": "Unauthorized"},
-                {"code": 429, "message": "Too many requests"}
+                {"code": 429, "message": "Too many requests"},
             ]
             endpoints.append(get_all)
-            
+
             # GET by ID
             get_one = APIEndpoint(
                 method="GET",
                 path=f"/api/{entity_plural}/{{id}}",
-                description=f"Retrieve a specific {entity_lower}"
+                description=f"Retrieve a specific {entity_lower}",
             )
             get_one.auth_required = True
             get_one.rate_limit = "100 requests per minute"
             get_one.request_schema = {}
             get_one.response_schema = {
                 "type": "object",
-                "properties": {
-                    "data": {"$ref": f"#/definitions/{entity}"}
-                }
+                "properties": {"data": {"$ref": f"#/definitions/{entity}"}},
             }
             get_one.errors = [
                 {"code": 401, "message": "Unauthorized"},
-                {"code": 404, "message": f"{entity} not found"}
+                {"code": 404, "message": f"{entity} not found"},
             ]
             endpoints.append(get_one)
-            
+
             # POST create
             create = APIEndpoint(
                 method="POST",
                 path=f"/api/{entity_plural}",
-                description=f"Create a new {entity_lower}"
+                description=f"Create a new {entity_lower}",
             )
             create.auth_required = True
             create.rate_limit = "20 requests per minute"
@@ -527,28 +581,28 @@ class SpecGenerator:
                 "required": ["name"],
                 "properties": {
                     "name": {"type": "string"},
-                    "description": {"type": "string"}
-                }
+                    "description": {"type": "string"},
+                },
             }
             create.response_schema = {
                 "type": "object",
                 "properties": {
                     "data": {"$ref": f"#/definitions/{entity}"},
-                    "message": {"type": "string"}
-                }
+                    "message": {"type": "string"},
+                },
             }
             create.errors = [
                 {"code": 400, "message": "Invalid input"},
                 {"code": 401, "message": "Unauthorized"},
-                {"code": 409, "message": f"{entity} already exists"}
+                {"code": 409, "message": f"{entity} already exists"},
             ]
             endpoints.append(create)
-            
+
             # PUT update
             update = APIEndpoint(
                 method="PUT",
                 path=f"/api/{entity_plural}/{{id}}",
-                description=f"Update an existing {entity_lower}"
+                description=f"Update an existing {entity_lower}",
             )
             update.auth_required = True
             update.rate_limit = "50 requests per minute"
@@ -557,121 +611,158 @@ class SpecGenerator:
             update.errors = [
                 {"code": 400, "message": "Invalid input"},
                 {"code": 401, "message": "Unauthorized"},
-                {"code": 404, "message": f"{entity} not found"}
+                {"code": 404, "message": f"{entity} not found"},
             ]
             endpoints.append(update)
-            
+
             # DELETE
             delete = APIEndpoint(
                 method="DELETE",
                 path=f"/api/{entity_plural}/{{id}}",
-                description=f"Delete a {entity_lower}"
+                description=f"Delete a {entity_lower}",
             )
             delete.auth_required = True
             delete.rate_limit = "20 requests per minute"
             delete.request_schema = {}
             delete.response_schema = {
                 "type": "object",
-                "properties": {
-                    "message": {"type": "string"}
-                }
+                "properties": {"message": {"type": "string"}},
             }
             delete.errors = [
                 {"code": 401, "message": "Unauthorized"},
-                {"code": 404, "message": f"{entity} not found"}
+                {"code": 404, "message": f"{entity} not found"},
             ]
             endpoints.append(delete)
-        
+
         # Add authentication endpoints
         auth_endpoints = [
             APIEndpoint(
                 method="POST",
                 path="/api/auth/login",
-                description="Authenticate user and receive token"
+                description="Authenticate user and receive token",
             ),
             APIEndpoint(
                 method="POST",
                 path="/api/auth/register",
-                description="Register a new user account"
+                description="Register a new user account",
             ),
             APIEndpoint(
                 method="POST",
                 path="/api/auth/refresh",
-                description="Refresh authentication token"
+                description="Refresh authentication token",
             ),
             APIEndpoint(
                 method="POST",
                 path="/api/auth/logout",
-                description="Invalidate authentication token"
-            )
+                description="Invalidate authentication token",
+            ),
         ]
-        
+
         for auth_ep in auth_endpoints:
-            auth_ep.auth_required = False if "login" in auth_ep.path or "register" in auth_ep.path else True
+            auth_ep.auth_required = (
+                False if "login" in auth_ep.path or "register" in auth_ep.path else True
+            )
             auth_ep.rate_limit = "10 requests per minute"
             auth_ep.request_schema = {
                 "type": "object",
-                "required": ["email", "password"] if "login" in auth_ep.path or "register" in auth_ep.path else [],
+                "required": (
+                    ["email", "password"]
+                    if "login" in auth_ep.path or "register" in auth_ep.path
+                    else []
+                ),
                 "properties": {
                     "email": {"type": "string", "format": "email"},
-                    "password": {"type": "string", "minLength": 8}
-                }
+                    "password": {"type": "string", "minLength": 8},
+                },
             }
             auth_ep.response_schema = {
                 "type": "object",
                 "properties": {
                     "token": {"type": "string"},
-                    "user": {"$ref": "#/definitions/User"}
-                }
+                    "user": {"$ref": "#/definitions/User"},
+                },
             }
             auth_ep.errors = [
                 {"code": 400, "message": "Invalid credentials"},
-                {"code": 429, "message": "Too many attempts"}
+                {"code": 429, "message": "Too many attempts"},
             ]
             endpoints.append(auth_ep)
-        
+
         return endpoints
 
     def _extract_entities(self, requirements: List[str]) -> List[str]:
         """Extract entity names from requirements"""
         entities = []
         common_entities = [
-            "user", "users", "account", "profile",
-            "product", "products", "item", "items",
-            "order", "orders", "transaction", "transactions",
-            "category", "categories", "tag", "tags",
-            "post", "posts", "article", "articles",
-            "comment", "comments", "review", "reviews",
-            "message", "messages", "notification", "notifications",
-            "project", "projects", "task", "tasks",
-            "team", "teams", "organization", "organizations"
+            "user",
+            "users",
+            "account",
+            "profile",
+            "product",
+            "products",
+            "item",
+            "items",
+            "order",
+            "orders",
+            "transaction",
+            "transactions",
+            "category",
+            "categories",
+            "tag",
+            "tags",
+            "post",
+            "posts",
+            "article",
+            "articles",
+            "comment",
+            "comments",
+            "review",
+            "reviews",
+            "message",
+            "messages",
+            "notification",
+            "notifications",
+            "project",
+            "projects",
+            "task",
+            "tasks",
+            "team",
+            "teams",
+            "organization",
+            "organizations",
         ]
-        
+
         requirements_text = " ".join(requirements).lower()
-        
+
         for entity in common_entities:
             if entity in requirements_text:
                 # Capitalize and singularize for consistency
                 entity_name = entity.rstrip("s").capitalize()
                 if entity_name not in entities:
                     entities.append(entity_name)
-        
+
         # If no entities found, use defaults
         if not entities:
             entities = ["User", "Resource", "Setting"]
-            
+
         return entities
 
     def generate_development_guidelines(
         self, tech_stack: List[TechStackDecision]
     ) -> str:
         """Generate development guidelines based on tech stack"""
-        
+
         # Find language and framework
-        language = next((d.choice for d in tech_stack if d.category == "language"), "Python")
-        framework = next((d.choice for d in tech_stack if d.category == "framework"), "")
-        database = next((d.choice for d in tech_stack if d.category == "database"), "PostgreSQL")
-        
+        language = next(
+            (d.choice for d in tech_stack if d.category == "language"), "Python"
+        )
+        framework = next(
+            (d.choice for d in tech_stack if d.category == "framework"), ""
+        )
+        database = next(
+            (d.choice for d in tech_stack if d.category == "database"), "PostgreSQL"
+        )
+
         guidelines = f"""# Development Guidelines
 
 ## Technology Stack
@@ -709,7 +800,7 @@ project-root/
 
 ### Code Style
 """
-        
+
         if "Python" in language:
             guidelines += """- Follow PEP 8
 - Use type hints
@@ -724,7 +815,7 @@ project-root/
 - Use TypeScript strict mode
 - Maximum line length: 100 characters
 """
-        
+
         guidelines += f"""
 ### Naming Conventions
 - **Classes**: PascalCase (e.g., UserAccount)
@@ -918,31 +1009,37 @@ Types: feat, fix, docs, style, refactor, test, chore
             return "npm run dev"
         return "start application"
 
-    def generate_full_specification(
-        self, prd_path: Path
-    ) -> Dict[str, Any]:
+    def generate_full_specification(self, prd_path: Path) -> Dict[str, Any]:
         """Generate comprehensive project specification from PRD"""
-        
+
         # Ingest PRD
         project_info = self.ingest_prd(prd_path)
-        
+
         # Generate all specification components
         constitution = self.generate_project_constitution(project_info)
         phases = self.generate_phase_breakdown(project_info)
         tech_stack = self.generate_tech_stack_recommendations(project_info)
         api_endpoints = self.generate_api_contracts(project_info)
         guidelines = self.generate_development_guidelines(tech_stack)
-        
+
         # Write specification files
         (self.specs_dir / "CONSTITUTION.md").write_text(constitution)
-        (self.specs_dir / "PHASES.md").write_text(self.formatter.format_phases_document(phases))
-        (self.specs_dir / "ADR-001-tech-stack.md").write_text(self.formatter.format_adr(tech_stack))
-        (self.specs_dir / "API_CONTRACT.md").write_text(self.formatter.format_api_document(api_endpoints))
+        (self.specs_dir / "PHASES.md").write_text(
+            self.formatter.format_phases_document(phases)
+        )
+        (self.specs_dir / "ADR-001-tech-stack.md").write_text(
+            self.formatter.format_adr(tech_stack)
+        )
+        (self.specs_dir / "API_CONTRACT.md").write_text(
+            self.formatter.format_api_document(api_endpoints)
+        )
         (self.specs_dir / "DEVELOPMENT_GUIDELINES.md").write_text(guidelines)
-        
+
         # Update PROJECT.md
-        self.formatter.update_project_md(project_info, phases, tech_stack, api_endpoints)
-        
+        self.formatter.update_project_md(
+            project_info, phases, tech_stack, api_endpoints
+        )
+
         return {
             "project_info": project_info,
             "phases": phases,
@@ -950,9 +1047,9 @@ Types: feat, fix, docs, style, refactor, test, chore
             "api_endpoints": api_endpoints,
             "specs_written": [
                 "CONSTITUTION.md",
-                "PHASES.md", 
+                "PHASES.md",
                 "ADR-001-tech-stack.md",
                 "API_CONTRACT.md",
-                "DEVELOPMENT_GUIDELINES.md"
-            ]
+                "DEVELOPMENT_GUIDELINES.md",
+            ],
         }

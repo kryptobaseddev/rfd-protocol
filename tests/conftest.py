@@ -71,7 +71,8 @@ def validation_engine(temp_db):
 
     # Create temporary database
     conn = sqlite3.connect(temp_db)
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS checkpoints (
             id INTEGER PRIMARY KEY,
             timestamp TEXT,
@@ -79,7 +80,8 @@ def validation_engine(temp_db):
             status TEXT,
             details TEXT
         )
-    """)
+    """
+    )
     conn.close()
 
     ve = ValidationEngine(mock_rfd)
@@ -123,25 +125,29 @@ def sample_python_project(temp_project):
     project_dir.mkdir()
 
     # Create sample files
-    (project_dir / "app.py").write_text("""
+    (project_dir / "app.py").write_text(
+        """
 def main():
     print("Hello, World!")
     return True
 
 if __name__ == "__main__":
     main()
-""")
+"""
+    )
 
     (project_dir / "requirements.txt").write_text("flask>=2.0.0\nrequests>=2.28.0")
 
-    (project_dir / "PROJECT.md").write_text("""
+    (project_dir / "PROJECT.md").write_text(
+        """
 # Sample Python Project
 
 ## Features
 - [ ] Feature 1: Main application
 - [ ] Feature 2: Web interface
 - [ ] Feature 3: Database integration
-""")
+"""
+    )
 
     return project_dir
 
@@ -153,23 +159,27 @@ def sample_javascript_project(temp_project):
     project_dir.mkdir()
 
     # Create sample files
-    (project_dir / "index.js").write_text("""
+    (project_dir / "index.js").write_text(
+        """
 function main() {
     console.log("Hello, World!");
     return true;
 }
 
 module.exports = { main };
-""")
+"""
+    )
 
-    (project_dir / "package.json").write_text("""{
+    (project_dir / "package.json").write_text(
+        """{
   "name": "sample-js-project",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
     "express": "^4.18.0"
   }
-}""")
+}"""
+    )
 
     return project_dir
 

@@ -38,6 +38,14 @@ class RFD:
         self.spec = SpecEngine(self)
         self.session = SessionManager(self)
         self.project_updater = ProjectUpdater(self)
+        
+        # Add workflow engine for gated progression
+        from .workflow_engine import GatedWorkflow
+        self.workflow = GatedWorkflow(self)
+        
+        # Add spec-kit integration
+        from .speckit_integration import SpecKitIntegration
+        self.speckit = SpecKitIntegration(self)
 
     def _init_structure(self):
         """Create RFD directory structure"""
@@ -50,7 +58,8 @@ class RFD:
         conn = sqlite3.connect(self.db_path)
         try:
             # Core tables
-            conn.executescript("""
+            conn.executescript(
+                """
             CREATE TABLE IF NOT EXISTS features (
                 id TEXT PRIMARY KEY,
                 description TEXT,
@@ -85,7 +94,8 @@ class RFD:
                 value JSON,
                 updated_at TEXT
             );
-        """)
+        """
+            )
             conn.commit()
         finally:
             conn.close()
@@ -134,14 +144,16 @@ class RFD:
         """Get status of all features"""
         conn = sqlite3.connect(self.db_path)
         try:
-            return conn.execute("""
+            return conn.execute(
+                """
             SELECT id, status,
                    (SELECT COUNT(*) FROM checkpoints
                     WHERE feature_id = features.id
                     AND validation_passed = 1) as passing_checkpoints
             FROM features
             ORDER BY created_at
-        """).fetchall()
+        """
+            ).fetchall()
         finally:
             conn.close()
 
@@ -198,19 +210,23 @@ class RFD:
         try:
             # CRITICAL FIX: Allow revert with validation-only checkpoints
             # Try to find a checkpoint with both validation AND build passing
-            last_good = conn.execute("""
+            last_good = conn.execute(
+                """
             SELECT git_hash, timestamp, validation_passed, build_passed FROM checkpoints
             WHERE validation_passed = 1 AND build_passed = 1
             ORDER BY id DESC LIMIT 1
-            """).fetchone()
+            """
+            ).fetchone()
 
             # If no perfect checkpoint, try validation-only
             if not last_good:
-                last_good = conn.execute("""
+                last_good = conn.execute(
+                    """
                     SELECT git_hash, timestamp, validation_passed, build_passed FROM checkpoints
                     WHERE validation_passed = 1
                     ORDER BY id DESC LIMIT 1
-                """).fetchone()
+                """
+                ).fetchone()
 
             if not last_good:
                 return False, "No checkpoint with passing validation found"

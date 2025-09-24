@@ -31,7 +31,8 @@ class SessionManager:
                     import sqlite3
 
                     conn = sqlite3.connect(self.db_path)
-                    conn.executescript("""
+                    conn.executescript(
+                        """
                         CREATE TABLE IF NOT EXISTS sessions (
                             id INTEGER PRIMARY KEY,
                             started_at TEXT,
@@ -62,7 +63,8 @@ class SessionManager:
                             status TEXT,
                             evidence JSON
                         );
-                    """)
+                    """
+                    )
                     conn.commit()
                     conn.close()
 
@@ -76,7 +78,7 @@ class SessionManager:
     def create_session(self, feature_id: str) -> int:
         """Create/start new development session - alias for start()"""
         return self.start(feature_id)
-    
+
     def start(self, feature_id: str) -> int:
         """Start new development session"""
         # CRITICAL FIX: Validate feature exists in PROJECT.md spec
@@ -124,7 +126,7 @@ class SessionManager:
             "started_at": datetime.now().isoformat(),
         }
 
-        # Update feature status
+        # Update feature status in database
         conn = sqlite3.connect(self.rfd.db_path)
         try:
             conn.execute(
@@ -137,6 +139,11 @@ class SessionManager:
             conn.commit()
         finally:
             conn.close()
+        
+        # Update PROJECT.md to reflect the status change
+        from .project_updater import ProjectUpdater
+        updater = ProjectUpdater(self.rfd)
+        updater.update_feature_status(feature_id, 'in_progress')
 
         # Generate context for AI
         self._generate_context(feature_id)
@@ -173,8 +180,14 @@ class SessionManager:
             """,
                 (datetime.now().isoformat(), self.current_session["feature_id"]),
             )
+            
+            # Update PROJECT.md status
+            from .project_updater import ProjectUpdater
+            updater = ProjectUpdater(self.rfd)
+            updater.update_feature_status(self.current_session["feature_id"], 'complete')
 
         conn.commit()
+        conn.close()
 
         self.current_session = None
         return session_id
@@ -188,13 +201,15 @@ class SessionManager:
         # Otherwise, check database for any active sessions
         try:
             conn = sqlite3.connect(self.rfd.db_path)
-            result = conn.execute("""
+            result = conn.execute(
+                """
                 SELECT id, started_at, feature_id
                 FROM sessions
                 WHERE ended_at IS NULL
                 ORDER BY started_at DESC
                 LIMIT 1
-            """).fetchone()
+            """
+            ).fetchone()
             conn.close()
 
             if result:
@@ -228,11 +243,13 @@ class SessionManager:
 
         # Check for any in-progress features
         conn = sqlite3.connect(self.rfd.db_path)
-        result = conn.execute("""
+        result = conn.execute(
+            """
             SELECT id FROM features
             WHERE status = 'building'
             ORDER BY created_at DESC LIMIT 1
-        """).fetchone()
+        """
+        ).fetchone()
 
         return result[0] if result else None
 
@@ -250,11 +267,13 @@ class SessionManager:
 
         # Check for pending features
         conn = sqlite3.connect(self.rfd.db_path)
-        pending = conn.execute("""
+        pending = conn.execute(
+            """
             SELECT id FROM features
             WHERE status = 'pending'
             ORDER BY created_at LIMIT 1
-        """).fetchone()
+        """
+        ).fetchone()
 
         if pending:
             return f"./rfd session start {pending[0]}"
@@ -463,7 +482,7 @@ status: building
                 "session": self.current_session,
                 "feature": self.get_current_feature(),
             }
-        
+
         # Original implementation with key
         conn = sqlite3.connect(self.rfd.db_path)
         result = conn.execute(
@@ -480,11 +499,13 @@ status: building
     def get_session_history(self) -> list:
         """Get history of all sessions"""
         conn = sqlite3.connect(self.rfd.db_path)
-        sessions = conn.execute("""
+        sessions = conn.execute(
+            """
             SELECT id, feature_id, started_at, ended_at, success
             FROM sessions
             ORDER BY started_at DESC
-        """).fetchall()
+        """
+        ).fetchall()
 
         return [
             {

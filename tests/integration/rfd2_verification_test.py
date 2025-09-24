@@ -341,13 +341,15 @@ def validate_email(email):
         validator = ValidationEngine(rfd)
 
         # Create a realistic project setup
-        (self.temp_path / "main.py").write_text("""
+        (self.temp_path / "main.py").write_text(
+            """
 def main():
     print("Hello World")
 
 if __name__ == "__main__":
     main()
-""")
+"""
+        )
 
         # These are the kinds of lies AI might tell
         real_ai_deceptions = [
