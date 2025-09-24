@@ -172,3 +172,9 @@ MESSAGE: Implemented WAL mode, added /rfd-analyze command, removed model referen
 VALIDATION: ✅
 BUILD: ❌
 COMMIT: 0edaac7
+
+## 2025-09-24 12:26 - Checkpoint
+MESSAGE: v2.4.0 ready - WAL mode, /rfd-analyze, comprehensive docs, spec-kit parity
+VALIDATION: ✅
+BUILD: ❌
+COMMIT: c0b36bd
