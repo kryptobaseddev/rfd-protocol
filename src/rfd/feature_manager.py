@@ -4,11 +4,11 @@ Handles feature lifecycle, status tracking, and database synchronization
 Production-ready implementation that eliminates manual PROJECT.md editing
 """
 
-import sqlite3
 import json
+import sqlite3
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
+
 import frontmatter
 
 
@@ -57,9 +57,7 @@ class FeatureManager:
             if "assigned_to" not in columns:
                 conn.execute("ALTER TABLE features ADD COLUMN assigned_to TEXT")
             if "priority" not in columns:
-                conn.execute(
-                    "ALTER TABLE features ADD COLUMN priority INTEGER DEFAULT 0"
-                )
+                conn.execute("ALTER TABLE features ADD COLUMN priority INTEGER DEFAULT 0")
             if "tags" not in columns:
                 conn.execute("ALTER TABLE features ADD COLUMN tags JSON")
             if "metadata" not in columns:
@@ -122,9 +120,7 @@ class FeatureManager:
 
         for feature in features:
             # Check if feature exists
-            existing = conn.execute(
-                "SELECT id FROM features WHERE id = ?", (feature.get("id"),)
-            ).fetchone()
+            existing = conn.execute("SELECT id FROM features WHERE id = ?", (feature.get("id"),)).fetchone()
 
             if not existing:
                 # Insert new feature
@@ -146,7 +142,7 @@ class FeatureManager:
                 # Update existing feature status from PROJECT.md only if newer
                 conn.execute(
                     """
-                    UPDATE features 
+                    UPDATE features
                     SET status = ?
                     WHERE id = ? AND status != ?
                 """,
@@ -167,8 +163,8 @@ class FeatureManager:
         # Update feature status
         conn.execute(
             """
-            UPDATE features 
-            SET status = 'in_progress', 
+            UPDATE features
+            SET status = 'in_progress',
                 started_at = ?
             WHERE id = ?
         """,
@@ -197,9 +193,7 @@ class FeatureManager:
         self._update_project_md(feature_id, "in_progress")
         return True
 
-    def complete_feature(
-        self, feature_id: str, evidence: Optional[Dict] = None
-    ) -> bool:
+    def complete_feature(self, feature_id: str, evidence: Optional[Dict] = None) -> bool:
         """Mark feature as complete"""
         conn = sqlite3.connect(self.db_path)
 
@@ -226,8 +220,8 @@ class FeatureManager:
         # Update feature status
         conn.execute(
             """
-            UPDATE features 
-            SET status = 'complete', 
+            UPDATE features
+            SET status = 'complete',
                 completed_at = ?
             WHERE id = ?
         """,
@@ -257,9 +251,7 @@ class FeatureManager:
         self._update_project_md(feature_id, "complete")
         return True
 
-    def update_progress(
-        self, feature_id: str, message: str, data: Optional[Dict] = None
-    ):
+    def update_progress(self, feature_id: str, message: str, data: Optional[Dict] = None):
         """Update feature progress"""
         conn = sqlite3.connect(self.db_path)
 
@@ -288,7 +280,7 @@ class FeatureManager:
         # Get feature details
         feature = conn.execute(
             """
-            SELECT id, description, acceptance_criteria, status, 
+            SELECT id, description, acceptance_criteria, status,
                    created_at, started_at, completed_at
             FROM features WHERE id = ?
         """,
@@ -302,7 +294,7 @@ class FeatureManager:
         progress = conn.execute(
             """
             SELECT timestamp, event_type, message, data
-            FROM feature_progress 
+            FROM feature_progress
             WHERE feature_id = ?
             ORDER BY timestamp DESC
             LIMIT 10
@@ -314,7 +306,7 @@ class FeatureManager:
         tasks = conn.execute(
             """
             SELECT description, status, completed_at
-            FROM tasks 
+            FROM tasks
             WHERE feature_id = ?
             ORDER BY created_at
         """,
@@ -340,10 +332,7 @@ class FeatureManager:
                 }
                 for p in progress
             ],
-            "tasks": [
-                {"description": t[0], "status": t[1], "completed_at": t[2]}
-                for t in tasks
-            ],
+            "tasks": [{"description": t[0], "status": t[1], "completed_at": t[2]} for t in tasks],
         }
 
     def get_all_features(self) -> List[Dict]:
@@ -354,8 +343,8 @@ class FeatureManager:
             """
             SELECT id, description, status, started_at, completed_at
             FROM features
-            ORDER BY 
-                CASE status 
+            ORDER BY
+                CASE status
                     WHEN 'in_progress' THEN 1
                     WHEN 'pending' THEN 2
                     WHEN 'complete' THEN 3
@@ -417,9 +406,7 @@ class FeatureManager:
         """Validate feature acceptance criteria"""
         conn = sqlite3.connect(self.db_path)
 
-        result = conn.execute(
-            "SELECT acceptance_criteria FROM features WHERE id = ?", (feature_id,)
-        ).fetchone()
+        result = conn.execute("SELECT acceptance_criteria FROM features WHERE id = ?", (feature_id,)).fetchone()
 
         conn.close()
 
@@ -444,7 +431,7 @@ class FeatureManager:
             return
 
         # Read current content
-        with open(project_file, "r") as f:
+        with open(project_file) as f:
             post = frontmatter.load(f)
 
         # Update feature status in metadata
@@ -519,13 +506,9 @@ class FeatureManager:
                 "completed": completed,
                 "in_progress": in_progress,
                 "pending": pending,
-                "completion_rate": (
-                    (completed / total_features * 100) if total_features > 0 else 0
-                ),
+                "completion_rate": ((completed / total_features * 100) if total_features > 0 else 0),
             },
             "features": features,
             "phases": phases,
-            "current_focus": next(
-                (f for f in features if f["status"] == "in_progress"), None
-            ),
+            "current_focus": next((f for f in features if f["status"] == "in_progress"), None),
         }

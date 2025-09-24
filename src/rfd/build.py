@@ -36,11 +36,7 @@ class BuildEngine:
         stack = {}
 
         # Check for Python
-        if (
-            Path("requirements.txt").exists()
-            or Path("pyproject.toml").exists()
-            or Path("setup.py").exists()
-        ):
+        if Path("requirements.txt").exists() or Path("pyproject.toml").exists() or Path("setup.py").exists():
             stack["language"] = "python"
             if Path("manage.py").exists():
                 stack["framework"] = "django"
@@ -51,7 +47,7 @@ class BuildEngine:
                         with open("requirements.txt") as f:
                             if "fastapi" in f.read():
                                 stack["framework"] = "fastapi"
-                except:
+                except Exception:
                     pass
 
             # Check pyproject.toml for dependencies
@@ -67,7 +63,7 @@ class BuildEngine:
                             stack["framework"] = "flask"
                         elif "click" in content:
                             stack["framework"] = "click"
-                except:
+                except Exception:
                     pass
 
         # Check for JavaScript
@@ -85,7 +81,7 @@ class BuildEngine:
                         stack["framework"] = "nextjs"
                     elif "react" in deps:
                         stack["framework"] = "react"
-            except:
+            except Exception:
                 pass
 
         # Check for Go
@@ -138,15 +134,13 @@ class BuildEngine:
 
         # Try unittest
         try:
-            result = subprocess.run(
-                ["python", "-m", "unittest"], capture_output=True, text=True
-            )
+            result = subprocess.run(["python", "-m", "unittest"], capture_output=True, text=True)
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
                 "errors": result.stderr,
             }
-        except:
+        except Exception:
             pass
 
         return {"success": False, "message": "No test runner found"}
@@ -162,7 +156,7 @@ class BuildEngine:
                 "output": result.stdout,
                 "errors": result.stderr,
             }
-        except:
+        except Exception:
             return {"success": False, "message": "npm test failed"}
 
     def _run_go_tests(self) -> Dict[str, Any]:
@@ -170,15 +164,13 @@ class BuildEngine:
         import subprocess
 
         try:
-            result = subprocess.run(
-                ["go", "test", "./..."], capture_output=True, text=True
-            )
+            result = subprocess.run(["go", "test", "./..."], capture_output=True, text=True)
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
                 "errors": result.stderr,
             }
-        except:
+        except Exception:
             return {"success": False, "message": "go test failed"}
 
     def _run_rust_tests(self) -> Dict[str, Any]:
@@ -192,7 +184,7 @@ class BuildEngine:
                 "output": result.stdout,
                 "errors": result.stderr,
             }
-        except:
+        except Exception:
             return {"success": False, "message": "cargo test failed"}
 
     def compile(self) -> Dict[str, Any]:
@@ -304,9 +296,7 @@ class BuildEngine:
         try:
             import requests
 
-            base_url = self.spec.get("api_contract", {}).get(
-                "base_url", "http://localhost:8000"
-            )
+            base_url = self.spec.get("api_contract", {}).get("base_url", "http://localhost:8000")
             health = self.spec.get("api_contract", {}).get("health_check", "/health")
 
             r = requests.get(f"{base_url}{health}", timeout=2)
@@ -314,7 +304,7 @@ class BuildEngine:
                 "passing": r.status_code == 200,
                 "message": f"Service responding at {base_url}",
             }
-        except:
+        except Exception:
             return {"passing": False, "message": "Service not running"}
 
     def _check_express(self) -> Dict[str, Any]:
@@ -322,9 +312,7 @@ class BuildEngine:
         try:
             import requests
 
-            base_url = self.spec.get("api_contract", {}).get(
-                "base_url", "http://localhost:3000"
-            )
+            base_url = self.spec.get("api_contract", {}).get("base_url", "http://localhost:3000")
             health = self.spec.get("api_contract", {}).get("health_check", "/health")
 
             r = requests.get(f"{base_url}{health}", timeout=2)
@@ -332,7 +320,7 @@ class BuildEngine:
                 "passing": r.status_code == 200,
                 "message": f"Service responding at {base_url}",
             }
-        except:
+        except Exception:
             return {"passing": False, "message": "Service not running"}
 
     def _check_tests(self) -> Dict[str, Any]:
@@ -358,9 +346,7 @@ class BuildEngine:
         for cmd, runner in test_commands:
             try:
                 # First check if test runner exists
-                check_result = subprocess.run(
-                    cmd, capture_output=True, text=True, timeout=5, cwd=self.rfd.root
-                )
+                check_result = subprocess.run(cmd, capture_output=True, text=True, timeout=5, cwd=self.rfd.root)
 
                 if check_result.returncode == 0:
                     # Test runner found, now run actual tests
@@ -431,11 +417,7 @@ class BuildEngine:
             )
             return {
                 "success": result.returncode == 0,
-                "message": (
-                    "Python syntax check passed"
-                    if result.returncode == 0
-                    else result.stderr
-                ),
+                "message": ("Python syntax check passed" if result.returncode == 0 else result.stderr),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -448,21 +430,17 @@ class BuildEngine:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
                 if result.returncode == 0:
                     return {"success": True, "message": f"Built with {cmd[0]}"}
-            except:
+            except Exception:
                 continue
         return {"success": True, "message": "No build step required"}
 
     def _compile_go(self) -> Dict[str, Any]:
         """Compile Go code"""
         try:
-            result = subprocess.run(
-                ["go", "build", "."], capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(["go", "build", "."], capture_output=True, text=True, timeout=30)
             return {
                 "success": result.returncode == 0,
-                "message": (
-                    "Go build successful" if result.returncode == 0 else result.stderr
-                ),
+                "message": ("Go build successful" if result.returncode == 0 else result.stderr),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -470,14 +448,10 @@ class BuildEngine:
     def _compile_rust(self) -> Dict[str, Any]:
         """Compile Rust code"""
         try:
-            result = subprocess.run(
-                ["cargo", "build"], capture_output=True, text=True, timeout=60
-            )
+            result = subprocess.run(["cargo", "build"], capture_output=True, text=True, timeout=60)
             return {
                 "success": result.returncode == 0,
-                "message": (
-                    "Rust build successful" if result.returncode == 0 else result.stderr
-                ),
+                "message": ("Rust build successful" if result.returncode == 0 else result.stderr),
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
@@ -491,12 +465,10 @@ class BuildEngine:
             ["g++", "*.cpp", "-o", "output"],
         ]:
             try:
-                result = subprocess.run(
-                    cmd, capture_output=True, text=True, shell=True, timeout=30
-                )
+                result = subprocess.run(cmd, capture_output=True, text=True, shell=True, timeout=30)
                 if result.returncode == 0:
                     return {"success": True, "message": f"Compiled with {cmd[0]}"}
-            except:
+            except Exception:
                 continue
         return {"success": False, "message": "No C/C++ compiler found"}
 

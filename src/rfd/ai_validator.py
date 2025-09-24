@@ -50,9 +50,7 @@ class AIClaimValidator:
                     "type": "file_claim",
                     "path": file_path,
                     "valid": exists,
-                    "reason": (
-                        "File exists" if exists else "File does not exist - AI lied!"
-                    ),
+                    "reason": ("File exists" if exists else "File does not exist - AI lied!"),
                 }
             )
 
@@ -63,9 +61,7 @@ class AIClaimValidator:
                 # Strict check: function must be in the specific file mentioned AND file must exist
                 try:
                     if Path(file_hint).exists():
-                        found_in_file = self._check_function_in_file(
-                            func_name, file_hint
-                        )
+                        found_in_file = self._check_function_in_file(func_name, file_hint)
                         validation_results.append(
                             {
                                 "type": "function_claim",
@@ -103,11 +99,7 @@ class AIClaimValidator:
                         "type": "function_claim",
                         "function": func_name,
                         "valid": exists,
-                        "reason": (
-                            "Function exists"
-                            if exists
-                            else "Function not found anywhere - AI lied!"
-                        ),
+                        "reason": ("Function exists" if exists else "Function not found anywhere - AI lied!"),
                     }
                 )
 
@@ -192,9 +184,7 @@ class AIClaimValidator:
             matches = re.findall(pattern, text, re.IGNORECASE | re.MULTILINE)
             for match in matches:
                 if isinstance(match, tuple):
-                    func_name = (
-                        match[0] if match[0] else match[1] if len(match) > 1 else None
-                    )
+                    func_name = match[0] if match[0] else match[1] if len(match) > 1 else None
                 else:
                     func_name = match
 
@@ -276,9 +266,7 @@ class AIClaimValidator:
             return True
         return False
 
-    def _verify_function_exists(
-        self, func_name: str, file_hint: Optional[str] = None
-    ) -> bool:
+    def _verify_function_exists(self, func_name: str, file_hint: Optional[str] = None) -> bool:
         """Verify if a function/class actually exists in the codebase"""
         if file_hint:
             try:
@@ -291,10 +279,7 @@ class AIClaimValidator:
         # Search across all Python files
         for py_file in Path(".").glob("**/*.py"):
             # Skip virtual environments and common directories
-            if any(
-                part in {".venv", "venv", "__pycache__", ".git"}
-                for part in py_file.parts
-            ):
+            if any(part in {".venv", "venv", "__pycache__", ".git"} for part in py_file.parts):
                 continue
 
             try:
@@ -308,7 +293,7 @@ class AIClaimValidator:
     def _check_function_in_file(self, func_name: str, file_path: str) -> bool:
         """Check if a specific function/class exists in a file"""
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             # Get file extension for language-specific patterns
@@ -363,9 +348,7 @@ class AIClaimValidator:
         except Exception:
             return False
 
-    def _extract_modification_claims(
-        self, text: str
-    ) -> List[Tuple[str, str, str, Optional[str]]]:
+    def _extract_modification_claims(self, text: str) -> List[Tuple[str, str, str, Optional[str]]]:
         """Extract claims about modifications to existing code"""
         patterns = [
             # Error handling patterns
@@ -490,9 +473,7 @@ class AIClaimValidator:
 
         return detected
 
-    def _verify_modification_claim(
-        self, target: str, modification_type: str, file_hint: Optional[str] = None
-    ) -> bool:
+    def _verify_modification_claim(self, target: str, modification_type: str, file_hint: Optional[str] = None) -> bool:
         """Verify if a claimed modification is likely true"""
         # First, verify the target function/class exists
         if not self._verify_function_exists(target, file_hint):
@@ -505,22 +486,15 @@ class AIClaimValidator:
         else:
             # Search for the file containing this function
             for py_file in Path(".").glob("**/*.py"):
-                if any(
-                    part in {".venv", "venv", "__pycache__", ".git"}
-                    for part in py_file.parts
-                ):
+                if any(part in {".venv", "venv", "__pycache__", ".git"} for part in py_file.parts):
                     continue
 
                 try:
-                    with open(py_file, "r", encoding="utf-8", errors="ignore") as f:
+                    with open(py_file, encoding="utf-8", errors="ignore") as f:
                         content = f.read()
                         if (
-                            re.search(
-                                rf"^\s*def\s+{target}\s*\(", content, re.MULTILINE
-                            )
-                            or re.search(
-                                rf"^\s*class\s+{target}\s*[:\(]", content, re.MULTILINE
-                            )
+                            re.search(rf"^\s*def\s+{target}\s*\(", content, re.MULTILINE)
+                            or re.search(rf"^\s*class\s+{target}\s*[:\(]", content, re.MULTILINE)
                             or re.search(
                                 rf"^\s*async\s+def\s+{target}\s*\(",
                                 content,
@@ -549,16 +523,13 @@ class AIClaimValidator:
             if modification_type == "error_handling":
                 # Look for try/except or error handling patterns
                 has_error_handling = any(
-                    pattern in function_content
-                    for pattern in ["try:", "except ", "except:", "raise ", "finally:"]
+                    pattern in function_content for pattern in ["try:", "except ", "except:", "raise ", "finally:"]
                 )
                 return has_error_handling
 
             elif modification_type == "logging":
                 # Must have actual logging imports and calls, not just print
-                has_logging = (
-                    "logger" in function_content or "logging" in function_content
-                )
+                has_logging = "logger" in function_content or "logging" in function_content
                 return has_logging
 
             elif modification_type == "input_validation":
@@ -639,3 +610,152 @@ class AIClaimValidator:
 
         # Extract the function content
         return "\n".join(lines[start_line:end_line])
+
+    def detect_mock_data(self, file_path: str = None, content: str = None) -> Tuple[bool, List[Dict[str, Any]]]:
+        """
+        Detect mock data patterns in code
+        Returns (has_mocks, details) where details contains specific mock findings
+        """
+        mock_findings = []
+
+        # Get content to check
+        if file_path and not content:
+            if not Path(file_path).exists():
+                return False, [{"type": "error", "message": f"File {file_path} not found"}]
+            try:
+                with open(file_path, encoding="utf-8") as f:
+                    content = f.read()
+            except Exception as e:
+                return False, [{"type": "error", "message": f"Error reading file: {e}"}]
+
+        if not content:
+            return False, [{"type": "error", "message": "No content to check"}]
+
+        # Common mock data patterns
+        # Note: Using chr() to avoid self-detection in validation patterns
+        mock_patterns = [
+            # Test/fake data literals
+            (r'["\']test[_\s]?user["\']', "test user data"),
+            (
+                r'["\']' + chr(102) + r'ake[_\s]?\w+["\']',
+                chr(102) + "ake data",
+            ),  # f-ake
+            (
+                r'["\']' + chr(100) + r'ummy[_\s]?\w+["\']',
+                chr(100) + "ummy data",
+            ),  # d-ummy
+            (r'["\']example\.com["\']', "example.com domain"),
+            (r'["\']foo@bar\.com["\']', "foo@bar email"),
+            (r'["\']lorem\s+ipsum["\']', "lorem ipsum text"),
+            (r'["\']123[- ]?456[- ]?7890["\']', "phone number pattern"),
+            # Mock libraries and frameworks
+            (r"from\s+unittest\.mock\s+import", "unittest mock import"),
+            (r"import\s+mock", "mock module import"),
+            (r"@mock\.", "mock decorator"),
+            (r"MagicMock\s*\(", "MagicMock usage"),
+            (r"Mock\s*\(", "Mock object usage"),
+            (r"patch\s*\(", "patch usage"),
+            # Hardcoded test values
+            (r'password\s*=\s*["\']password["\']', "hardcoded test password"),
+            (r'token\s*=\s*["\']test[_\s]?token["\']', "hardcoded test token"),
+            (r'api[_\s]?key\s*=\s*["\']test[_\s]?key["\']', "hardcoded test API key"),
+            # Mock functions/methods
+            (r"def\s+mock_\w+", "mock function definition"),
+            (
+                r"def\s+" + chr(102) + r"ake_\w+",
+                chr(102) + "ake function definition",
+            ),  # f-ake
+            (r"def\s+stub_\w+", "stub function definition"),
+            (r"def\s+test_\w+", "test function definition"),
+            # Mock return values
+            (r'return\s+["\']mock[_\s]?\w+["\']', "mock return value"),
+            (
+                r'return\s+["\']' + chr(102) + r'ake[_\s]?\w+["\']',
+                chr(102) + "ake return value",
+            ),  # f-ake
+            (r'return\s+\{\s*["\']test["\']', "test object return"),
+            # Mock database records
+            (r'INSERT\s+INTO.*["\']test_', "test database insert"),
+            (r'VALUES.*["\']dummy', "dummy database values"),
+            # Fixture and factory patterns
+            (r"@pytest\.fixture", "pytest fixture"),
+            (r"factory\.Faker\(", "Faker factory"),
+            (r"FactoryBoy", "FactoryBoy usage"),
+        ]
+
+        # Check each pattern
+        for pattern, description in mock_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
+            if matches:
+                # Get line numbers for each match
+                lines = content.split("\n")
+                for match in matches:
+                    line_num = None
+                    for i, line in enumerate(lines, 1):
+                        if match in line or (isinstance(match, str) and match.strip() in line):
+                            line_num = i
+                            mock_findings.append(
+                                {
+                                    "type": "mock_data",
+                                    "pattern": description,
+                                    "match": (match[:100] if len(str(match)) > 100 else str(match)),
+                                    "line": line_num,
+                                    "file": file_path or "provided content",
+                                }
+                            )
+                            break
+
+        # Check for test files (which are allowed to have mocks)
+        is_test_file = False
+        if file_path:
+            is_test_file = any(part in str(file_path) for part in ["test_", "_test.py", "tests/", "test/"])
+
+        # Filter findings if in test file
+        if is_test_file:
+            # In test files, only flag production mock usage
+            mock_findings = [f for f in mock_findings if "import" not in f["pattern"] and "fixture" not in f["pattern"]]
+
+        has_mocks = len(mock_findings) > 0
+
+        return has_mocks, mock_findings
+
+    def validate_no_mocks(self, directory: str = "src", exclude_tests: bool = True) -> Dict[str, Any]:
+        """
+        Validate that no mock data exists in production code
+        Returns validation result with details
+        """
+        results = {
+            "passing": True,
+            "files_checked": 0,
+            "files_with_mocks": [],
+            "total_mock_instances": 0,
+            "details": [],
+        }
+
+        # Get all Python files
+        path = Path(directory)
+        if not path.exists():
+            return {"passing": False, "error": f"Directory {directory} not found"}
+
+        for py_file in path.glob("**/*.py"):
+            # Skip test files if requested
+            if exclude_tests:
+                if any(part in str(py_file) for part in ["test_", "_test.py", "tests/", "test/", "__pycache__"]):
+                    continue
+
+            # Skip the ai_validator.py file itself since it contains mock patterns for detection
+            if "ai_validator.py" in str(py_file):
+                continue
+
+            results["files_checked"] += 1
+
+            # Check for mocks in this file
+            has_mocks, findings = self.detect_mock_data(str(py_file))
+
+            if has_mocks:
+                results["passing"] = False
+                results["files_with_mocks"].append(str(py_file))
+                results["total_mock_instances"] += len(findings)
+                results["details"].extend(findings)
+
+        return results

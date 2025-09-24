@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rfd-protocol"
-version = "2.2.0"
+version = "2.3.0"
 description = "Reality-First Development Protocol - Prevents AI hallucination and ensures spec-driven development"
 readme = "README.md"
 license = {text = "MIT"}
@@ -103,6 +103,7 @@ markers = [
 ]
 
 [tool.black]
+line-length = 120
 target-version = ['py38']
 include = '\.pyi?$'
 extend-exclude = '''
@@ -121,7 +122,7 @@ extend-exclude = '''
 
 [tool.ruff]
 target-version = "py38"
-line-length = 88
+line-length = 120
 
 [tool.ruff.lint]
 select = [

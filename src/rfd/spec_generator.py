@@ -3,7 +3,6 @@ Comprehensive Spec Generation System for RFD
 Combines RFD's reality-first approach with spec-kit's planning methodologies
 """
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -214,16 +213,12 @@ class SpecGenerator:
 """
         return constitution
 
-    def generate_phase_breakdown(
-        self, project_info: Dict[str, Any]
-    ) -> List[ProjectPhase]:
+    def generate_phase_breakdown(self, project_info: Dict[str, Any]) -> List[ProjectPhase]:
         """Generate development phases based on project info"""
         phases = []
 
         # Phase 0: Foundation
-        foundation = ProjectPhase(
-            id="phase-0", name="Foundation & Setup", type="planning", duration_weeks=1
-        )
+        foundation = ProjectPhase(id="phase-0", name="Foundation & Setup", type="planning", duration_weeks=1)
         foundation.dependencies = []
         foundation.deliverables = [
             "Development environment setup",
@@ -248,9 +243,7 @@ class SpecGenerator:
         phases.append(foundation)
 
         # Phase 1: Core Data Model
-        data_model = ProjectPhase(
-            id="phase-1", name="Core Data Model", type="development", duration_weeks=2
-        )
+        data_model = ProjectPhase(id="phase-1", name="Core Data Model", type="development", duration_weeks=2)
         data_model.dependencies = ["phase-0"]
         data_model.deliverables = [
             "Database schema",
@@ -367,9 +360,7 @@ class SpecGenerator:
 
         return phases
 
-    def generate_tech_stack_recommendations(
-        self, project_info: Dict[str, Any]
-    ) -> List[TechStackDecision]:
+    def generate_tech_stack_recommendations(self, project_info: Dict[str, Any]) -> List[TechStackDecision]:
         """Generate technology stack recommendations"""
         tech_stack = []
 
@@ -379,15 +370,11 @@ class SpecGenerator:
         all_text = requirements.lower() + " " + features.lower()
 
         # Language decision
-        language_decision = TechStackDecision(
-            category="language", choice="", rationale=""
-        )
+        language_decision = TechStackDecision(category="language", choice="", rationale="")
 
         if "real-time" in all_text or "websocket" in all_text:
             language_decision.choice = "Node.js/TypeScript"
-            language_decision.rationale = (
-                "Excellent real-time support and unified language across stack"
-            )
+            language_decision.rationale = "Excellent real-time support and unified language across stack"
             language_decision.alternatives_considered = [
                 "Python + Django Channels",
                 "Go",
@@ -399,9 +386,7 @@ class SpecGenerator:
             language_decision.alternatives_considered = ["R", "Julia", "Java"]
         elif "mobile" in all_text:
             language_decision.choice = "React Native/TypeScript"
-            language_decision.rationale = (
-                "Cross-platform mobile development with code reuse"
-            )
+            language_decision.rationale = "Cross-platform mobile development with code reuse"
             language_decision.alternatives_considered = [
                 "Flutter",
                 "Native (Swift/Kotlin)",
@@ -409,9 +394,7 @@ class SpecGenerator:
             ]
         else:
             language_decision.choice = "Python"
-            language_decision.rationale = (
-                "Rapid development, extensive libraries, strong community"
-            )
+            language_decision.rationale = "Rapid development, extensive libraries, strong community"
             language_decision.alternatives_considered = ["Node.js", "Ruby", "Go"]
 
         language_decision.constraints = [
@@ -426,16 +409,12 @@ class SpecGenerator:
         tech_stack.append(language_decision)
 
         # Framework decision
-        framework_decision = TechStackDecision(
-            category="framework", choice="", rationale=""
-        )
+        framework_decision = TechStackDecision(category="framework", choice="", rationale="")
 
         if language_decision.choice == "Python":
             if "api" in all_text or "rest" in all_text:
                 framework_decision.choice = "FastAPI"
-                framework_decision.rationale = (
-                    "Modern, fast, automatic documentation, async support"
-                )
+                framework_decision.rationale = "Modern, fast, automatic documentation, async support"
                 framework_decision.alternatives_considered = [
                     "Django REST",
                     "Flask",
@@ -443,9 +422,7 @@ class SpecGenerator:
                 ]
             else:
                 framework_decision.choice = "Django"
-                framework_decision.rationale = (
-                    "Batteries included, rapid development, strong security"
-                )
+                framework_decision.rationale = "Batteries included, rapid development, strong security"
                 framework_decision.alternatives_considered = [
                     "Flask",
                     "FastAPI",
@@ -453,9 +430,7 @@ class SpecGenerator:
                 ]
         elif "TypeScript" in language_decision.choice:
             framework_decision.choice = "NestJS"
-            framework_decision.rationale = (
-                "Enterprise-grade, modular architecture, TypeScript-first"
-            )
+            framework_decision.rationale = "Enterprise-grade, modular architecture, TypeScript-first"
             framework_decision.alternatives_considered = ["Express", "Fastify", "Koa"]
 
         framework_decision.constraints = [
@@ -481,15 +456,11 @@ class SpecGenerator:
             ]
         elif "real-time" in all_text or "chat" in all_text:
             db_decision.choice = "PostgreSQL + Redis"
-            db_decision.rationale = (
-                "PostgreSQL for persistence, Redis for real-time features"
-            )
+            db_decision.rationale = "PostgreSQL for persistence, Redis for real-time features"
             db_decision.alternatives_considered = ["MongoDB", "CassandraDB"]
         elif "analytics" in all_text or "reporting" in all_text:
             db_decision.choice = "PostgreSQL"
-            db_decision.rationale = (
-                "Excellent analytical capabilities, window functions, extensions"
-            )
+            db_decision.rationale = "Excellent analytical capabilities, window functions, extensions"
             db_decision.alternatives_considered = [
                 "ClickHouse",
                 "TimescaleDB",
@@ -659,17 +630,11 @@ class SpecGenerator:
         ]
 
         for auth_ep in auth_endpoints:
-            auth_ep.auth_required = (
-                False if "login" in auth_ep.path or "register" in auth_ep.path else True
-            )
+            auth_ep.auth_required = False if "login" in auth_ep.path or "register" in auth_ep.path else True
             auth_ep.rate_limit = "10 requests per minute"
             auth_ep.request_schema = {
                 "type": "object",
-                "required": (
-                    ["email", "password"]
-                    if "login" in auth_ep.path or "register" in auth_ep.path
-                    else []
-                ),
+                "required": (["email", "password"] if "login" in auth_ep.path or "register" in auth_ep.path else []),
                 "properties": {
                     "email": {"type": "string", "format": "email"},
                     "password": {"type": "string", "minLength": 8},
@@ -747,21 +712,13 @@ class SpecGenerator:
 
         return entities
 
-    def generate_development_guidelines(
-        self, tech_stack: List[TechStackDecision]
-    ) -> str:
+    def generate_development_guidelines(self, tech_stack: List[TechStackDecision]) -> str:
         """Generate development guidelines based on tech stack"""
 
         # Find language and framework
-        language = next(
-            (d.choice for d in tech_stack if d.category == "language"), "Python"
-        )
-        framework = next(
-            (d.choice for d in tech_stack if d.category == "framework"), ""
-        )
-        database = next(
-            (d.choice for d in tech_stack if d.category == "database"), "PostgreSQL"
-        )
+        language = next((d.choice for d in tech_stack if d.category == "language"), "Python")
+        framework = next((d.choice for d in tech_stack if d.category == "framework"), "")
+        database = next((d.choice for d in tech_stack if d.category == "database"), "PostgreSQL")
 
         guidelines = f"""# Development Guidelines
 
@@ -1024,21 +981,13 @@ Types: feat, fix, docs, style, refactor, test, chore
 
         # Write specification files
         (self.specs_dir / "CONSTITUTION.md").write_text(constitution)
-        (self.specs_dir / "PHASES.md").write_text(
-            self.formatter.format_phases_document(phases)
-        )
-        (self.specs_dir / "ADR-001-tech-stack.md").write_text(
-            self.formatter.format_adr(tech_stack)
-        )
-        (self.specs_dir / "API_CONTRACT.md").write_text(
-            self.formatter.format_api_document(api_endpoints)
-        )
+        (self.specs_dir / "PHASES.md").write_text(self.formatter.format_phases_document(phases))
+        (self.specs_dir / "ADR-001-tech-stack.md").write_text(self.formatter.format_adr(tech_stack))
+        (self.specs_dir / "API_CONTRACT.md").write_text(self.formatter.format_api_document(api_endpoints))
         (self.specs_dir / "DEVELOPMENT_GUIDELINES.md").write_text(guidelines)
 
         # Update PROJECT.md
-        self.formatter.update_project_md(
-            project_info, phases, tech_stack, api_endpoints
-        )
+        self.formatter.update_project_md(project_info, phases, tech_stack, api_endpoints)
 
         return {
             "project_info": project_info,

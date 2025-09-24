@@ -13,6 +13,8 @@ from typing import Any, Dict
 
 import frontmatter
 
+from .db_utils import get_db_connection, init_database, migrate_to_wal
+
 from .build import BuildEngine
 from .project_updater import ProjectUpdater
 from .session import SessionManager
@@ -38,13 +40,15 @@ class RFD:
         self.spec = SpecEngine(self)
         self.session = SessionManager(self)
         self.project_updater = ProjectUpdater(self)
-        
+
         # Add workflow engine for gated progression
         from .workflow_engine import GatedWorkflow
+
         self.workflow = GatedWorkflow(self)
-        
+
         # Add spec-kit integration
         from .speckit_integration import SpecKitIntegration
+
         self.speckit = SpecKitIntegration(self)
 
     def _init_structure(self):
@@ -54,8 +58,13 @@ class RFD:
         (self.rfd_dir / "context" / "checkpoints").mkdir(exist_ok=True)
 
     def _init_database(self):
-        """Initialize SQLite for state management"""
-        conn = sqlite3.connect(self.db_path)
+        """Initialize SQLite with WAL mode for state management"""
+        # Use new database utilities for WAL mode and proper setup
+        init_database(self.db_path)
+        migrate_to_wal(self.db_path)
+        
+        # Get connection with WAL mode
+        conn = get_db_connection(self.db_path)
         try:
             # Core tables
             conn.executescript(
@@ -114,7 +123,7 @@ class RFD:
             post = frontmatter.loads(content)
             if post.metadata:
                 return post.metadata
-        except:
+        except Exception:
             pass
 
         # Try to find JSON in the content
@@ -124,7 +133,7 @@ class RFD:
             json_match = re.search(r"\{.*\}", content, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
-        except:
+        except Exception:
             pass
 
         # Return empty dict if no valid format found
@@ -165,10 +174,8 @@ class RFD:
 
         # Git commit
         try:
-            git_hash = subprocess.run(
-                ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-            ).stdout.strip()
-        except:
+            git_hash = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        except Exception:
             git_hash = "no-git"
 
         # Save checkpoint
@@ -186,9 +193,7 @@ class RFD:
                     validation["passing"],
                     build["passing"],
                     git_hash,
-                    json.dumps(
-                        {"message": message, "validation": validation, "build": build}
-                    ),
+                    json.dumps({"message": message, "validation": validation, "build": build}),
                 ),
             )
             conn.commit()

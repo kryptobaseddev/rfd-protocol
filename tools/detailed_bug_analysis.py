@@ -49,9 +49,7 @@ class TestClass:
             print(f"Claim: '{claim}' -> {'✅' if passed else '❌'}")
             if details:
                 for detail in details:
-                    print(
-                        f"  {detail['type']}: {detail['target']} - {detail['message']}"
-                    )
+                    print(f"  {detail['type']}: {detail['target']} - {detail['message']}")
 
         # Test the internal function detection
         print("\n--- Internal Function Detection Test ---")

@@ -145,10 +145,7 @@ setup(name='test-project', version='1.0.0')
         self.assertEqual(rfd.root, Path.cwd())
 
         # Memory database should be relative
-        self.assertTrue(
-            rfd.db_path.is_relative_to(Path.cwd())
-            or rfd.db_path == Path.home() / ".rfd" / "memory.db"
-        )
+        self.assertTrue(rfd.db_path.is_relative_to(Path.cwd()) or rfd.db_path == Path.home() / ".rfd" / "memory.db")
 
         # No hardcoded /mnt/projects paths
         validator = ValidationEngine(rfd)
@@ -278,9 +275,7 @@ setup(name='test-project', version='1.0.0')
 
         # Test Python-specific function detection
         Path("app.py").write_text("def process_data(): pass")
-        passed, _ = validator.validate_ai_claims(
-            "Created app.py with function process_data"
-        )
+        passed, _ = validator.validate_ai_claims("Created app.py with function process_data")
         self.assertTrue(passed, "Should detect Python function")
         Path("app.py").unlink()
 
@@ -332,9 +327,7 @@ setup(name='test-project', version='1.0.0')
                 if hasattr(rfd, "config_dir"):
                     # Config should be in home or current dir
                     config_path = str(rfd.config_dir)
-                    self.assertTrue(
-                        env["HOME"] in config_path or self.test_dir in config_path
-                    )
+                    self.assertTrue(env["HOME"] in config_path or self.test_dir in config_path)
 
     def test_spec_engine_works_without_questionary(self):
         """SpecEngine should have fallback if questionary unavailable"""

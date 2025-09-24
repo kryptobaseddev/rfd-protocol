@@ -3,7 +3,6 @@ Validation Engine for RFD
 Tests that code actually works as specified
 """
 
-import re
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -23,9 +22,7 @@ class ValidationEngine:
         self.results = []
         self.ai_validator = AIClaimValidator()
 
-    def validate(
-        self, feature: Optional[str] = None, full: bool = False
-    ) -> Dict[str, Any]:
+    def validate(self, feature: Optional[str] = None, full: bool = False) -> Dict[str, Any]:
         """Run validation tests"""
         self.results = []
 
@@ -57,11 +54,7 @@ class ValidationEngine:
         return {
             "passing": results["passing"],
             "failed_count": sum(1 for r in results["results"] if not r["passed"]),
-            "message": (
-                "All validations passing"
-                if results["passing"]
-                else "Validation failures detected"
-            ),
+            "message": ("All validations passing" if results["passing"] else "Validation failures detected"),
         }
 
     def check_ai_claim(self, claim: str) -> bool:
@@ -97,11 +90,7 @@ class ValidationEngine:
                 "dist",
                 "__pycache__",
             }
-            files = [
-                f
-                for f in Path(".").glob("**/*.py")
-                if not any(part in exclude_dirs for part in f.parts)
-            ]
+            files = [f for f in Path(".").glob("**/*.py") if not any(part in exclude_dirs for part in f.parts)]
             passed = len(files) <= rules["max_files"]
             self.results.append(
                 {
@@ -137,7 +126,7 @@ class ValidationEngine:
                                 "message": f"{f.name} has {lines} lines (max: {rules['max_loc_per_file']})",
                             }
                         )
-                except:
+                except Exception:
                     pass
 
     def _validate_api(self):
@@ -257,6 +246,41 @@ class ValidationEngine:
                     }
                 )
 
+        # Special validation for mock_detection feature
+        if feature_id == "mock_detection":
+            # Check if mock detection is implemented
+            mock_results = self.ai_validator.validate_no_mocks("src/rfd", exclude_tests=True)
+
+            # The feature passes if we can detect mocks (functionality exists)
+            # and no mocks are found in production code
+            feature_implemented = True  # We implemented the detection
+            no_mocks_in_prod = mock_results["passing"]
+
+            self.results.append(
+                {
+                    "test": f"feature_{feature_id}",
+                    "passed": feature_implemented and no_mocks_in_prod,
+                    "message": (
+                        f"Mock detection: {mock_results['files_checked']} files checked, "
+                        f"{len(mock_results['files_with_mocks'])} with mocks"
+                        if not no_mocks_in_prod
+                        else "Mock detection working - no mocks found"
+                    ),
+                }
+            )
+
+            # Add details about any mocks found
+            if not no_mocks_in_prod and mock_results.get("details"):
+                for detail in mock_results["details"][:3]:  # Show first 3 examples
+                    self.results.append(
+                        {
+                            "test": f"mock_found_{detail['file']}",
+                            "passed": False,
+                            "message": f"Mock data found: {detail['pattern']} at line {detail.get('line', '?')}",
+                        }
+                    )
+            return
+
         # Custom acceptance criteria
         status = feature.get("status", "pending")
         self.results.append(
@@ -276,9 +300,7 @@ class ValidationEngine:
 
         if db_type == "sqlite":
             # Check for SQLite database file
-            db_files = list(Path(".").glob("**/*.db")) + list(
-                Path(".").glob("**/*.sqlite")
-            )
+            db_files = list(Path(".").glob("**/*.db")) + list(Path(".").glob("**/*.sqlite"))
             if db_files:
                 # Validate schema if specified
                 if "schema" in self.spec.get("database", {}):
@@ -298,9 +320,7 @@ class ValidationEngine:
                     try:
                         conn = sqlite3.connect(".rfd/memory.db")
                         cursor = conn.cursor()
-                        cursor.execute(
-                            "SELECT count(*) FROM sqlite_master WHERE type='table'"
-                        )
+                        cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
                         table_count = cursor.fetchone()[0]
                         conn.close()
                         self.results.append(

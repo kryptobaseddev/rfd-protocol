@@ -8,6 +8,8 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Dict, Optional
 
+from .db_utils import get_db_connection
+
 
 class SessionManager:
     def __init__(self, rfd):
@@ -30,7 +32,7 @@ class SessionManager:
                     """Initialize the database with required tables"""
                     import sqlite3
 
-                    conn = sqlite3.connect(self.db_path)
+                    conn = get_db_connection(self.db_path)
                     conn.executescript(
                         """
                         CREATE TABLE IF NOT EXISTS sessions (
@@ -75,37 +77,45 @@ class SessionManager:
         self.current_session = None
         self.context_dir = self.rfd.rfd_dir / "context"
 
+        # Load active session if exists
+        self._load_active_session()
+
     def create_session(self, feature_id: str) -> int:
         """Create/start new development session - alias for start()"""
         return self.start(feature_id)
 
     def start(self, feature_id: str) -> int:
         """Start new development session"""
-        # CRITICAL FIX: Validate feature exists in PROJECT.md spec
-        spec = self.rfd.load_project_spec()
-        feature_exists = False
+        # Check if feature exists in database (not markdown!)
+        conn = get_db_connection(self.rfd.db_path)
 
-        # Check if feature is defined in PROJECT.md
-        for feature in spec.get("features", []):
-            if feature.get("id") == feature_id:
-                feature_exists = True
-                break
+        # First check if feature exists in database
+        feature = conn.execute("SELECT id, description, status FROM features WHERE id = ?", (feature_id,)).fetchone()
 
-        # Allow bypassing spec validation for testing or when no features defined
-        if not feature_exists:
-            features_list = spec.get("features", [])
-            # Only raise error if features are explicitly defined and this feature isn't in them
-            if features_list:
-                raise ValueError(
-                    f"Feature '{feature_id}' not found in PROJECT.md spec. Available features: {[f.get('id') for f in features_list]}"
+        if not feature:
+            # Get all available features from database for error message
+            all_features = conn.execute("SELECT id FROM features ORDER BY created_at DESC").fetchall()
+            available = [f[0] for f in all_features]
+
+            # If no features at all, allow creating new one
+            if not available:
+                # Add feature to database
+                conn.execute(
+                    """INSERT INTO features (id, description, status, created_at)
+                       VALUES (?, ?, 'pending', datetime('now'))""",
+                    (feature_id, f"Feature {feature_id}"),
                 )
+                conn.commit()
+            else:
+                conn.close()
+                raise ValueError(f"Feature '{feature_id}' not found in database. Available features: {available}")
 
         # End any existing session
         if self.current_session:
             self.end(success=False)
 
         # Create new session
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         try:
             cursor = conn.execute(
                 """
@@ -127,7 +137,7 @@ class SessionManager:
         }
 
         # Update feature status in database
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         try:
             conn.execute(
                 """
@@ -139,11 +149,12 @@ class SessionManager:
             conn.commit()
         finally:
             conn.close()
-        
+
         # Update PROJECT.md to reflect the status change
         from .project_updater import ProjectUpdater
+
         updater = ProjectUpdater(self.rfd)
-        updater.update_feature_status(feature_id, 'in_progress')
+        updater.update_feature_status(feature_id, "in_progress")
 
         # Generate context for AI
         self._generate_context(feature_id)
@@ -161,7 +172,7 @@ class SessionManager:
         self._create_session_snapshot(session_id, success)
 
         # Update session record
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         conn.execute(
             """
             UPDATE sessions
@@ -180,11 +191,12 @@ class SessionManager:
             """,
                 (datetime.now().isoformat(), self.current_session["feature_id"]),
             )
-            
+
             # Update PROJECT.md status
             from .project_updater import ProjectUpdater
+
             updater = ProjectUpdater(self.rfd)
-            updater.update_feature_status(self.current_session["feature_id"], 'complete')
+            updater.update_feature_status(self.current_session["feature_id"], "complete")
 
         conn.commit()
         conn.close()
@@ -200,7 +212,7 @@ class SessionManager:
 
         # Otherwise, check database for any active sessions
         try:
-            conn = sqlite3.connect(self.rfd.db_path)
+            conn = get_db_connection(self.rfd.db_path)
             result = conn.execute(
                 """
                 SELECT id, started_at, feature_id
@@ -242,7 +254,7 @@ class SessionManager:
             return self.current_session["feature_id"]
 
         # Check for any in-progress features
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         result = conn.execute(
             """
             SELECT id FROM features
@@ -266,7 +278,7 @@ class SessionManager:
             return "./rfd build  # Fix build errors"
 
         # Check for pending features
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         pending = conn.execute(
             """
             SELECT id FROM features
@@ -382,9 +394,7 @@ status: building
         # Generate snapshot filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         feature_id = self.current_session.get("feature_id", "unknown")
-        snapshot_file = (
-            snapshot_dir / f"session_{session_id}_{feature_id}_{timestamp}.json"
-        )
+        snapshot_file = snapshot_dir / f"session_{session_id}_{feature_id}_{timestamp}.json"
 
         # Gather all session data
         snapshot_data = {
@@ -404,9 +414,7 @@ status: building
         if context_file.exists():
             snapshot_data["context"] = {
                 "content": context_file.read_text(),
-                "last_modified": datetime.fromtimestamp(
-                    context_file.stat().st_mtime
-                ).isoformat(),
+                "last_modified": datetime.fromtimestamp(context_file.stat().st_mtime).isoformat(),
             }
 
         # Add memory state
@@ -420,7 +428,7 @@ status: building
             snapshot_data["validation"] = validation
 
         # Add checkpoints from this session
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         checkpoints = conn.execute(
             """
             SELECT timestamp, validation_passed, build_passed, git_hash, evidence
@@ -462,7 +470,7 @@ status: building
 
     def store_context(self, key: str, value: Any):
         """Store context value for persistence"""
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         conn.execute(
             """
             INSERT OR REPLACE INTO memory (key, value, updated_at)
@@ -484,7 +492,7 @@ status: building
             }
 
         # Original implementation with key
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         result = conn.execute(
             """
             SELECT value FROM memory WHERE key = ?
@@ -498,7 +506,7 @@ status: building
 
     def get_session_history(self) -> list:
         """Get history of all sessions"""
-        conn = sqlite3.connect(self.rfd.db_path)
+        conn = get_db_connection(self.rfd.db_path)
         sessions = conn.execute(
             """
             SELECT id, feature_id, started_at, ended_at, success
@@ -517,3 +525,27 @@ status: building
             }
             for s in sessions
         ]
+
+    def _load_active_session(self):
+        """Load active session on initialization"""
+        conn = get_db_connection(self.rfd.db_path)
+
+        # Find active session (started but not ended)
+        result = conn.execute(
+            """
+            SELECT id, feature_id, started_at
+            FROM sessions
+            WHERE ended_at IS NULL
+            ORDER BY started_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
+        if result:
+            self.current_session = {
+                "id": result[0],
+                "feature_id": result[1],
+                "started_at": result[2],
+            }
+
+        conn.close()

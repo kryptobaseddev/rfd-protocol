@@ -3,40 +3,38 @@ Spec-Kit Style Integration for RFD
 Brings the best of GitHub's spec-kit into RFD
 """
 
-import json
 import sqlite3
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-import frontmatter
+from pathlib import Path
+from typing import List
 
 
 class SpecKitIntegration:
     """Integrates spec-kit style workflow into RFD"""
-    
+
     def __init__(self, rfd):
         self.rfd = rfd
-        self.specs_dir = Path('specs')
-        self.memory_dir = Path('memory')
-        self.templates_dir = self.rfd.rfd_dir / 'templates'
-        
+        self.specs_dir = Path("specs")
+        self.memory_dir = Path("memory")
+        self.templates_dir = self.rfd.rfd_dir / "templates"
+
         # Create directories
         self.specs_dir.mkdir(exist_ok=True)
         self.memory_dir.mkdir(exist_ok=True)
-    
+
     def create_constitution(self) -> Path:
         """
         Create project constitution (immutable principles)
         Like spec-kit's memory/constitution.md
         """
-        constitution_file = self.memory_dir / 'constitution.md'
-        
+        constitution_file = self.memory_dir / "constitution.md"
+
         if constitution_file.exists():
             print("Constitution already exists")
             return constitution_file
-        
+
         spec = self.rfd.load_project_spec()
-        
+
         constitution = f"""# Project Constitution
 Generated: {datetime.now().isoformat()}
 
@@ -86,11 +84,11 @@ Features must be implemented in order:
 ---
 This constitution is immutable. Any changes require unanimous agreement and version bump.
 """
-        
+
         constitution_file.write_text(constitution)
         print(f"✅ Created constitution at {constitution_file}")
         return constitution_file
-    
+
     def specify_feature(self, feature_id: str) -> Path:
         """
         Create detailed specification for a feature
@@ -99,23 +97,23 @@ This constitution is immutable. Any changes require unanimous agreement and vers
         # Get feature from PROJECT.md
         spec = self.rfd.load_project_spec()
         feature = None
-        
-        for f in spec.get('features', []):
-            if f['id'] == feature_id:
+
+        for f in spec.get("features", []):
+            if f["id"] == feature_id:
                 feature = f
                 break
-        
+
         if not feature:
             raise ValueError(f"Feature {feature_id} not found in PROJECT.md")
-        
+
         # Create feature directory
-        feature_num = spec.get('features', []).index(feature) + 1
+        feature_num = spec.get("features", []).index(feature) + 1
         feature_dir = self.specs_dir / f"{feature_num:03d}-{feature_id}"
         feature_dir.mkdir(exist_ok=True)
-        
+
         # Create spec.md
-        spec_file = feature_dir / 'spec.md'
-        
+        spec_file = feature_dir / "spec.md"
+
         spec_content = f"""# Feature Specification: {feature['description']}
 Feature ID: {feature_id}
 Created: {datetime.now().isoformat()}
@@ -177,11 +175,11 @@ Status: {feature.get('status', 'pending')}
 ## Notes
 [Additional context or clarifications]
 """
-        
+
         spec_file.write_text(spec_content)
         print(f"✅ Created specification at {spec_file}")
         return spec_file
-    
+
     def create_plan(self, feature_id: str) -> Path:
         """
         Create technical implementation plan
@@ -189,21 +187,21 @@ Status: {feature.get('status', 'pending')}
         """
         spec = self.rfd.load_project_spec()
         feature = None
-        
-        for f in spec.get('features', []):
-            if f['id'] == feature_id:
+
+        for f in spec.get("features", []):
+            if f["id"] == feature_id:
                 feature = f
                 break
-        
+
         if not feature:
             raise ValueError(f"Feature {feature_id} not found")
-        
-        feature_num = spec.get('features', []).index(feature) + 1
+
+        feature_num = spec.get("features", []).index(feature) + 1
         feature_dir = self.specs_dir / f"{feature_num:03d}-{feature_id}"
         feature_dir.mkdir(exist_ok=True)
-        
-        plan_file = feature_dir / 'plan.md'
-        
+
+        plan_file = feature_dir / "plan.md"
+
         plan_content = f"""# Implementation Plan: {feature_id}
 Created: {datetime.now().isoformat()}
 
@@ -275,11 +273,11 @@ tests/
 - Real data only (no mocks)
 - Performance requirements met
 """
-        
+
         plan_file.write_text(plan_content)
         print(f"✅ Created plan at {plan_file}")
         return plan_file
-    
+
     def create_tasks(self, feature_id: str) -> Path:
         """
         Generate executable tasks from plan
@@ -287,25 +285,25 @@ tests/
         """
         spec = self.rfd.load_project_spec()
         feature = None
-        
-        for f in spec.get('features', []):
-            if f['id'] == feature_id:
+
+        for f in spec.get("features", []):
+            if f["id"] == feature_id:
                 feature = f
                 break
-        
+
         if not feature:
             raise ValueError(f"Feature {feature_id} not found")
-        
-        feature_num = spec.get('features', []).index(feature) + 1
+
+        feature_num = spec.get("features", []).index(feature) + 1
         feature_dir = self.specs_dir / f"{feature_num:03d}-{feature_id}"
         feature_dir.mkdir(exist_ok=True)
-        
-        tasks_file = feature_dir / 'tasks.md'
-        
+
+        tasks_file = feature_dir / "tasks.md"
+
         # Parse acceptance criteria to generate tasks
-        acceptance = feature.get('acceptance', '')
+        acceptance = feature.get("acceptance", "")
         tasks = self._generate_tasks_from_acceptance(acceptance)
-        
+
         tasks_content = f"""# Tasks: {feature_id}
 Generated: {datetime.now().isoformat()}
 
@@ -320,10 +318,10 @@ Generated: {datetime.now().isoformat()}
 
 ### Phase 2: Core Implementation
 """
-        
+
         for i, task in enumerate(tasks, 1):
             tasks_content += f"- [S] Task {i}: {task}\n"
-        
+
         tasks_content += f"""
 ### Phase 3: Validation
 - [S] Run acceptance tests
@@ -356,62 +354,73 @@ Generated: {datetime.now().isoformat()}
 - [ ] No mock data present
 - [ ] Code reviewed and approved
 """
-        
+
         tasks_file.write_text(tasks_content)
-        
+
         # Also create tasks in database
         self._store_tasks_in_db(feature_id, tasks)
-        
+
         print(f"✅ Created tasks at {tasks_file}")
         return tasks_file
-    
+
     def _generate_tasks_from_acceptance(self, acceptance: str) -> List[str]:
         """Generate tasks from acceptance criteria"""
         tasks = []
-        
-        for line in acceptance.split('\n'):
+
+        for line in acceptance.split("\n"):
             line = line.strip()
             if not line:
                 continue
-            
+
             # Parse different criteria types into tasks
-            if 'endpoint:' in line.lower():
+            if "endpoint:" in line.lower():
                 # "endpoint: POST /login returns 200"
                 tasks.append(f"Implement {line}")
                 tasks.append(f"Write test for {line}")
-            elif 'database:' in line.lower():
+            elif "database:" in line.lower():
                 # "database: users table exists"
                 tasks.append(f"Create {line}")
                 tasks.append(f"Add migration for {line}")
-            elif 'test:' in line.lower():
+            elif "test:" in line.lower():
                 # "test: test_user_login passes"
-                test_name = line.split(':')[1].strip()
+                test_name = line.split(":")[1].strip()
                 tasks.append(f"Implement functionality to make {test_name} pass")
-            elif 'function:' in line.lower() or 'creates:' in line.lower():
+            elif "function:" in line.lower() or "creates:" in line.lower():
                 tasks.append(f"Implement {line}")
             else:
                 # Generic criterion
                 tasks.append(f"Ensure: {line}")
-        
-        return tasks if tasks else ["Implement core functionality", "Write tests", "Validate implementation"]
-    
+
+        return (
+            tasks
+            if tasks
+            else [
+                "Implement core functionality",
+                "Write tests",
+                "Validate implementation",
+            ]
+        )
+
     def _store_tasks_in_db(self, feature_id: str, tasks: List[str]):
         """Store tasks in database for tracking"""
         conn = sqlite3.connect(self.rfd.db_path)
-        
+
         # Clear existing tasks for this feature
         conn.execute("DELETE FROM tasks WHERE feature_id = ?", (feature_id,))
-        
+
         # Insert new tasks
         for task in tasks:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO tasks (feature_id, description, status, created_at)
                 VALUES (?, ?, 'pending', ?)
-            """, (feature_id, task, datetime.now().isoformat()))
-        
+            """,
+                (feature_id, task, datetime.now().isoformat()),
+            )
+
         conn.commit()
         conn.close()
-    
+
     def clarify(self, feature_id: str, question: str) -> str:
         """
         Clarify specification ambiguities
@@ -419,21 +428,21 @@ Generated: {datetime.now().isoformat()}
         """
         feature_num = 1  # Would calculate from feature list
         feature_dir = self.specs_dir / f"{feature_num:03d}-{feature_id}"
-        clarifications_file = feature_dir / 'clarifications.md'
-        
+        clarifications_file = feature_dir / "clarifications.md"
+
         # Append clarification
         timestamp = datetime.now().isoformat()
         clarification = f"\n## {timestamp}\n**Q**: {question}\n**A**: [To be resolved]\n"
-        
+
         if clarifications_file.exists():
             existing = clarifications_file.read_text()
             clarifications_file.write_text(existing + clarification)
         else:
             header = f"# Clarifications: {feature_id}\n"
             clarifications_file.write_text(header + clarification)
-        
+
         return f"Clarification recorded. Please resolve in {clarifications_file}"
-    
+
     def implement_feature(self, feature_id: str) -> bool:
         """
         Execute implementation with validation at each step
@@ -441,44 +450,50 @@ Generated: {datetime.now().isoformat()}
         """
         # Load tasks
         conn = sqlite3.connect(self.rfd.db_path)
-        tasks = conn.execute("""
+        tasks = conn.execute(
+            """
             SELECT id, description, status FROM tasks
             WHERE feature_id = ?
             ORDER BY created_at
-        """, (feature_id,)).fetchall()
+        """,
+            (feature_id,),
+        ).fetchall()
         conn.close()
-        
+
         if not tasks:
             print(f"No tasks found for {feature_id}. Run 'rfd speckit tasks {feature_id}' first.")
             return False
-        
+
         print(f"\n🚀 Implementing {feature_id} ({len(tasks)} tasks)")
-        
+
         for task_id, description, status in tasks:
-            if status == 'complete':
+            if status == "complete":
                 print(f"✅ Already complete: {description}")
                 continue
-            
+
             print(f"\n📝 Task: {description}")
             print("Implement this task, then press Enter to validate...")
             input()  # Wait for manual implementation
-            
+
             # Validate after each task
             validation_result = self.rfd.validator.validate(feature=feature_id)
-            
-            if validation_result['passing']:
+
+            if validation_result["passing"]:
                 # Mark task complete
                 conn = sqlite3.connect(self.rfd.db_path)
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE tasks SET status = 'complete', completed_at = ?
                     WHERE id = ?
-                """, (datetime.now().isoformat(), task_id))
+                """,
+                    (datetime.now().isoformat(), task_id),
+                )
                 conn.commit()
                 conn.close()
-                print(f"✅ Task validated and marked complete")
+                print("✅ Task validated and marked complete")
             else:
-                print(f"❌ Validation failed. Fix issues before continuing.")
+                print("❌ Validation failed. Fix issues before continuing.")
                 return False
-        
+
         print(f"\n✨ All tasks complete for {feature_id}!")
         return True

@@ -611,9 +611,7 @@ class TestErrorRecovery(unittest.TestCase):
         session1.start("interrupted-feature")
 
         # Save partial progress
-        session1.save_state(
-            {"checkpoint": 2, "files_created": ["partial.py"], "status": "in_progress"}
-        )
+        session1.save_state({"checkpoint": 2, "files_created": ["partial.py"], "status": "in_progress"})
 
         # Simulate interruption
         del rfd1
@@ -693,9 +691,7 @@ class TestPerformance(unittest.TestCase):
         from rfd import RFD
 
         # Create deep nesting
-        deep_path = Path(
-            "src/components/features/user/profile/settings/privacy/advanced"
-        )
+        deep_path = Path("src/components/features/user/profile/settings/privacy/advanced")
         deep_path.mkdir(parents=True, exist_ok=True)
 
         file_path = deep_path / "options.py"

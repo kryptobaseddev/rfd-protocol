@@ -132,9 +132,7 @@ def test_installation():
         )
 
         # Test CLI command
-        result = run_command(
-            [str(venv_python), "-m", "nexus_rfd_protocol.cli", "--help"], check=False
-        )
+        result = run_command([str(venv_python), "-m", "nexus_rfd_protocol.cli", "--help"], check=False)
         if result.returncode != 0:
             print("❌ CLI command failed")
             return False

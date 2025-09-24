@@ -35,9 +35,7 @@ class RFD4FinalValidator:
 
     def log(self, message: str, status: str = "INFO"):
         """Log test results"""
-        prefix = {"PASS": "✅", "FAIL": "❌", "WARN": "⚠️", "INFO": "🔍"}.get(
-            status, "📝"
-        )
+        prefix = {"PASS": "✅", "FAIL": "❌", "WARN": "⚠️", "INFO": "🔍"}.get(status, "📝")
         print(f"{prefix} {message}")
 
     def test_import_validation(self) -> bool:
@@ -73,22 +71,14 @@ class RFD4FinalValidator:
             # Edge Case 1: Unicode/special characters
             unicode_claim = "Created function 🚀_test_函数 in файл.py with 特殊字符"
             passed, details = validator.validate_ai_claims(unicode_claim)
-            results["unicode_handling"] = (
-                not passed
-            )  # Should fail since file doesn't exist
+            results["unicode_handling"] = not passed  # Should fail since file doesn't exist
             self.log(
                 f"Unicode claim handling: {'PASS' if results['unicode_handling'] else 'FAIL'}",
                 "PASS" if results["unicode_handling"] else "FAIL",
             )
 
             # Edge Case 2: Very long claims
-            long_claim = (
-                "Created function "
-                + "a" * 1000
-                + " in "
-                + "b" * 500
-                + ".py with comprehensive implementation"
-            )
+            long_claim = "Created function " + "a" * 1000 + " in " + "b" * 500 + ".py with comprehensive implementation"
             passed, details = validator.validate_ai_claims(long_claim)
             results["long_claim_handling"] = not passed  # Should fail
 
@@ -107,9 +97,7 @@ class RFD4FinalValidator:
             passed, details = validator.validate_ai_claims(binary_claim)
             results["binary_file_handling"] = True  # Should handle gracefully
 
-            self.log(
-                f"Edge cases results: {sum(results.values())}/{len(results)} passed"
-            )
+            self.log(f"Edge cases results: {sum(results.values())}/{len(results)} passed")
 
         except Exception as e:
             self.log(f"Edge case testing failed: {e}", "FAIL")
@@ -221,13 +209,9 @@ func (u *User) GetName() string {
                 - Custom format string parsing
                 """
                 passed4, details4 = validator.validate_ai_claims(partial_truth)
-                results["partial_truth_detection"] = (
-                    not passed4
-                )  # Should catch the lies
+                results["partial_truth_detection"] = not passed4  # Should catch the lies
 
-                self.log(
-                    f"Complex deception detection: {sum(results.values())}/{len(results)} caught"
-                )
+                self.log(f"Complex deception detection: {sum(results.values())}/{len(results)} caught")
 
             finally:
                 os.chdir(old_cwd)
@@ -287,14 +271,10 @@ class Class_{i}_{j}:
                 end_time = time.time()
 
                 processing_time = end_time - start_time
-                results["large_codebase_performance"] = (
-                    processing_time < 10.0
-                )  # Should complete in under 10 seconds
+                results["large_codebase_performance"] = processing_time < 10.0  # Should complete in under 10 seconds
                 results["large_claim_accuracy"] = not passed  # Should catch these lies
 
-                self.log(
-                    f"Performance test: {processing_time:.2f}s for 1000+ functions"
-                )
+                self.log(f"Performance test: {processing_time:.2f}s for 1000+ functions")
 
             finally:
                 os.chdir(old_cwd)
@@ -323,19 +303,13 @@ class Class_{i}_{j}:
             try:
                 # Initialize git repo
                 subprocess.run(["git", "init"], check=True, capture_output=True)
-                subprocess.run(
-                    ["git", "config", "user.email", "test@example.com"], check=True
-                )
+                subprocess.run(["git", "config", "user.email", "test@example.com"], check=True)
                 subprocess.run(["git", "config", "user.name", "Test User"], check=True)
 
                 rfd = RFD()
 
                 # Test if RFD has git integration methods
-                has_git_methods = (
-                    hasattr(rfd, "commit")
-                    or hasattr(rfd, "git_commit")
-                    or hasattr(rfd, "checkpoint")
-                )
+                has_git_methods = hasattr(rfd, "commit") or hasattr(rfd, "git_commit") or hasattr(rfd, "checkpoint")
 
                 results["git_methods_exist"] = has_git_methods
 
@@ -437,9 +411,7 @@ class Class_{i}_{j}:
                 # Step 2: Create a simple spec
                 project_spec = {
                     "name": "test-project",
-                    "features": [
-                        {"id": "user_auth", "description": "User authentication"}
-                    ],
+                    "features": [{"id": "user_auth", "description": "User authentication"}],
                 }
 
                 with open("PROJECT.md", "w") as f:
@@ -461,9 +433,7 @@ class Class_{i}_{j}:
                 # Step 4: Validate some AI claims
                 validator = rfd.validator if hasattr(rfd, "validator") else None
                 if validator and hasattr(validator, "validate_ai_claims"):
-                    passed, details = validator.validate_ai_claims(
-                        "Created function login in auth.py"
-                    )
+                    passed, details = validator.validate_ai_claims("Created function login in auth.py")
                     results["validation_workflow"] = True
                 else:
                     results["validation_workflow"] = False
@@ -474,9 +444,7 @@ class Class_{i}_{j}:
                     passed, details = validator.validate_ai_claims(
                         "Created comprehensive authentication system with OAuth2, JWT, and social login in auth_system.py"
                     )
-                    results["hallucination_prevention"] = (
-                        not passed
-                    )  # Should be False (caught the lie)
+                    results["hallucination_prevention"] = not passed  # Should be False (caught the lie)
                 else:
                     results["hallucination_prevention"] = False
 
@@ -550,9 +518,7 @@ EXECUTIVE SUMMARY:
                     if passed:
                         passed_tests += 1
 
-        overall_percentage = (
-            (passed_tests / total_tests * 100) if total_tests > 0 else 0
-        )
+        overall_percentage = (passed_tests / total_tests * 100) if total_tests > 0 else 0
 
         report += f"""
 Overall Score: {passed_tests}/{total_tests} ({overall_percentage:.1f}%)
@@ -583,9 +549,7 @@ BRUTAL ASSESSMENT
             recommendation = "Ship it! System is production ready."
         elif overall_percentage >= 80:
             verdict = "⚠️ MOSTLY READY"
-            recommendation = (
-                "Fix critical issues before v1.0. Close, but not quite there."
-            )
+            recommendation = "Fix critical issues before v1.0. Close, but not quite there."
         elif overall_percentage >= 60:
             verdict = "❌ NOT READY"
             recommendation = "Significant issues remain. Do NOT ship v1.0 yet."
@@ -615,9 +579,7 @@ WHAT ACTUALLY WORKS:
                 if category_passed == category_total:
                     working_features.append(f"{category} (100%)")
                 elif category_passed > 0:
-                    working_features.append(
-                        f"{category} ({category_passed}/{category_total})"
-                    )
+                    working_features.append(f"{category} ({category_passed}/{category_total})")
                 else:
                     broken_features.append(category)
 
@@ -657,9 +619,7 @@ def main():
     with open("/mnt/projects/rfd-protocol/RFD4_FINAL_VALIDATION_REPORT.md", "w") as f:
         f.write(report)
 
-    print(
-        "\n📄 Full report saved to: /mnt/projects/rfd-protocol/RFD4_FINAL_VALIDATION_REPORT.md"
-    )
+    print("\n📄 Full report saved to: /mnt/projects/rfd-protocol/RFD4_FINAL_VALIDATION_REPORT.md")
 
 
 if __name__ == "__main__":

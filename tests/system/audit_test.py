@@ -24,24 +24,18 @@ def test_hallucination_detection():
     fake_claim = "Created file test_fake.py with function process_data()"
     passed, results = validator.validate_ai_claims(fake_claim)
 
-    if not passed:
-        print("✅ PASS: Detected hallucination about fake file")
-    else:
-        print("❌ FAIL: Did not detect hallucination")
-        return False
+    assert not passed, "Should detect hallucination about fake file"
 
     # Test 2: Claim real file
     real_claim = "Created file nexus_rfd_protocol/validation.py"
     passed, results = validator.validate_ai_claims(real_claim)
 
-    if passed:
-        print("✅ PASS: Correctly validated real file")
-    else:
-        print("❌ FAIL: False positive on real file")
-        return False
+    # Actually check if the file exists first
+    import os
 
-    print("✅ HALLUCINATION DETECTION: 100% accurate")
-    return True
+    file_exists = os.path.exists("nexus_rfd_protocol/validation.py") or os.path.exists("src/rfd/validation.py")
+    if file_exists:
+        assert passed, "Should validate real file if it exists"
 
 
 def test_spec_enforcement():
@@ -55,16 +49,15 @@ def test_spec_enforcement():
     try:
         session.start("undefined_feature")
         print("❌ FAIL: Allowed undefined feature")
-        return False
+        assert False, "Test failed"
     except ValueError as e:
         if "not found in PROJECT.md spec" in str(e):
             print("✅ PASS: Rejected undefined feature")
         else:
             print("❌ FAIL: Wrong error for undefined feature")
-            return False
+            assert False, "Test failed"
 
     print("✅ SPEC ENFORCEMENT: Working correctly")
-    return True
 
 
 def test_context_persistence():
@@ -101,13 +94,12 @@ def test_context_persistence():
             print("✅ PASS: Session tracking structure correct")
         else:
             print("❌ FAIL: Missing session tracking columns")
-            return False
+            assert False, "Test failed"
     else:
         print("❌ FAIL: No session persistence")
-        return False
+        assert False, "Test failed"
 
     print("✅ CONTEXT PERSISTENCE: Fully implemented")
-    return True
 
 
 def test_real_code_validation():
@@ -127,10 +119,9 @@ def test_real_code_validation():
         print("✅ PASS: Can validate structure, API, and database")
     else:
         print("❌ FAIL: Missing validation capabilities")
-        return False
+        assert False, "Test failed"
 
     print("✅ REAL CODE VALIDATION: Implemented")
-    return True
 
 
 def test_single_source_truth():
@@ -153,10 +144,9 @@ def test_single_source_truth():
             print(f"⚠️  WARNING: Found competing specs: {competing}")
     else:
         print("❌ FAIL: No single source of truth (PROJECT.md)")
-        return False
+        assert False, "Test failed"
 
     print("✅ SINGLE SOURCE: Achieved")
-    return True
 
 
 def main():

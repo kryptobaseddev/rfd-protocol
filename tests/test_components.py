@@ -255,9 +255,7 @@ async def async_function():
         self.assertFalse(validator._verify_function_exists("nonexistent_function"))
 
         # With file hint
-        self.assertTrue(
-            validator._verify_function_exists("test_function", "test_module.py")
-        )
+        self.assertTrue(validator._verify_function_exists("test_function", "test_module.py"))
 
         # Clean up
         Path("test_module.py").unlink()

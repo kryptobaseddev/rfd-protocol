@@ -42,17 +42,15 @@ def test_empty_spec():
             try:
                 session.start("undefined_feature")
                 print("❌ BUG: Empty spec allows ANY feature")
-                return False
+                assert False, "Test failed"
             except ValueError:
                 print("✅ PASS: Empty spec correctly rejects undefined features")
 
         except Exception as e:
             print(f"❌ BUG: Empty spec crashes system: {e}")
-            return False
+            assert False, "Test failed"
         finally:
             os.chdir(original_dir)
-
-    return True
 
 
 def test_no_project_md():
@@ -82,17 +80,15 @@ def test_no_project_md():
             try:
                 session.start("any_feature")
                 print("❌ BUG: Missing PROJECT.md allows ANY feature")
-                return False
+                assert False, "Test failed"
             except ValueError:
                 print("✅ PASS: Missing PROJECT.md correctly rejects features")
 
         except Exception as e:
             print(f"❌ BUG: Missing PROJECT.md crashes system: {e}")
-            return False
+            assert False, "Test failed"
         finally:
             os.chdir(original_dir)
-
-    return True
 
 
 def test_hallucination_bypass():
@@ -118,7 +114,7 @@ def test_hallucination_bypass():
 
             if passed1:
                 print("❌ BUG: False positive - claimed .py file when only .txt exists")
-                return False
+                assert False, "Test failed"
             else:
                 print("✅ PASS: Correctly detected false file claim")
 
@@ -129,7 +125,7 @@ def test_hallucination_bypass():
 
             if passed2:
                 print("❌ BUG: False positive - claimed function that doesn't exist")
-                return False
+                assert False, "Test failed"
             else:
                 print("✅ PASS: Correctly detected false function claim")
 
@@ -139,17 +135,15 @@ def test_hallucination_bypass():
 
             if not passed3:
                 print("❌ BUG: False negative - rejected valid function claim")
-                return False
+                assert False, "Test failed"
             else:
                 print("✅ PASS: Correctly validated real function")
 
         except Exception as e:
             print(f"❌ BUG: Hallucination detection crashed: {e}")
-            return False
+            assert False, "Test failed"
         finally:
             os.chdir(original_dir)
-
-    return True
 
 
 def test_subtle_lies():
@@ -199,17 +193,15 @@ class UserManager:
 
             if not all_caught:
                 print("❌ BUG: Validation missed subtle lies")
-                return False
+                assert False, "Test failed"
 
             print("✅ PASS: All subtle lies were detected")
 
         except Exception as e:
             print(f"❌ BUG: Subtle lie detection crashed: {e}")
-            return False
+            assert False, "Test failed"
         finally:
             os.chdir(original_dir)
-
-    return True
 
 
 def test_spec_enforcement_bypass():
@@ -266,17 +258,15 @@ features:
 
             if not all_blocked:
                 print("❌ BUG: Spec enforcement can be bypassed")
-                return False
+                assert False, "Test failed"
 
             print("✅ PASS: Spec enforcement is solid")
 
         except Exception as e:
             print(f"❌ BUG: Spec enforcement testing crashed: {e}")
-            return False
+            assert False, "Test failed"
         finally:
             os.chdir(original_dir)
-
-    return True
 
 
 def main():
@@ -313,9 +303,7 @@ def main():
         status = "✅ SECURE" if result else "❌ VULNERABLE"
         print(f"{test}: {status}")
 
-    print(
-        f"\nOVERALL SECURITY: {passed}/{total} tests passed ({int(passed / total * 100)}%)"
-    )
+    print(f"\nOVERALL SECURITY: {passed}/{total} tests passed ({int(passed / total * 100)}%)")
 
     if passed == total:
         print("\n🎉 SYSTEM SECURE - No critical bugs found")

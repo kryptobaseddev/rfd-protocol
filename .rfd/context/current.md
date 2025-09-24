@@ -1,23 +1,23 @@
 ---
-session_id: 2
-feature: rfd_core_features
-started: 2025-09-23T18:43:23.889813
+session_id: 4
+feature: fix_critical_issues
+started: 2025-09-23T22:26:53.843522
 status: building
 ---
 
-# Current Session: rfd_core_features
+# Current Session: fix_critical_issues
 
 ## Feature Specification
-Implement missing RFD features for true dogfooding
+Fix critical broken functionality preventing RFD from working
 
 **Acceptance Criteria:**
-Tasks and phases display in status command, slash commands auto-execute, resume functionality works
+Session persistence works, PyPI package installs and runs, tests have real assertions, dogfooding is real
 
 ## Current Status
 ```
-./rfd validate --feature rfd_core_features
+./rfd validate --feature fix_critical_issues
 ✅ max_files: 35 files (max: 50)
-❌ feature_rfd_core_features: Implement missing RFD features for true dogfooding - pending
+❌ feature_fix_critical_issues: Fix critical broken functionality preventing RFD from working - pending
 ✅ database: Database found: .rfd/memory.db
 ```
 

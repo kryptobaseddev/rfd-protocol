@@ -27,9 +27,7 @@ def cli(ctx):
 
 @cli.command()
 @click.option("--wizard", is_flag=True, help="Run interactive initialization wizard")
-@click.option(
-    "--from-prd", type=click.Path(exists=True), help="Initialize from PRD document"
-)
+@click.option("--from-prd", type=click.Path(exists=True), help="Initialize from PRD document")
 @click.option(
     "--mode",
     type=click.Choice(["0-to-1", "exploration", "brownfield"]),
@@ -48,7 +46,7 @@ def init(rfd, wizard, from_prd, mode):
 
         if from_prd:
             # Direct PRD import
-            project_info = wizard_runner.spec_generator.ingest_prd(Path(from_prd))
+            project_info = wizard_runner.spec_generator.ingest_prd(from_prd)
             wizard_runner.spec_generator.generate_full_specification(project_info, mode)
             wizard_runner.create_base_files(project_info)
             click.echo("✅ Project initialized from PRD!")
@@ -107,9 +105,10 @@ if __name__ == "__main__":
     if not Path("PROGRESS.md").exists():
         Path("PROGRESS.md").write_text("# Build Progress\n\n")
         files_created.append("PROGRESS.md")
-    
+
     # Track RFD version in project
     from .migration import RFDMigration
+
     migrator = RFDMigration()
     migrator._update_version_file()
 
@@ -118,9 +117,7 @@ if __name__ == "__main__":
 
 
 @cli.command()
-@click.argument(
-    "action", type=click.Choice(["create", "review", "validate", "generate"])
-)
+@click.argument("action", type=click.Choice(["create", "review", "validate", "generate"]))
 @click.option(
     "--type",
     "spec_type",
@@ -150,10 +147,7 @@ def spec(rfd, action, spec_type):
             else {
                 "name": rfd.load_project_spec().get("name", "Project"),
                 "description": rfd.load_project_spec().get("description", ""),
-                "requirements": [
-                    f["description"]
-                    for f in rfd.load_project_spec().get("features", [])
-                ],
+                "requirements": [f["description"] for f in rfd.load_project_spec().get("features", [])],
                 "goals": rfd.load_project_spec().get("goals", []),
                 "constraints": rfd.load_project_spec().get("constraints", []),
             }
@@ -258,8 +252,9 @@ def complete(rfd, feature_id):
 @click.pass_obj
 def status(rfd):
     """Comprehensive project status with phases, tasks, and next actions"""
-    from .feature_manager import FeatureManager
     import sqlite3
+
+    from .feature_manager import FeatureManager
 
     fm = FeatureManager(rfd)
     data = fm.get_dashboard()
@@ -271,9 +266,7 @@ def status(rfd):
     # Overall Progress
     stats = data["statistics"]
     click.echo(f"\n📊 Overall Progress: {stats['completion_rate']:.1f}% complete")
-    progress_bar = "█" * int(stats["completion_rate"] / 5) + "░" * (
-        20 - int(stats["completion_rate"] / 5)
-    )
+    progress_bar = "█" * int(stats["completion_rate"] / 5) + "░" * (20 - int(stats["completion_rate"] / 5))
     click.echo(f"   [{progress_bar}]")
     click.echo(
         f"   ✅ {stats['completed']} completed | 🔨 {stats['in_progress']} active | ⏳ {stats['pending']} pending"
@@ -281,17 +274,15 @@ def status(rfd):
 
     # Current Focus
     if data["current_focus"]:
-        click.echo(f"\n🎯 Current Focus:")
-        click.echo(
-            f"   {data['current_focus']['id']}: {data['current_focus']['description']}"
-        )
+        click.echo("\n🎯 Current Focus:")
+        click.echo(f"   {data['current_focus']['id']}: {data['current_focus']['description']}")
 
         # Show tasks for current feature
         conn = sqlite3.connect(rfd.db_path)
         tasks = conn.execute(
             """
-            SELECT description, status FROM tasks 
-            WHERE feature_id = ? 
+            SELECT description, status FROM tasks
+            WHERE feature_id = ?
             ORDER BY created_at
         """,
             (data["current_focus"]["id"],),
@@ -309,11 +300,7 @@ def status(rfd):
     if phases:
         click.echo("\n🗓️ Project Phases:")
         for phase in phases:
-            icon = (
-                "✅"
-                if phase["status"] == "complete"
-                else "🔄" if phase["status"] == "active" else "⏸️"
-            )
+            icon = "✅" if phase["status"] == "complete" else "🔄" if phase["status"] == "active" else "⏸️"
             click.echo(f"   {icon} {phase['name']}: {phase['description']}")
 
     # Next Actions
@@ -322,17 +309,11 @@ def status(rfd):
         click.echo("   1. Continue current feature: ./rfd build")
         click.echo("   2. Run validation: ./rfd validate")
     elif stats["pending"] > 0:
-        next_feature = next(
-            (f for f in data["features"] if f["status"] == "pending"), None
-        )
+        next_feature = next((f for f in data["features"] if f["status"] == "pending"), None)
         if next_feature:
-            click.echo(
-                f"   1. Start next feature: ./rfd session start {next_feature['id']}"
-            )
+            click.echo(f"   1. Start next feature: ./rfd session start {next_feature['id']}")
     else:
-        click.echo(
-            "   ✨ All features complete! Consider adding new features to PROJECT.md"
-        )
+        click.echo("   ✨ All features complete! Consider adding new features to PROJECT.md")
 
     # Last Session Info
     click.echo("\n📅 Last Session:")
@@ -377,11 +358,7 @@ def dashboard(rfd):
     # Features list
     click.echo("\n📦 Features:")
     for feature in data["features"]:
-        icon = (
-            "✅"
-            if feature["status"] == "complete"
-            else "🔨" if feature["status"] == "in_progress" else "⏳"
-        )
+        icon = "✅" if feature["status"] == "complete" else "🔨" if feature["status"] == "in_progress" else "⏳"
         click.echo(f"  {icon} {feature['id']}: {feature['description'][:50]}")
         if feature["status"] == "in_progress" and feature["started_at"]:
             click.echo(f"      Started: {feature['started_at'][:10]}")
@@ -407,9 +384,7 @@ def check(rfd):
     # Current session
     session = state["session"]
     if session:
-        click.echo(
-            f"📝 Session: {session['feature_id']} (started {session['started_at']})"
-        )
+        click.echo(f"📝 Session: {session['feature_id']} (started {session['started_at']})")
 
     # Features
     click.echo("\n📦 Features:")
@@ -464,10 +439,8 @@ def checkpoint(rfd, message):
 
     # Git commit
     try:
-        git_hash = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-        ).stdout.strip()
-    except:
+        git_hash = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    except Exception:
         git_hash = "no-git"
 
     # Save checkpoint
@@ -517,68 +490,71 @@ def revert(rfd):
 def resume(rfd):
     """Resume from last session context - FULLY AUTOMATIC"""
     from .auto_handoff import AutoHandoff
-    
+
     # Create automatic handoff system
     handoff = AutoHandoff(rfd)
-    
+
     # Save current state to database
     handoff.save_to_database()
-    
+
     # Display complete handoff
     handoff.display_handoff()
-    
+
     return
-    
+
     # OLD manual code below (kept for reference but not executed)
     context_file = rfd.rfd_dir / "context" / "current.md"
     memory_file = rfd.rfd_dir / "context" / "memory.json"
-    
+
     click.echo("\n=== RFD Resume ===\n")
-    
+
     # Show current context
     if context_file.exists():
         import frontmatter
+
         with open(context_file) as f:
             content = frontmatter.load(f)
             if content.metadata:
-                feature = content.metadata.get('feature', 'unknown')
-                started = content.metadata.get('started', 'unknown')
-                status = content.metadata.get('status', 'unknown')
-                
-                click.echo(f"📋 Current Session:")
+                feature = content.metadata.get("feature", "unknown")
+                started = content.metadata.get("started", "unknown")
+                status = content.metadata.get("status", "unknown")
+
+                click.echo("📋 Current Session:")
                 click.echo(f"   Feature: {feature}")
                 click.echo(f"   Started: {started}")
                 click.echo(f"   Status: {status}")
-    
+
     # Show memory
     if memory_file.exists():
         data = json.loads(memory_file.read_text())
         if data.get("current_feature"):
-            click.echo(f"\n🧠 Memory:")
+            click.echo("\n🧠 Memory:")
             click.echo(f"   Current Feature: {data['current_feature']}")
             if data.get("last_action"):
                 click.echo(f"   Last Action: {data['last_action']}")
-    
+
     # Show project status
     click.echo("\n📊 Project Status:")
     state = rfd.get_current_state()
     click.echo(f"   Validation: {'✅' if state['validation']['passing'] else '❌'}")
     click.echo(f"   Build: {'✅' if state['build']['passing'] else '❌'}")
-    
+
     # Suggest next action
     next_action = rfd.session.suggest_next_action()
     click.echo(f"\n➡️ Next Action: {next_action}")
-    
+
     # Show tasks if current feature exists
     if context_file.exists():
         conn = sqlite3.connect(rfd.db_path)
-        tasks = conn.execute("""
-            SELECT description, status FROM tasks 
+        tasks = conn.execute(
+            """
+            SELECT description, status FROM tasks
             WHERE feature_id = (SELECT value FROM memory WHERE key = 'current_feature')
             ORDER BY created_at
-        """).fetchall()
+        """
+        ).fetchall()
         conn.close()
-        
+
         if tasks:
             click.echo("\n📝 Tasks:")
             for desc, status in tasks:
@@ -599,17 +575,18 @@ def workflow(rfd):
 def workflow_start(rfd, feature_id):
     """Start feature with gated workflow"""
     import uuid
+
     session_id = str(uuid.uuid4())[:8]
-    
+
     success, message = rfd.workflow.start_feature(feature_id, session_id)
     if success:
         click.echo(f"✅ {message}")
-        
+
         # Show current state
         status = rfd.workflow.get_workflow_status(feature_id)
         click.echo(f"\n📍 Current State: {status['current_state']}")
         click.echo(f"📊 Progress: {status['progress']}")
-        
+
         # Check if can proceed
         can_proceed, reason = rfd.workflow.can_proceed(feature_id)
         if can_proceed:
@@ -628,31 +605,31 @@ def workflow_start(rfd, feature_id):
 def workflow_status(rfd, feature_id):
     """Show workflow status for feature"""
     status = rfd.workflow.get_workflow_status(feature_id)
-    
+
     if "error" in status:
         click.echo(f"❌ {status['error']}")
         return
-    
+
     click.echo(f"\n=== Workflow Status: {feature_id} ===")
     click.echo(f"\n📍 Current State: {status['current_state']}")
     click.echo(f"📊 Progress: {status['progress']}")
-    
+
     # Show checkpoints
-    if status['checkpoints_passed']:
+    if status["checkpoints_passed"]:
         click.echo("\n✅ Checkpoints Passed:")
-        for cp in status['checkpoints_passed']:
+        for cp in status["checkpoints_passed"]:
             click.echo(f"   - {cp['state']}: {cp['timestamp'][:10]}")
-    
+
     # Show blockers
-    if status['unresolved_queries'] > 0:
+    if status["unresolved_queries"] > 0:
         click.echo(f"\n⚠️ Unresolved Queries: {status['unresolved_queries']}")
-    
+
     # Show drift prevention
     click.echo(f"\n🛡️ Drift Attempts Blocked: {status['drift_attempts_blocked']}")
     click.echo(f"🚫 Hallucinations Caught: {status['hallucinations_caught']}")
-    
+
     # Can proceed?
-    can_proceed, reason = status['can_proceed']
+    can_proceed, reason = status["can_proceed"]
     if can_proceed:
         click.echo(f"\n✅ Can Proceed: {reason}")
     else:
@@ -665,18 +642,19 @@ def workflow_status(rfd, feature_id):
 def workflow_proceed(rfd, feature_id):
     """Try to proceed to next workflow state"""
     import uuid
+
     session_id = str(uuid.uuid4())[:8]  # Would get from session
-    
+
     success, message = rfd.workflow.proceed_to_next(feature_id, session_id)
-    
+
     if success:
         click.echo(f"✅ {message}")
-        
+
         # Show new state
         status = rfd.workflow.get_workflow_status(feature_id)
         click.echo(f"\n📍 Now in: {status['current_state']}")
         click.echo(f"📊 Progress: {status['progress']}")
-        
+
         # Show next action based on state
         state = rfd.workflow.get_current_state(feature_id)
         next_actions = {
@@ -686,9 +664,9 @@ def workflow_proceed(rfd, feature_id):
             "task_generation": "rfd speckit tasks {feature_id}",
             "implementation": "rfd speckit implement {feature_id}",
             "validation": "rfd validate --feature {feature_id}",
-            "completion": "rfd complete {feature_id}"
+            "completion": "rfd complete {feature_id}",
         }
-        
+
         if state and state.value in next_actions:
             click.echo(f"\n→ Next: {next_actions[state.value].format(feature_id=feature_id)}")
     else:
@@ -724,36 +702,36 @@ def workflow_resolve(rfd, query_id, answer):
 def migrate(rfd):
     """Check and apply migrations after RFD update"""
     from .migration import RFDMigration
-    
+
     migrator = RFDMigration()
-    
+
     # Check if migration needed
     if not migrator.needs_migration():
         click.echo(f"✅ Project is up to date with RFD v{migrator.get_rfd_version()}")
         return
-    
+
     click.echo(f"🔄 Migration needed: v{migrator.get_project_rfd_version()} → v{migrator.get_rfd_version()}")
-    
+
     # Check compatibility
     compat = migrator.check_compatibility()
-    if not compat['compatible']:
+    if not compat["compatible"]:
         click.echo("⚠️ Breaking changes detected:")
-        for warning in compat['warnings']:
+        for warning in compat["warnings"]:
             click.echo(f"   - {warning}")
-        
+
         if not click.confirm("Continue with migration?"):
             return
-    
+
     # Run migration
     click.echo("📦 Creating backup...")
     result = migrator.migrate()
-    
-    if result['status'] == 'migrated':
-        click.echo(f"✅ Migration successful!")
+
+    if result["status"] == "migrated":
+        click.echo("✅ Migration successful!")
         click.echo(f"   Backup saved to: {result['backup']}")
-        for migration in result['migrations']:
+        for migration in result["migrations"]:
             click.echo(f"   Applied: {migration}")
-    elif result['status'] == 'failed':
+    elif result["status"] == "failed":
         click.echo(f"❌ Migration failed: {result.get('error', 'Unknown error')}")
         click.echo(f"   Backup preserved at: {result['backup']}")
     else:
@@ -761,33 +739,33 @@ def migrate(rfd):
 
 
 @cli.command()
-@click.pass_obj  
+@click.pass_obj
 def upgrade_check(rfd):
     """Check if RFD itself needs updating"""
     import subprocess
-    import json
-    
+
     # Check current version
     from . import __version__
+
     current = __version__
-    
+
     # Check PyPI for latest
     try:
         result = subprocess.run(
-            ['pip', 'index', 'versions', 'rfd-protocol'],
+            ["pip", "index", "versions", "rfd-protocol"],
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
-        
+
         if result.returncode == 0:
             # Parse output for latest version
-            lines = result.stdout.split('\n')
+            lines = result.stdout.split("\n")
             for line in lines:
-                if 'Available versions:' in line:
-                    versions = line.split(':')[1].strip().split(',')
+                if "Available versions:" in line:
+                    versions = line.split(":")[1].strip().split(",")
                     latest = versions[0].strip()
-                    
+
                     if latest != current:
                         click.echo(f"🆕 Update available: v{current} → v{latest}")
                         click.echo("\nTo update: pip install --upgrade rfd-protocol")
@@ -795,9 +773,9 @@ def upgrade_check(rfd):
                     else:
                         click.echo(f"✅ You're on the latest version: v{current}")
                     return
-        
+
         click.echo("⚠️ Could not check for updates")
-        
+
     except Exception as e:
         click.echo(f"⚠️ Update check failed: {e}")
 
@@ -827,7 +805,7 @@ def speckit_specify(rfd, feature_id):
     if state and state.value != "specification":
         click.echo(f"❌ Cannot specify in state {state.value}. Use 'rfd workflow proceed' first.")
         return
-    
+
     path = rfd.speckit.specify_feature(feature_id)
     click.echo(f"📄 Specification created: {path}")
 
@@ -842,7 +820,7 @@ def speckit_plan(rfd, feature_id):
     if not allowed:
         click.echo(f"❌ {reason}")
         return
-    
+
     path = rfd.speckit.create_plan(feature_id)
     click.echo(f"📋 Plan created: {path}")
 
@@ -857,7 +835,7 @@ def speckit_tasks(rfd, feature_id):
     if not allowed:
         click.echo(f"❌ {reason}")
         return
-    
+
     path = rfd.speckit.create_tasks(feature_id)
     click.echo(f"📝 Tasks created: {path}")
 
@@ -872,7 +850,7 @@ def speckit_implement(rfd, feature_id):
     if not allowed:
         click.echo(f"❌ {reason}")
         return
-    
+
     success = rfd.speckit.implement_feature(feature_id)
     if success:
         click.echo("✅ Implementation complete")
@@ -910,9 +888,6 @@ def create_claude_md():
     """Create CLAUDE.md for Claude Code CLI"""
     content = """---
 # Claude Code Configuration
-model: claude-3-5-sonnet-20241022
-temperature: 0.2
-max_tokens: 4000
 tools: enabled
 memory: .rfd/context/memory.json
 ---

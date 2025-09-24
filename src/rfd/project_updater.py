@@ -60,9 +60,7 @@ class ProjectUpdater:
         conn = sqlite3.connect(self.rfd.db_path)
 
         # Total checkpoints
-        total_checkpoints = conn.execute("SELECT COUNT(*) FROM checkpoints").fetchone()[
-            0
-        ]
+        total_checkpoints = conn.execute("SELECT COUNT(*) FROM checkpoints").fetchone()[0]
 
         # Passing vs failing checkpoints
         passing_checkpoints = conn.execute(
@@ -74,9 +72,7 @@ class ProjectUpdater:
         # Feature completion rate
         total_features = conn.execute("SELECT COUNT(*) FROM features").fetchone()[0]
 
-        completed_features = conn.execute(
-            "SELECT COUNT(*) FROM features WHERE status = 'complete'"
-        ).fetchone()[0]
+        completed_features = conn.execute("SELECT COUNT(*) FROM features WHERE status = 'complete'").fetchone()[0]
 
         # Average feature time (in hours)
         avg_time_result = conn.execute(
@@ -92,9 +88,7 @@ class ProjectUpdater:
         avg_feature_time = round(avg_time_result, 2) if avg_time_result else 0
 
         # Count drift incidents (validation failures)
-        drift_incidents = conn.execute(
-            "SELECT COUNT(*) FROM checkpoints WHERE validation_passed = 0"
-        ).fetchone()[0]
+        drift_incidents = conn.execute("SELECT COUNT(*) FROM checkpoints WHERE validation_passed = 0").fetchone()[0]
 
         conn.close()
 

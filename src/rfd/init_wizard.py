@@ -66,9 +66,7 @@ class InitWizard:
 
         if generate_full:
             print("\n🔨 Generating comprehensive specifications...\n")
-            generated = self.spec_generator.generate_full_specification(
-                project_info, development_mode
-            )
+            generated = self.spec_generator.generate_full_specification(project_info, development_mode)
 
             print("✅ Generated specifications:")
             for _name, path in generated.items():
@@ -114,9 +112,7 @@ class InitWizard:
         # Generate specs for brownfield
         if questionary.confirm("Generate modernization plan?").ask():
             print("\n🔄 Generating modernization specifications...\n")
-            generated = self.spec_generator.generate_full_specification(
-                project_info, development_mode="brownfield"
-            )
+            generated = self.spec_generator.generate_full_specification(project_info, development_mode="brownfield")
 
             print("✅ Generated modernization plan:")
             for _name, path in generated.items():
@@ -137,9 +133,7 @@ class InitWizard:
         """Initialize from a PRD document"""
         print("\n📄 Import from PRD\n")
 
-        prd_path = questionary.path(
-            "Path to PRD document:", validate=lambda x: Path(x).exists()
-        ).ask()
+        prd_path = questionary.path("Path to PRD document:", validate=lambda x: Path(x).exists()).ask()
 
         print("\n📖 Parsing PRD document...\n")
         project_info = self.spec_generator.ingest_prd(Path(prd_path))
@@ -197,9 +191,7 @@ class InitWizard:
         project_info = {
             "name": post.metadata.get("name", "Project"),
             "description": post.metadata.get("description", ""),
-            "requirements": [
-                f["description"] for f in post.metadata.get("features", [])
-            ],
+            "requirements": [f["description"] for f in post.metadata.get("features", [])],
             "goals": post.metadata.get("goals", []),
             "constraints": post.metadata.get("constraints", []),
         }
@@ -207,18 +199,14 @@ class InitWizard:
         specs_created = []
 
         if "Generate project constitution" in enhancements:
-            constitution = self.spec_generator.generate_project_constitution(
-                project_info
-            )
+            constitution = self.spec_generator.generate_project_constitution(project_info)
             path = Path("specs/CONSTITUTION.md")
             path.parent.mkdir(exist_ok=True)
             path.write_text(constitution)
             specs_created.append(path)
 
         if "Create phase breakdown" in enhancements:
-            mode = questionary.select(
-                "Development mode:", choices=["0-to-1", "exploration", "brownfield"]
-            ).ask()
+            mode = questionary.select("Development mode:", choices=["0-to-1", "exploration", "brownfield"]).ask()
             phases = self.spec_generator.generate_phase_breakdown(project_info, mode)
             doc = self.spec_generator._format_phases_document(phases)
             path = Path("specs/PHASES.md")
@@ -239,9 +227,7 @@ class InitWizard:
 
         return True
 
-    def collect_project_info(
-        self, defaults: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    def collect_project_info(self, defaults: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Collect project information interactively"""
         if defaults is None:
             defaults = {}
@@ -249,9 +235,7 @@ class InitWizard:
         info = {}
 
         # Basic info
-        info["name"] = questionary.text(
-            "Project name:", default=defaults.get("name", Path.cwd().name)
-        ).ask()
+        info["name"] = questionary.text("Project name:", default=defaults.get("name", Path.cwd().name)).ask()
 
         info["description"] = questionary.text(
             "Project description (one line):", default=defaults.get("description", "")
@@ -292,9 +276,7 @@ class InitWizard:
         if questionary.confirm("Add constraints?").ask():
             print("\nProject constraints (empty to finish):")
             while len(constraints) < 5:
-                constraint = questionary.text(
-                    f"Constraint {len(constraints) + 1}:"
-                ).ask()
+                constraint = questionary.text(f"Constraint {len(constraints) + 1}:").ask()
                 if not constraint:
                     break
                 constraints.append(constraint)
@@ -315,10 +297,7 @@ class InitWizard:
         features = []
         print("\nInitial features (at least 1, max 3 for v1):")
         while len(features) < 3:
-            if (
-                features
-                and not questionary.confirm(f"Add feature {len(features) + 1}?").ask()
-            ):
+            if features and not questionary.confirm(f"Add feature {len(features) + 1}?").ask():
                 break
 
             feature = {
@@ -501,17 +480,12 @@ class InitWizard:
         # Create PROGRESS.md
         if not Path("PROGRESS.md").exists():
             with open("PROGRESS.md", "w") as f:
-                f.write(
-                    f"# Build Progress\n\n*Started: {datetime.now().isoformat()}*\n\n"
-                )
+                f.write(f"# Build Progress\n\n*Started: {datetime.now().isoformat()}*\n\n")
 
     def create_claude_md(self):
         """Create CLAUDE.md for AI assistance"""
         claude_md = """---
 # Claude Code Configuration
-model: claude-3-5-sonnet-20241022
-temperature: 0.2
-max_tokens: 4000
 tools: enabled
 memory: .rfd/context/memory.json
 ---

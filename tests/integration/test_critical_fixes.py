@@ -53,25 +53,24 @@ features:
         print("✅ PASS: Valid feature accepted")
     except ValueError as e:
         print(f"❌ FAIL: Valid feature rejected: {e}")
-        return False
+        assert False, "Test failed"
 
     # Test 2: Invalid feature should fail
     print("Test 2: Starting session with invalid feature 'fake_feature'...")
     try:
         rfd.session.start("fake_feature")
         print("❌ FAIL: Invalid feature was accepted (should have been rejected)")
-        return False
+        assert False, "Test failed"
     except ValueError as e:
-        if "not found in PROJECT.md" in str(e):
+        if "not found in" in str(e) and ("PROJECT.md" in str(e) or "database" in str(e)):
             print(f"✅ PASS: Invalid feature rejected with error: {e}")
         else:
             print(f"❌ FAIL: Wrong error message: {e}")
-            return False
+            assert False, "Test failed"
 
     # Cleanup
     os.chdir("..")
     shutil.rmtree(test_dir)
-    return True
 
 
 def test_revert_validation_only():
@@ -84,9 +83,7 @@ def test_revert_validation_only():
 
     # Setup git repo
     subprocess.run(["git", "init"], capture_output=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@example.com"], capture_output=True
-    )
+    subprocess.run(["git", "config", "user.email", "test@example.com"], capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test User"], capture_output=True)
 
     # Create PROJECT.md
@@ -113,9 +110,7 @@ features:
     conn = sqlite3.connect(rfd.db_path)
 
     # Insert a validation-only checkpoint
-    git_hash = subprocess.run(
-        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
+    git_hash = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
 
     conn.execute(
         """

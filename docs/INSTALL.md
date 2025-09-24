@@ -1,6 +1,6 @@
 # RFD Protocol Installation Guide
 
-This guide covers installing and setting up the Nexus RFD Protocol in new projects.
+Complete guide for installing and setting up RFD (Reality-First Development) in your projects.
 
 ## Prerequisites
 
@@ -13,11 +13,14 @@ This guide covers installing and setting up the Nexus RFD Protocol in new projec
 ### Method 1: pip install (Recommended)
 
 ```bash
-# Install globally for all projects
+# Install globally (recommended)
 pip install rfd-protocol
 
 # Or with pipx for isolated environment
 pipx install rfd-protocol
+
+# Upgrade to latest version
+pip install --upgrade rfd-protocol
 ```
 
 Verify installation:
@@ -115,11 +118,12 @@ Should show:
 
 ### Automatic Integration
 
-If you have Claude Code CLI installed, RFD automatically configures it:
+RFD automatically configures Claude Code integration:
 
 1. **CLAUDE.md** is created with RFD-specific instructions
 2. **Memory persistence** is configured at `.rfd/context/memory.json`
-3. **Claude follows RFD workflow** automatically
+3. **Context preservation** across all sessions
+4. **Hallucination prevention** through validation requirements
 
 ### Manual Claude Code Setup
 
@@ -274,10 +278,10 @@ mkdir temp-project && cd temp-project && rfd init
 **Solution**:
 ```bash
 # Reinstall with dependencies
-pip install --upgrade --force-reinstall nexus-rfd-protocol
+pip install --upgrade --force-reinstall rfd-protocol
 
 # Or install with all optional dependencies
-pip install nexus-rfd-protocol[dev]
+pip install rfd-protocol[dev]
 ```
 
 ### Claude Code not auto-configured
@@ -311,7 +315,7 @@ To remove RFD from a project:
 rm -rf .rfd/ PROJECT.md CLAUDE.md PROGRESS.md
 
 # Uninstall package
-pip uninstall nexus-rfd-protocol
+pip uninstall rfd-protocol
 ```
 
 Your source code remains untouched.

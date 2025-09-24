@@ -1,7 +1,5 @@
 ---
 # Claude Code Configuration
-temperature: 0.2
-max_tokens: 4000
 tools: enabled
 memory: .rfd/context/memory.json
 ---

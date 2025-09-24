@@ -230,9 +230,7 @@ def get_config():
                 print(f"❌ ERROR detecting lie: {e}")
 
         detection_rate = (caught_lies / total_lies) * 100
-        print(
-            f"\nLie Detection Rate: {caught_lies}/{total_lies} = {detection_rate:.1f}%"
-        )
+        print(f"\nLie Detection Rate: {caught_lies}/{total_lies} = {detection_rate:.1f}%")
 
         return detection_rate >= 80  # Must catch at least 80% of lies
 
@@ -388,9 +386,7 @@ if __name__ == "__main__":
                 print(f"❌ ERROR: {e}")
 
         deception_rate = (caught_deceptions / total_deceptions) * 100
-        print(
-            f"\nReal-World Deception Detection: {caught_deceptions}/{total_deceptions} = {deception_rate:.1f}%"
-        )
+        print(f"\nReal-World Deception Detection: {caught_deceptions}/{total_deceptions} = {deception_rate:.1f}%")
 
         return deception_rate >= 90  # Must catch at least 90% of real deceptions
 
@@ -482,17 +478,13 @@ if __name__ == "__main__":
             print(f"{test}: {status}")
 
         overall_pass_rate = (passed_tests / total_tests) * 100
-        print(
-            f"\nOVERALL VERIFICATION: {passed_tests}/{total_tests} tests passed ({overall_pass_rate:.1f}%)"
-        )
+        print(f"\nOVERALL VERIFICATION: {passed_tests}/{total_tests} tests passed ({overall_pass_rate:.1f}%)")
 
         if passed_tests == total_tests:
             print("\n🎉 RFD-3's CLAIMS VERIFIED - All tests pass!")
             return True
         else:
-            print(
-                f"\n⚠️ RFD-3's CLAIMS PARTIALLY VERIFIED - {total_tests - passed_tests} tests failed"
-            )
+            print(f"\n⚠️ RFD-3's CLAIMS PARTIALLY VERIFIED - {total_tests - passed_tests} tests failed")
             return False
 
 

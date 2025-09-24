@@ -91,7 +91,6 @@ Save current state with message.
 description: Complete RFD workflow for a feature
 argument-hint: feature-id
 allowed-tools: Bash(*), Read(*), Write(*), Edit(*), MultiEdit(*), TodoWrite
-model: claude-3-5-sonnet-20241022
 ---
 
 # RFD Complete Workflow
@@ -125,14 +124,15 @@ Track all work with TodoWrite.""",
         """Set up Claude commands in a project by copying from templates"""
         commands_dir = project_root / ".claude" / "commands"
         commands_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Use templates instead of hardcoded commands
         templates_dir = Path(__file__).parent / "templates" / "commands"
-        
+
         created = []
         if templates_dir.exists():
             # Copy all command templates
             import shutil
+
             for template_file in templates_dir.glob("*.md"):
                 target_file = commands_dir / template_file.name
                 if not target_file.exists():
@@ -159,9 +159,6 @@ Track all work with TodoWrite.""",
             config_content = """# Claude Code Configuration for RFD Project
 version: "1.0"
 project_type: "rfd"
-
-# Default model for RFD operations
-model: claude-3-5-sonnet-20241022
 
 # RFD specific settings
 rfd:

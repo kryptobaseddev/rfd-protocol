@@ -23,14 +23,10 @@ class SpecEngine:
         description = questionary.text("What does this do? (30 words max):").ask()
 
         # Stack selection
-        language = questionary.select(
-            "Language:", choices=["python", "javascript", "typescript", "ruby", "go"]
-        ).ask()
+        language = questionary.select("Language:", choices=["python", "javascript", "typescript", "ruby", "go"]).ask()
 
         framework = self._select_framework(language)
-        database = questionary.select(
-            "Database:", choices=["sqlite", "postgresql", "mysql", "mongodb", "none"]
-        ).ask()
+        database = questionary.select("Database:", choices=["sqlite", "postgresql", "mysql", "mongodb", "none"]).ask()
 
         # Features (max 3 for v1)
         features = []
@@ -38,9 +34,7 @@ class SpecEngine:
             if i > 0 and not questionary.confirm(f"Add feature {i + 1}?").ask():
                 break
 
-            feature_id = questionary.text(
-                f"Feature {i + 1} ID (e.g., user_signup):"
-            ).ask()
+            feature_id = questionary.text(f"Feature {i + 1} ID (e.g., user_signup):").ask()
             feature_desc = questionary.text(f"Feature {i + 1} description:").ask()
             feature_acceptance = questionary.text("Acceptance criteria:").ask()
 
@@ -101,9 +95,7 @@ class SpecEngine:
             "go": ["gin", "echo", "none"],
         }
 
-        return questionary.select(
-            "Framework:", choices=frameworks.get(language, ["none"])
-        ).ask()
+        return questionary.select("Framework:", choices=frameworks.get(language, ["none"])).ask()
 
     def _default_constraints(self) -> list:
         """Default constraints for any project"""
@@ -216,11 +208,7 @@ class SpecEngine:
         # Features
         print("📋 Features:")
         for f in spec.get("features", []):
-            status_icon = (
-                "✅"
-                if f["status"] == "complete"
-                else "🔨" if f["status"] == "building" else "⭕"
-            )
+            status_icon = "✅" if f["status"] == "complete" else "🔨" if f["status"] == "building" else "⭕"
             print(f"  {status_icon} {f['id']}")
             print(f"      {f['description']}")
             print(f"      Acceptance: {f.get('acceptance', 'Not specified')}\n")

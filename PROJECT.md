@@ -7,10 +7,15 @@ constraints:
 - MUST maintain backward compatibility
 description: Using RFD to fix RFD and achieve 100% test pass rate
 features:
+- acceptance: Session persistence works, PyPI package installs and runs, tests have
+    real assertions, dogfooding is real
+  description: Fix critical broken functionality preventing RFD from working
+  id: fix_critical_issues
+  status: complete
 - acceptance: Detects and blocks mock data in code, enforces real implementations
   description: Mock data detection and prevention system
   id: mock_detection
-  status: pending
+  status: complete
 - acceptance: Tasks and phases display in status command, slash commands auto-execute,
     resume functionality works
   description: Implement missing RFD features for true dogfooding
