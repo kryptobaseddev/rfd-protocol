@@ -2,6 +2,18 @@
 
 <!-- version list -->
 
+## v4.0.0 (2025-09-24)
+
+### Features
+
+- Major v2.4.0 release with spec-kit parity and WAL mode
+  ([`b360f57`](https://github.com/kryptobaseddev/rfd-protocol/commit/b360f57c787457e01e9ab13e91bdab4572f7ec4e))
+
+### Breaking Changes
+
+- Database now uses WAL mode for better concurrency
+
+
 ## v3.0.0 (2025-09-24)
 
 ### Chores
