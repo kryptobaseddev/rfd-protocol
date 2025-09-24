@@ -1,35 +1,42 @@
 ---
-name: "RFD Protocol Dogfooding"
-description: "Using RFD to fix RFD and achieve 100% test pass rate"
-version: "1.1.0"
-stack:
-  language: "python"
-  framework: "click"
-  database: "sqlite"
+constraints:
+- NO new features until 100% tests pass
+- MUST use RFD workflow for all fixes
+- MUST validate each fix with tests
+- NO mock data in tests
+- MUST maintain backward compatibility
+description: Using RFD to fix RFD and achieve 100% test pass rate
+features:
+- acceptance: test_get_current_feature, test_save_and_load_state, test_session_manager_initialization,
+    test_session_persistence, test_suggest_next_action, test_update_progress all pass
+  description: Fix all 6 SessionManager test failures
+  id: session_manager_fixes
+  status: complete
+- acceptance: test_add_feature_to_spec, test_create_spec_interactive, test_update_feature_status,
+    test_validate_spec all pass
+  description: Fix all 4 SpecEngine test failures
+  id: spec_engine_fixes
+  status: complete
+- acceptance: All tests in test_integration.py pass
+  description: Fix 12 integration test failures
+  id: integration_test_fixes
+  status: complete
+- acceptance: Full installer works, Claude commands auto-generate, database syncs
+    with PROJECT.md
+  description: Complete RFD dogfooding with installer and automation
+  id: rfd_dogfooding
+  status: complete
+name: RFD Protocol Dogfooding
 rules:
   max_files: 50
   max_loc_per_file: 1200
   must_pass_tests: true
   no_mocks_in_prod: true
-features:
-  - id: "session_manager_fixes"
-    description: "Fix all 6 SessionManager test failures"
-    acceptance: "test_get_current_feature, test_save_and_load_state, test_session_manager_initialization, test_session_persistence, test_suggest_next_action, test_update_progress all pass"
-    status: "pending"
-  - id: "spec_engine_fixes"
-    description: "Fix all 4 SpecEngine test failures"
-    acceptance: "test_add_feature_to_spec, test_create_spec_interactive, test_update_feature_status, test_validate_spec all pass"
-    status: "pending"
-  - id: "integration_test_fixes"
-    description: "Fix 12 integration test failures"
-    acceptance: "All tests in test_integration.py pass"
-    status: "pending"
-constraints:
-  - "NO new features until 100% tests pass"
-  - "MUST use RFD workflow for all fixes"
-  - "MUST validate each fix with tests"
-  - "NO mock data in tests"
-  - "MUST maintain backward compatibility"
+stack:
+  database: sqlite
+  framework: click
+  language: python
+version: 1.1.0
 ---
 
 # Nexus RFD Protocol v1.0

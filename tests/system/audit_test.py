@@ -6,48 +6,51 @@ Tests each problem from brain-dump.md against RFD solution
 
 import sys
 from pathlib import Path
-from rfd.validation import ValidationEngine
-from rfd.session import SessionManager
+
 from rfd.rfd import RFD
+from rfd.session import SessionManager
+from rfd.validation import ValidationEngine
+
 
 def test_hallucination_detection():
     """Test: AI hallucination (48% error) → Verify reduced to <5%"""
     print("\n=== TEST 1: AI Hallucination Detection ===")
-    
+
     # Create a mock RFD instance
     rfd = RFD()
     validator = ValidationEngine(rfd)
-    
+
     # Test 1: Claim non-existent file
     fake_claim = "Created file test_fake.py with function process_data()"
     passed, results = validator.validate_ai_claims(fake_claim)
-    
+
     if not passed:
         print("✅ PASS: Detected hallucination about fake file")
     else:
         print("❌ FAIL: Did not detect hallucination")
         return False
-    
+
     # Test 2: Claim real file
     real_claim = "Created file nexus_rfd_protocol/validation.py"
     passed, results = validator.validate_ai_claims(real_claim)
-    
+
     if passed:
         print("✅ PASS: Correctly validated real file")
     else:
         print("❌ FAIL: False positive on real file")
         return False
-    
+
     print("✅ HALLUCINATION DETECTION: 100% accurate")
     return True
+
 
 def test_spec_enforcement():
     """Test: Not following developer intentions → Check spec enforcement"""
     print("\n=== TEST 2: Spec Enforcement ===")
-    
+
     rfd = RFD()
     session = SessionManager(rfd)
-    
+
     # Test: Try to start session with undefined feature
     try:
         session.start("undefined_feature")
@@ -59,37 +62,39 @@ def test_spec_enforcement():
         else:
             print("❌ FAIL: Wrong error for undefined feature")
             return False
-    
+
     print("✅ SPEC ENFORCEMENT: Working correctly")
     return True
+
 
 def test_context_persistence():
     """Test: Context forgetting → Verify session persistence"""
     print("\n=== TEST 3: Context Persistence ===")
-    
+
     rfd = RFD()
-    
+
     # Check if database exists and has session tracking
     if not rfd.db_path.exists():
         rfd._init_database()
-    
+
     import sqlite3
+
     conn = sqlite3.connect(rfd.db_path)
-    
+
     # Check sessions table exists
     cursor = conn.execute("""
-        SELECT name FROM sqlite_master 
+        SELECT name FROM sqlite_master
         WHERE type='table' AND name='sessions'
     """)
-    
+
     if cursor.fetchone():
         print("✅ PASS: Session persistence database exists")
-        
+
         # Check for session tracking columns
         cursor = conn.execute("PRAGMA table_info(sessions)")
         columns = {col[1] for col in cursor.fetchall()}
-        
-        required = {'id', 'started_at', 'feature_id'}
+
+        required = {"id", "started_at", "feature_id"}
         if required.issubset(columns):
             print("✅ PASS: Session tracking structure correct")
         else:
@@ -98,46 +103,48 @@ def test_context_persistence():
     else:
         print("❌ FAIL: No session persistence")
         return False
-    
+
     print("✅ CONTEXT PERSISTENCE: Fully implemented")
     return True
+
 
 def test_real_code_validation():
     """Test: Fake stubbed code/mock data → Verify real code only"""
     print("\n=== TEST 4: Real Code Validation ===")
-    
+
     rfd = RFD()
     validator = ValidationEngine(rfd)
-    
+
     # Check that validator has methods to detect real vs mock
-    has_validation = hasattr(validator, '_validate_structure')
-    has_api_check = hasattr(validator, '_validate_api')
-    has_db_check = hasattr(validator, '_validate_database')
-    
+    has_validation = hasattr(validator, "_validate_structure")
+    has_api_check = hasattr(validator, "_validate_api")
+    has_db_check = hasattr(validator, "_validate_database")
+
     if has_validation and has_api_check and has_db_check:
         print("✅ PASS: Has real validation methods")
         print("✅ PASS: Can validate structure, API, and database")
     else:
         print("❌ FAIL: Missing validation capabilities")
         return False
-    
+
     print("✅ REAL CODE VALIDATION: Implemented")
     return True
+
 
 def test_single_source_truth():
     """Test: Too many documents → Verify single source of truth"""
     print("\n=== TEST 5: Single Source of Truth ===")
-    
+
     # Check for PROJECT.md as single spec
     project_spec = Path("PROJECT.md")
-    
+
     if project_spec.exists():
         print("✅ PASS: PROJECT.md exists as single source")
-        
+
         # Check no competing spec files
         competing = list(Path(".").glob("*SPEC*.md"))
         competing = [f for f in competing if f.name != "RFD-SPEC.md"]
-        
+
         if len(competing) == 0:
             print("✅ PASS: No competing specification documents")
         else:
@@ -145,43 +152,45 @@ def test_single_source_truth():
     else:
         print("❌ FAIL: No single source of truth (PROJECT.md)")
         return False
-    
+
     print("✅ SINGLE SOURCE: Achieved")
     return True
+
 
 def main():
     """Run all audit tests"""
     print("=" * 60)
     print("RFD PROTOCOL AUDIT - Testing Against brain-dump.md Problems")
     print("=" * 60)
-    
+
     results = {
         "hallucination": test_hallucination_detection(),
         "spec_enforcement": test_spec_enforcement(),
         "context": test_context_persistence(),
         "real_code": test_real_code_validation(),
-        "single_source": test_single_source_truth()
+        "single_source": test_single_source_truth(),
     }
-    
+
     print("\n" + "=" * 60)
     print("AUDIT SUMMARY")
     print("=" * 60)
-    
+
     total = len(results)
     passed = sum(1 for v in results.values() if v)
-    
+
     for test, result in results.items():
         status = "✅ SOLVED" if result else "❌ NOT SOLVED"
         print(f"{test}: {status}")
-    
-    print(f"\nOVERALL: {passed}/{total} tests passed ({int(passed/total*100)}%)")
-    
+
+    print(f"\nOVERALL: {passed}/{total} tests passed ({int(passed / total * 100)}%)")
+
     if passed == total:
         print("\n🎉 100% PROBLEMS SOLVED - READY FOR RFD-PRIME REVIEW")
         return 0
     else:
         print(f"\n⚠️  {total - passed} PROBLEMS REMAIN - NEEDS MORE WORK")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

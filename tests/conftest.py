@@ -7,23 +7,24 @@ This file provides common fixtures used across all test categories:
 - system tests (end-to-end workflows)
 """
 
-import pytest
-import tempfile
+import os
 import shutil
 import sqlite3
-import os
-from pathlib import Path
-from unittest.mock import Mock, MagicMock
 import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from rfd.rfd import RFD
-from rfd.validation import ValidationEngine
-from rfd.session import SessionManager
 from rfd.build import BuildEngine
+from rfd.rfd import RFD
+from rfd.session import SessionManager
 from rfd.spec import SpecEngine
+from rfd.validation import ValidationEngine
 
 
 @pytest.fixture(scope="session")
@@ -67,7 +68,7 @@ def validation_engine(temp_db):
     mock_rfd = Mock()
     mock_rfd.project_root = Path("/tmp/test")
     mock_rfd.config = {}
-    
+
     # Create temporary database
     conn = sqlite3.connect(temp_db)
     conn.execute("""
@@ -80,7 +81,7 @@ def validation_engine(temp_db):
         )
     """)
     conn.close()
-    
+
     ve = ValidationEngine(mock_rfd)
     ve.db_path = temp_db
     return ve
@@ -91,7 +92,7 @@ def session_manager(temp_db):
     """SessionManager instance with temporary database."""
     mock_rfd = Mock()
     mock_rfd.project_root = Path("/tmp/test")
-    
+
     sm = SessionManager(mock_rfd)
     sm.db_path = temp_db
     sm._init_database()
@@ -120,7 +121,7 @@ def sample_python_project(temp_project):
     """Create a sample Python project for testing."""
     project_dir = temp_project / "sample_python"
     project_dir.mkdir()
-    
+
     # Create sample files
     (project_dir / "app.py").write_text("""
 def main():
@@ -130,9 +131,9 @@ def main():
 if __name__ == "__main__":
     main()
 """)
-    
+
     (project_dir / "requirements.txt").write_text("flask>=2.0.0\nrequests>=2.28.0")
-    
+
     (project_dir / "PROJECT.md").write_text("""
 # Sample Python Project
 
@@ -141,7 +142,7 @@ if __name__ == "__main__":
 - [ ] Feature 2: Web interface
 - [ ] Feature 3: Database integration
 """)
-    
+
     return project_dir
 
 
@@ -150,7 +151,7 @@ def sample_javascript_project(temp_project):
     """Create a sample JavaScript project for testing."""
     project_dir = temp_project / "sample_js"
     project_dir.mkdir()
-    
+
     # Create sample files
     (project_dir / "index.js").write_text("""
 function main() {
@@ -160,7 +161,7 @@ function main() {
 
 module.exports = { main };
 """)
-    
+
     (project_dir / "package.json").write_text("""{
   "name": "sample-js-project",
   "version": "1.0.0",
@@ -169,7 +170,7 @@ module.exports = { main };
     "express": "^4.18.0"
   }
 }""")
-    
+
     return project_dir
 
 
@@ -212,18 +213,18 @@ def sample_ai_claims():
         "true_claims": [
             "Created tests/conftest.py with pytest fixtures",
             "Modified pyproject.toml to add ruff configuration",
-            "Added function test_basic_functionality() to existing file"
+            "Added function test_basic_functionality() to existing file",
         ],
         "false_claims": [
             "Created /nonexistent/fake_file.py with magic_function()",
             "Modified nonexistent_file.py to add error_handling()",
-            "Added function that_does_not_exist() to real_file.py"
+            "Added function that_does_not_exist() to real_file.py",
         ],
         "complex_claims": [
             "Created multiple files: src/new.py, tests/test_new.py, docs/new.md",
             "Refactored entire codebase to use async/await patterns",
-            "Added comprehensive error handling throughout the application"
-        ]
+            "Added comprehensive error handling throughout the application",
+        ],
     }
 
 
@@ -254,5 +255,5 @@ features:
     status: invalid_status
   - invalid_feature_format
 ---
-"""
+""",
     }
