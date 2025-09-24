@@ -1,23 +1,23 @@
 ---
-session_id: 5
-feature: cli_refactor
-started: 2025-09-24T13:27:38.422732
+session_id: 4
+feature: fix_critical_issues
+started: 2025-09-23T22:26:53.843522
 status: building
 ---
 
-# Current Session: cli_refactor
+# Current Session: fix_critical_issues
 
 ## Feature Specification
-Refactor CLI to eliminate confusion and improve UX
+Fix critical broken functionality preventing RFD from working
 
 **Acceptance Criteria:**
-Commands are intuitive, no speckit subcommand, smart defaults work
+Session persistence works, PyPI package installs and runs, tests have real assertions, dogfooding is real
 
 ## Current Status
 ```
-./rfd validate --feature cli_refactor
-✅ max_files: 39 files (max: 50)
-❌ feature_cli_refactor: Refactor CLI to eliminate confusion and improve UX - pending
+./rfd validate --feature fix_critical_issues
+✅ max_files: 35 files (max: 50)
+❌ feature_fix_critical_issues: Fix critical broken functionality preventing RFD from working - pending
 ✅ database: Database found: .rfd/memory.db
 ```
 

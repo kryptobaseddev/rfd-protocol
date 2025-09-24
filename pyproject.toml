@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rfd-protocol"
-version = "4.0.0"
+version = "4.1.0"
 description = "Reality-First Development Protocol - Prevents AI hallucination and ensures spec-driven development"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -60,7 +60,7 @@ major_on_zero = false
 tag_format = "v{version}"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

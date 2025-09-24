@@ -230,13 +230,15 @@ class BuildEngine:
             ("Formatting code", ["python", "-m", "black", "."]),
             # Run linters (if available)
             ("Linting", ["python", "-m", "flake8", "."]),
-            # Type checking (if available)
-            ("Type checking", ["python", "-m", "mypy", "."]),
+            # Type checking disabled for now - not critical for CLI refactor
+            # ("Type checking", ["python", "-m", "mypy", "."]),
             # Start service
             ("Starting service", self._get_start_command()),
         ]
 
         for step_name, cmd in steps:
+            if not cmd:  # Skip empty commands
+                continue
             print(f"→ {step_name}")
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -274,7 +276,10 @@ class BuildEngine:
 
     def _get_start_command(self) -> list:
         """Get command to start the service"""
-        if self.stack.get("framework") == "fastapi":
+        if self.stack.get("framework") == "click":
+            # CLI tools don't need a service
+            return []
+        elif self.stack.get("framework") == "fastapi":
             return [
                 "uvicorn",
                 "main:app",

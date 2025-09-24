@@ -13,9 +13,8 @@ from typing import Any, Dict
 
 import frontmatter
 
-from .db_utils import get_db_connection, init_database, migrate_to_wal
-
 from .build import BuildEngine
+from .db_utils import get_db_connection, init_database, migrate_to_wal
 from .project_updater import ProjectUpdater
 from .session import SessionManager
 from .spec import SpecEngine
@@ -62,7 +61,7 @@ class RFD:
         # Use new database utilities for WAL mode and proper setup
         init_database(self.db_path)
         migrate_to_wal(self.db_path)
-        
+
         # Get connection with WAL mode
         conn = get_db_connection(self.db_path)
         try:
@@ -148,6 +147,31 @@ class RFD:
             "session": self.session.get_current(),
             "features": self.get_features_status(),
         }
+
+    def save_project_spec(self, spec: Dict[str, Any]) -> None:
+        """Save project spec to PROJECT.md in YAML frontmatter format"""
+        import yaml
+        project_file = self.root / "PROJECT.md"
+        
+        # Separate frontmatter from content
+        content = ""
+        if project_file.exists():
+            with open(project_file) as f:
+                full_content = f.read()
+                # Extract existing content after frontmatter
+                parts = full_content.split("---\n", 2)
+                if len(parts) > 2:
+                    content = parts[2]
+                elif len(parts) == 1 and not full_content.startswith("---"):
+                    content = full_content
+        
+        # Write updated spec with frontmatter
+        with open(project_file, "w") as f:
+            f.write("---\n")
+            yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
+            f.write("---\n")
+            if content:
+                f.write(content)
 
     def get_features_status(self) -> list:
         """Get status of all features"""

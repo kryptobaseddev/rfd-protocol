@@ -124,8 +124,13 @@ class AIClaimValidator:
     def _extract_file_claims(self, text: str) -> List[str]:
         """Extract file paths mentioned in AI claims"""
         patterns = [
-            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+(?:file\s+)?([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp|md|txt|yml|yaml|json|xml|html|css|scss|sql|sh|bash))",
-            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+a?\s?(?:new\s+)?file\s+(?:called\s+|named\s+)?([/\w.-]+)",
+            # Match file creation/modification claims with file extensions
+            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+"
+            r"(?:file\s+)?([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp|md|txt|yml|"
+            r"yaml|json|xml|html|css|scss|sql|sh|bash))",
+            # Match file creation/modification with descriptive text
+            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+"
+            r"a?\s?(?:new\s+)?file\s+(?:called\s+|named\s+)?([/\w.-]+)",
             r"(?:In|At|File)\s+([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp))",
             r"`([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp))`",
         ]

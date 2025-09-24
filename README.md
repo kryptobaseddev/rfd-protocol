@@ -16,7 +16,7 @@ RFD enforces reality at every step. No more "I implemented that feature" when no
 
 ## What is RFD?
 
-RFD (Reality-First Development) is a development protocol that makes AI hallucination physically impossible through continuous reality validation. It's not just another tool - it's a fundamental shift in how we build software with AI.
+RFD (Reality-First Development) is a development protocol that makes **AI hallucination** physically impossible through continuous reality validation. Not just managing the LLM but also the human to help prevent **squirrel brain** and **SDLC drift** by enforcing concrete reality checkpoints. Instead of trusting AI claims about what was implemented, RFD validates the actual code runs, tests pass, and features work. It's not just another tool - it's a fundamental shift in how we build software with AI.
 
 ### Core Guarantees
 

@@ -4,7 +4,6 @@ Manages development sessions and AI context
 """
 
 import json
-import sqlite3
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -30,7 +29,6 @@ class SessionManager:
 
                 def _init_database(self):
                     """Initialize the database with required tables"""
-                    import sqlite3
 
                     conn = get_db_connection(self.db_path)
                     conn.executescript(

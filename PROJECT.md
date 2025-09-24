@@ -12,6 +12,10 @@ features:
   description: Fix critical broken functionality preventing RFD from working
   id: fix_critical_issues
   status: complete
+- acceptance: Commands are intuitive, no speckit subcommand, smart defaults work
+  description: Refactor CLI to eliminate confusion and improve UX
+  id: cli_refactor
+  status: in_progress
 - acceptance: Detects and blocks mock data in code, enforces real implementations
   description: Mock data detection and prevention system
   id: mock_detection

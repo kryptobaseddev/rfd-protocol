@@ -5,42 +5,41 @@ Ensures consistent SQLite configuration across all connections
 
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 
 def get_db_connection(db_path: str | Path, timeout: float = 30.0) -> sqlite3.Connection:
     """
     Create a SQLite connection with WAL mode and optimal settings.
-    
+
     WAL (Write-Ahead Logging) benefits:
     - Better concurrency - readers don't block writers
     - Better performance for write-heavy workloads
     - More robust crash recovery
     - Consistent memory context across sessions
-    
+
     Args:
         db_path: Path to the SQLite database
         timeout: Connection timeout in seconds
-    
+
     Returns:
         Configured SQLite connection
     """
     conn = sqlite3.connect(str(db_path), timeout=timeout)
-    
+
     # Enable WAL mode for better concurrency and performance
     conn.execute("PRAGMA journal_mode=WAL")
-    
+
     # Optimize for performance
     conn.execute("PRAGMA synchronous=NORMAL")  # Good balance of safety and speed
-    conn.execute("PRAGMA cache_size=10000")     # Increase cache size (pages)
-    conn.execute("PRAGMA temp_store=MEMORY")    # Use memory for temp tables
-    
+    conn.execute("PRAGMA cache_size=10000")  # Increase cache size (pages)
+    conn.execute("PRAGMA temp_store=MEMORY")  # Use memory for temp tables
+
     # Enable foreign keys for referential integrity
     conn.execute("PRAGMA foreign_keys=ON")
-    
+
     # Row factory for dict-like access
     conn.row_factory = sqlite3.Row
-    
+
     return conn
 
 
@@ -51,9 +50,10 @@ def init_database(db_path: str | Path) -> None:
     """
     conn = get_db_connection(db_path)
     cursor = conn.cursor()
-    
+
     # Core session management
-    cursor.executescript("""
+    cursor.executescript(
+        """
         CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY,
             feature_id TEXT,
@@ -61,7 +61,7 @@ def init_database(db_path: str | Path) -> None:
             completed_at TEXT,
             status TEXT DEFAULT 'active'
         );
-        
+
         CREATE TABLE IF NOT EXISTS features (
             id TEXT PRIMARY KEY,
             description TEXT,
@@ -73,7 +73,7 @@ def init_database(db_path: str | Path) -> None:
             estimated_hours REAL,
             actual_hours REAL
         );
-        
+
         CREATE TABLE IF NOT EXISTS checkpoints (
             id INTEGER PRIMARY KEY,
             session_id INTEGER,
@@ -84,7 +84,7 @@ def init_database(db_path: str | Path) -> None:
             git_hash TEXT,
             feature_id TEXT
         );
-        
+
         CREATE TABLE IF NOT EXISTS context (
             id INTEGER PRIMARY KEY,
             session_id INTEGER,
@@ -92,7 +92,7 @@ def init_database(db_path: str | Path) -> None:
             value TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         -- Spec-kit style tables
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY,
@@ -106,7 +106,7 @@ def init_database(db_path: str | Path) -> None:
             completed_at TEXT,
             FOREIGN KEY (feature_id) REFERENCES features (id)
         );
-        
+
         CREATE TABLE IF NOT EXISTS project_phases (
             id TEXT PRIMARY KEY,
             name TEXT,
@@ -116,7 +116,7 @@ def init_database(db_path: str | Path) -> None:
             started_at TEXT,
             completed_at TEXT
         );
-        
+
         CREATE TABLE IF NOT EXISTS workflow_state (
             id INTEGER PRIMARY KEY,
             feature_id TEXT,
@@ -127,7 +127,7 @@ def init_database(db_path: str | Path) -> None:
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (feature_id) REFERENCES features (id)
         );
-        
+
         CREATE TABLE IF NOT EXISTS workflow_checkpoints (
             id INTEGER PRIMARY KEY,
             workflow_id INTEGER,
@@ -136,7 +136,7 @@ def init_database(db_path: str | Path) -> None:
             data JSON,
             FOREIGN KEY (workflow_id) REFERENCES workflow_state (id)
         );
-        
+
         -- Hallucination and drift tracking
         CREATE TABLE IF NOT EXISTS hallucination_log (
             id INTEGER PRIMARY KEY,
@@ -146,7 +146,7 @@ def init_database(db_path: str | Path) -> None:
             detected_by TEXT,
             severity TEXT
         );
-        
+
         CREATE TABLE IF NOT EXISTS drift_log (
             id INTEGER PRIMARY KEY,
             timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -155,7 +155,7 @@ def init_database(db_path: str | Path) -> None:
             component TEXT,
             resolved BOOLEAN DEFAULT 0
         );
-        
+
         -- Query resolution for spec ambiguities
         CREATE TABLE IF NOT EXISTS workflow_queries (
             id INTEGER PRIMARY KEY,
@@ -165,7 +165,7 @@ def init_database(db_path: str | Path) -> None:
             resolved_at TEXT,
             FOREIGN KEY (workflow_id) REFERENCES workflow_state (id)
         );
-        
+
         -- Constitution storage (immutable principles)
         CREATE TABLE IF NOT EXISTS constitution (
             id INTEGER PRIMARY KEY,
@@ -174,7 +174,7 @@ def init_database(db_path: str | Path) -> None:
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             immutable BOOLEAN DEFAULT 1
         );
-        
+
         -- API contract storage
         CREATE TABLE IF NOT EXISTS api_contracts (
             id INTEGER PRIMARY KEY,
@@ -188,14 +188,15 @@ def init_database(db_path: str | Path) -> None:
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (feature_id) REFERENCES features (id)
         );
-        
+
         -- Create indexes for better performance
         CREATE INDEX IF NOT EXISTS idx_sessions_feature ON sessions(feature_id);
         CREATE INDEX IF NOT EXISTS idx_tasks_feature ON tasks(feature_id);
         CREATE INDEX IF NOT EXISTS idx_workflow_state_feature ON workflow_state(feature_id);
         CREATE INDEX IF NOT EXISTS idx_api_contracts_feature ON api_contracts(feature_id);
-    """)
-    
+    """
+    )
+
     conn.commit()
     conn.close()
 
@@ -203,30 +204,30 @@ def init_database(db_path: str | Path) -> None:
 def migrate_to_wal(db_path: str | Path) -> bool:
     """
     Migrate existing database to WAL mode.
-    
+
     Returns:
         True if migration successful or already in WAL mode
     """
     try:
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
-        
+
         # Check current journal mode
         result = cursor.execute("PRAGMA journal_mode").fetchone()
         current_mode = result[0] if result else "delete"
-        
+
         if current_mode.lower() == "wal":
-            print(f"Database already in WAL mode")
+            print("Database already in WAL mode")
             conn.close()
             return True
-        
+
         # Switch to WAL mode
         cursor.execute("PRAGMA journal_mode=WAL")
         result = cursor.execute("PRAGMA journal_mode").fetchone()
         new_mode = result[0] if result else "unknown"
-        
+
         if new_mode.lower() == "wal":
-            print(f"Successfully migrated database to WAL mode")
+            print("Successfully migrated database to WAL mode")
             conn.commit()
             conn.close()
             return True
@@ -234,7 +235,7 @@ def migrate_to_wal(db_path: str | Path) -> bool:
             print(f"Failed to migrate to WAL mode, still in {new_mode} mode")
             conn.close()
             return False
-            
+
     except Exception as e:
         print(f"Error migrating to WAL mode: {e}")
         return False
@@ -243,48 +244,57 @@ def migrate_to_wal(db_path: str | Path) -> bool:
 def verify_database_integrity(db_path: str | Path) -> bool:
     """
     Verify database integrity and structure.
-    
+
     Returns:
         True if database is healthy
     """
     try:
         conn = get_db_connection(db_path)
         cursor = conn.cursor()
-        
+
         # Check integrity
         result = cursor.execute("PRAGMA integrity_check").fetchone()
         if result[0] != "ok":
             print(f"Database integrity check failed: {result[0]}")
             return False
-        
+
         # Verify all required tables exist
         required_tables = [
-            'sessions', 'features', 'checkpoints', 'context',
-            'tasks', 'project_phases', 'workflow_state',
-            'hallucination_log', 'drift_log', 'constitution',
-            'api_contracts'
+            "sessions",
+            "features",
+            "checkpoints",
+            "context",
+            "tasks",
+            "project_phases",
+            "workflow_state",
+            "hallucination_log",
+            "drift_log",
+            "constitution",
+            "api_contracts",
         ]
-        
-        cursor.execute("""
-            SELECT name FROM sqlite_master 
+
+        cursor.execute(
+            """
+            SELECT name FROM sqlite_master
             WHERE type='table' AND name NOT LIKE 'sqlite_%'
-        """)
+        """
+        )
         existing_tables = {row[0] for row in cursor.fetchall()}
-        
+
         missing_tables = set(required_tables) - existing_tables
         if missing_tables:
             print(f"Missing tables: {missing_tables}")
             return False
-        
+
         # Check WAL mode
         result = cursor.execute("PRAGMA journal_mode").fetchone()
         if result[0].lower() != "wal":
             print(f"Database not in WAL mode: {result[0]}")
             return False
-        
+
         conn.close()
         return True
-        
+
     except Exception as e:
         print(f"Database verification error: {e}")
         return False
