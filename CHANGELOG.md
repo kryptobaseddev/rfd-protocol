@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v4.2.0 (2025-09-25)
+
+### Features
+
+- **commands**: Improve slash commands with better parameter hints and discovery
+  ([`192ac2e`](https://github.com/kryptobaseddev/rfd-protocol/commit/192ac2ec6832c212b34d67a06b3e2bb83b055103))
+
+
 ## v4.1.0 (2025-09-24)
 
 ### Documentation
