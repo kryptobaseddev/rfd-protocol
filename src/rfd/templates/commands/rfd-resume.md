@@ -14,7 +14,7 @@ This command automatically:
 ## Load Context
 @.rfd/context/current.md
 @.rfd/context/memory.json
-@PROJECT.md
+@.rfd/config.yaml
 
 ## Check Status
 !./rfd-new dashboard

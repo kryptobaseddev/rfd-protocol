@@ -15,7 +15,7 @@ features:
 - acceptance: Commands are intuitive, no speckit subcommand, smart defaults work
   description: Refactor CLI to eliminate confusion and improve UX
   id: cli_refactor
-  status: in_progress
+  status: complete
 - acceptance: Detects and blocks mock data in code, enforces real implementations
   description: Mock data detection and prevention system
   id: mock_detection

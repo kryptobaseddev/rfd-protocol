@@ -403,6 +403,32 @@ def status(rfd):
 
 @cli.command()
 @click.pass_obj
+def audit(rfd):
+    """Audit database-first compliance"""
+    from .database_accountability import DatabaseAccountability
+    
+    auditor = DatabaseAccountability(rfd.db_path)
+    audit_result = auditor.audit_database_first(Path.cwd())
+    
+    if audit_result["compliant"]:
+        click.echo("✅ Database-First Compliance: PASSING")
+    else:
+        click.echo("⚠️  Database-First Compliance: VIOLATIONS FOUND")
+        click.echo("=" * 50)
+        for violation in audit_result["violations"]:
+            click.echo(f"❌ {violation['message']}")
+            if "fix" in violation:
+                click.echo(f"   Fix: {violation['fix']}")
+        
+        click.echo("\n📋 Recommendations:")
+        for rec in audit_result["recommendations"]:
+            click.echo(f"   • {rec}")
+    
+    return audit_result["compliant"]
+
+
+@cli.command()
+@click.pass_obj
 def dashboard(rfd):
     """Show project dashboard with all features and progress"""
     from .feature_manager import FeatureManager
@@ -490,6 +516,41 @@ def session_start(rfd, feature_id):
     except ValueError as e:
         click.echo(f"❌ Error: {e}", err=True)
         sys.exit(1)
+
+
+@session.command("status")
+@click.pass_obj
+def session_status(rfd):
+    """Show current session status"""
+    current = rfd.session.get_current()
+    if current:
+        click.echo(f"📍 Current session:")
+        click.echo(f"   Feature: {current.get('feature_id', 'unknown')}")
+        click.echo(f"   Started: {current.get('started_at', 'unknown')}")
+        click.echo(f"   Session ID: {current.get('id', 'unknown')}")
+        # Show feature status from database
+        import sqlite3
+        conn = sqlite3.connect(rfd.db_path)
+        cursor = conn.execute(
+            "SELECT status, description FROM features WHERE id = ?",
+            (current.get('feature_id'),)
+        )
+        result = cursor.fetchone()
+        conn.close()
+        if result:
+            click.echo(f"   Feature Status: {result[0]}")
+            click.echo(f"   Description: {result[1]}")
+    else:
+        click.echo("💤 No active session")
+        click.echo("\nStart a session with: rfd session start <feature-id>")
+
+
+@session.command("current")
+@click.pass_obj
+def session_current(rfd):
+    """Show current feature being worked on (alias for status)"""
+    ctx = click.get_current_context()
+    ctx.invoke(session_status)
 
 
 @session.command("end")

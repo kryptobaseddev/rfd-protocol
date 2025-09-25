@@ -9,6 +9,7 @@ from pathlib import Path
 
 try:
     from packaging import version
+
     HAS_PACKAGING = True
 except ImportError:
     HAS_PACKAGING = False
@@ -61,7 +62,7 @@ def check_for_updates(silent: bool = False) -> bool:
     # Skip if packaging module not available
     if not HAS_PACKAGING:
         return False
-    
+
     # Check at most once per day to avoid spamming PyPI
     cache_file = Path.home() / ".rfd" / ".update_check"
     cache_file.parent.mkdir(exist_ok=True)

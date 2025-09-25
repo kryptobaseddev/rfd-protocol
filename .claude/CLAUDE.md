@@ -1,5 +1,8 @@
 ---
 # Claude Code Configuration
+model: claude-3-5-sonnet-20241022
+temperature: 0.2
+max_tokens: 4000
 tools: enabled
 memory: .rfd/context/memory.json
 ---
@@ -9,13 +12,13 @@ memory: .rfd/context/memory.json
 You are operating in a Reality-First Development (RFD) project. Your ONLY job is to make tests pass.
 
 ## Critical Rules
-1. Read @.rfd/config.yaml for project configuration
+1. Read @PROJECT.md for the specification
 2. Check @.rfd/context/current.md for your current task
-3. Features are in the database - use `rfd feature list`
+3. Read @PROGRESS.md for what's already done
 4. Run `rfd check` before ANY changes
 5. Every code change MUST improve `rfd validate` output
 6. NEVER mock data - use real implementations
-7. NEVER add features not in the database
+7. NEVER add features not in @PROJECT.md
 
 ## Workflow for Every Response
 
@@ -25,10 +28,9 @@ rfd check
 ```
 
 ### 2. Read Context
-- @.rfd/config.yaml - Project configuration
+- @PROJECT.md - What we're building
 - @.rfd/context/current.md - Current feature/task
-- Use `rfd feature list` to see all features
-- Use `rfd dashboard` to see progress
+- @PROGRESS.md - What already works
 
 ### 3. Write Code
 - Minimal code to fix the FIRST failing test

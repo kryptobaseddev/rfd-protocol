@@ -19,9 +19,9 @@ If a feature ID is provided: `$1`, start a session for it.
 
 ### 3. Read Specifications
 Read and understand:
-- @PROJECT.md - Project specifications
+- @.rfd/config.yaml - Project configuration
 - @.rfd/context/current.md - Current task
-- @PROGRESS.md - Completed work
+- Run `rfd feature list` to see all features
 
 ### 4. Build Feature
 !./rfd build $1
@@ -39,6 +39,6 @@ If validation passes:
 !./rfd checkpoint "Completed: $1"
 
 ### 8. Update Progress
-Update feature status in PROJECT.md to "complete" if all tests pass.
+Use `rfd feature complete <feature-id>` if all tests pass.
 
 Track entire workflow in TodoWrite for visibility.
