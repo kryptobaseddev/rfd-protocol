@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v4.2.1 (2025-09-25)
+
+### Bug Fixes
+
+- Add missing packaging dependency for version checks
+  ([`a2b9b29`](https://github.com/kryptobaseddev/rfd-protocol/commit/a2b9b2924e64df5a1a9bc00d91a29492d4221cdf))
+
+
 ## v4.2.0 (2025-09-25)
 
 ### Features
