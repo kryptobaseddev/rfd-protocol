@@ -1,0 +1,8 @@
+# RFD Context Files - AUTO-GENERATED, DO NOT EDIT MANUALLY
+.rfd/context/current.md linguist-generated=true
+.rfd/context/memory.json linguist-generated=true
+.rfd/context/handoff.md linguist-generated=true
+
+# Deprecated files
+PROJECT.md.deprecated linguist-documentation=true
+PROGRESS.md.deprecated linguist-documentation=true

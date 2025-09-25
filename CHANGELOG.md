@@ -2,13 +2,54 @@
 
 <!-- version list -->
 
+## v5.0.0 (2025-09-25)
+
+### Breaking Changes
+
+- **database-first**: Complete migration to database-first architecture
+  - PROJECT.md and PROGRESS.md are now deprecated
+  - All project configuration now in `.rfd/config.yaml`
+  - Features are managed exclusively in the database
+  - Context files are auto-generated and protected from manual editing
+
+### Features
+
+- **context-manager**: Add ContextManager for programmatic context handling
+  - Auto-generates `.rfd/context/` files with DO NOT EDIT warnings
+  - Prevents AI/LLM agents from manually editing context files
+  - Provides safe read-only access for AI agents
+  ([`current`](https://github.com/kryptobaseddev/rfd-protocol/commit/current))
+
+- **database-accountability**: Add `rfd audit` command for database-first compliance
+  - Detects status mismatches between files and database
+  - Identifies orphaned sessions and missing task tracking
+  - Provides specific fixes for each violation
+  ([`current`](https://github.com/kryptobaseddev/rfd-protocol/commit/current))
+
+- **session-commands**: Add missing session management commands
+  - `rfd session status` - Shows current session details
+  - `rfd session current` - Alias for status command
+  - Both commands query database for authoritative feature status
+  ([`current`](https://github.com/kryptobaseddev/rfd-protocol/commit/current))
+
+### Fixes
+
+- **validation**: Fix validation to use database status instead of PROJECT.md
+- **session**: Remove all PROJECT.md dependencies from session management
+- **spec**: Update load_project_spec() to use database and config.yaml
+
+### Documentation
+
+- Update CLAUDE.md to forbid editing auto-generated context files
+- Add .gitattributes to mark context files as linguist-generated
+- Update all command templates to reference config.yaml instead of PROJECT.md
+
 ## v4.2.1 (2025-09-25)
 
 ### Bug Fixes
 
 - Add missing packaging dependency for version checks
   ([`a2b9b29`](https://github.com/kryptobaseddev/rfd-protocol/commit/a2b9b2924e64df5a1a9bc00d91a29492d4221cdf))
-
 
 ## v4.2.0 (2025-09-25)
 

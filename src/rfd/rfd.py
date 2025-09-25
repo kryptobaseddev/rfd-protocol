@@ -109,34 +109,45 @@ class RFD:
             conn.close()
 
     def load_project_spec(self) -> Dict[str, Any]:
-        """Load and parse PROJECT.md"""
-        project_file = self.root / "PROJECT.md"
-        if not project_file.exists():
-            return {}
-
-        with open(project_file) as f:
-            content = f.read()
-
-        # Try frontmatter format first
+        """Load project spec from database and config.yaml"""
+        from .config_manager import ConfigManager
+        from .db_utils import get_db_connection
+        
+        # Get config from config.yaml
+        config_mgr = ConfigManager(self.rfd_dir)
+        config = config_mgr.load_config() or {}
+        
+        # Get features from database
+        conn = get_db_connection(self.db_path)
+        features = []
+        
         try:
-            post = frontmatter.loads(content)
-            if post.metadata:
-                return post.metadata
-        except Exception:
-            pass
-
-        # Try to find JSON in the content
-        try:
-            import re
-
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-        except Exception:
-            pass
-
-        # Return empty dict if no valid format found
-        return {}
+            cursor = conn.execute(
+                """SELECT id, description, acceptance_criteria, status 
+                   FROM features ORDER BY created_at"""
+            )
+            for row in cursor.fetchall():
+                features.append({
+                    "id": row[0],
+                    "description": row[1],
+                    "acceptance": row[2] or "Not specified",
+                    "status": row[3]
+                })
+        finally:
+            conn.close()
+        
+        # Combine config and features
+        spec = {
+            "name": config.get("project", {}).get("name", "Unknown Project"),
+            "description": config.get("project", {}).get("description", ""),
+            "version": config.get("project", {}).get("rfd_version", "1.0.0"),
+            "stack": config.get("stack", {}),
+            "rules": config.get("rules", {}),
+            "constraints": config.get("constraints", []),
+            "features": features
+        }
+        
+        return spec
 
     def get_current_state(self) -> Dict[str, Any]:
         """Get complete current project state"""
@@ -149,7 +160,7 @@ class RFD:
         }
 
     def save_project_spec(self, spec: Dict[str, Any]) -> None:
-        """Save project spec to PROJECT.md in YAML frontmatter format"""
+        """DEPRECATED - Project spec now lives in database and config.yaml"""
         import yaml
 
         project_file = self.root / "PROJECT.md"

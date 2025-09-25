@@ -1,29 +1,30 @@
+<!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
-session_id: 5
-feature: cli_refactor
-started: 2025-09-24T13:27:38.422732
+session_id: 9
+feature: test_context
+started: 2025-09-25T13:53:46.947559
 status: building
 ---
 
-# Current Session: cli_refactor
+# Current Session: test_context
 
 ## Feature Specification
-Refactor CLI to eliminate confusion and improve UX
+Test automated context generation
 
 **Acceptance Criteria:**
-Commands are intuitive, no speckit subcommand, smart defaults work
+Test automated context generation is complete and working
 
 ## Current Status
 ```
-./rfd validate --feature cli_refactor
-✅ max_files: 39 files (max: 50)
-❌ feature_cli_refactor: Refactor CLI to eliminate confusion and improve UX - pending
+./rfd validate --feature test_context
+✅ max_files: 45 files (max: 50)
+❌ feature_test_context: Test automated context generation - building
 ✅ database: Database found: .rfd/memory.db
 ```
 
 ## Required Actions
 1. Make all validation tests pass
-2. Ensure code follows PROJECT.md constraints
+2. Ensure code follows .rfd/config.yaml constraints
 3. No mocks - use real implementations
 
 ## Commands
@@ -33,7 +34,7 @@ Commands are intuitive, no speckit subcommand, smart defaults work
 ./rfd checkpoint     # Save working state
 ```
 
-## Constraints from PROJECT.md
+## Constraints from .rfd/config.yaml
 - NO new features until 100% tests pass
 - MUST use RFD workflow for all fixes
 - MUST validate each fix with tests

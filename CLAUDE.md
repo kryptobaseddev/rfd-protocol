@@ -10,12 +10,13 @@ You are operating in a Reality-First Development (RFD) project. Your ONLY job is
 
 ## Critical Rules
 1. Read @.rfd/config.yaml for project configuration
-2. Check @.rfd/context/current.md for your current task
+2. Check @.rfd/context/current.md for your current task (READ-ONLY - NEVER EDIT)
 3. Features are in the database - use `rfd feature list`
 4. Run `rfd check` before ANY changes
 5. Every code change MUST improve `rfd validate` output
 6. NEVER mock data - use real implementations
 7. NEVER add features not in the database
+8. NEVER manually edit files in .rfd/context/ - they are AUTO-GENERATED
 
 ## Workflow for Every Response
 
@@ -49,10 +50,10 @@ rfd checkpoint "Fixed: [describe what you fixed]"
 Check @.rfd/context/current.md for next failing test. Repeat.
 
 ## Your Memory
-- Located at @.rfd/context/memory.json
-- Automatically loaded/saved
-- Remembers what you've tried
-- Tracks what works/doesn't
+- Located at @.rfd/context/memory.json (READ-ONLY)
+- Automatically managed by RFD system
+- You can READ but NEVER WRITE to context files
+- Use `rfd` commands to update state, not manual edits
 
 ## Never Forget
 - You're fixing tests, not designing architecture
