@@ -14,7 +14,7 @@ from typing import Any, Dict
 import frontmatter
 
 from .build import BuildEngine
-from .db_utils import get_db_connection, init_database, migrate_to_wal
+from .db_utils import get_db_connection, init_database
 from .project_updater import ProjectUpdater
 from .session import SessionManager
 from .spec import SpecEngine
@@ -60,7 +60,7 @@ class RFD:
         """Initialize SQLite with WAL mode for state management"""
         # Use new database utilities for WAL mode and proper setup
         init_database(self.db_path)
-        migrate_to_wal(self.db_path)
+        # migrate_to_wal is already handled in get_db_connection calls
 
         # Get connection with WAL mode
         conn = get_db_connection(self.db_path)
@@ -151,8 +151,9 @@ class RFD:
     def save_project_spec(self, spec: Dict[str, Any]) -> None:
         """Save project spec to PROJECT.md in YAML frontmatter format"""
         import yaml
+
         project_file = self.root / "PROJECT.md"
-        
+
         # Separate frontmatter from content
         content = ""
         if project_file.exists():
@@ -164,7 +165,7 @@ class RFD:
                     content = parts[2]
                 elif len(parts) == 1 and not full_content.startswith("---"):
                     content = full_content
-        
+
         # Write updated spec with frontmatter
         with open(project_file, "w") as f:
             f.write("---\n")

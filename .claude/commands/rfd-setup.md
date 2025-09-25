@@ -1,6 +1,7 @@
 ---
 description: Setup RFD environment and dependencies
 allowed-tools: Bash(*), Read(*), Write(*), Edit(*)
+model: claude-3-5-sonnet-20241022
 ---
 
 # RFD Setup

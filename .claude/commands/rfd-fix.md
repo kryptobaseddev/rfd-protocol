@@ -1,6 +1,7 @@
 ---
 description: Automatically fix common RFD issues
 allowed-tools: Bash(*), Read(*), Write(*), Edit(*), MultiEdit(*), TodoWrite
+model: claude-3-5-sonnet-20241022
 ---
 
 # RFD Auto-Fix

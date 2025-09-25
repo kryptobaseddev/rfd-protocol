@@ -217,7 +217,7 @@ def migrate_to_wal(db_path: str | Path) -> bool:
         current_mode = result[0] if result else "delete"
 
         if current_mode.lower() == "wal":
-            print("Database already in WAL mode")
+            # Already in WAL mode, no need to print
             conn.close()
             return True
 

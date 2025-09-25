@@ -14,7 +14,10 @@ from pathlib import Path
 import click
 
 from . import __version__
+from .feature_commands import create_feature_commands
 from .rfd import RFD
+from .template_sync import auto_sync_on_init
+from .update_check import check_for_updates
 
 
 @click.group()
@@ -61,10 +64,20 @@ def init(rfd, wizard, from_prd, mode):
     # Create default files if not exist
     files_created = []
 
-    # PROJECT.md template
-    if not Path("PROJECT.md").exists():
-        rfd.spec.create_interactive()
-        files_created.append("PROJECT.md")
+    # Create config.yaml instead of PROJECT.md
+    from .config_manager import ConfigManager
+
+    config_mgr = ConfigManager(rfd.rfd_dir)
+    if not config_mgr.is_configured():
+        # For now, create basic config
+        config_mgr.create_config(
+            name=Path.cwd().name,
+            description="Project managed by RFD",
+            language="python",
+            framework="unknown",
+            database="sqlite",
+        )
+        files_created.append(".rfd/config.yaml")
 
     # Set up Claude integration
     from .claude_integration import ClaudeIntegration
@@ -101,16 +114,16 @@ if __name__ == "__main__":
         create_claude_md()
         files_created.append("CLAUDE.md")
 
-    # PROGRESS.md
-    if not Path("PROGRESS.md").exists():
-        Path("PROGRESS.md").write_text("# Build Progress\n\n")
-        files_created.append("PROGRESS.md")
+    # No more PROGRESS.md - use database for checkpoints
 
     # Track RFD version in project
     from .migration import RFDMigration
 
     migrator = RFDMigration()
     migrator._update_version_file()
+
+    # Sync command templates
+    auto_sync_on_init(Path.cwd())
 
     click.echo(f"✅ RFD initialized! Created: {', '.join(files_created)}")
     click.echo("\n→ Next: rfd spec review")
@@ -121,23 +134,22 @@ if __name__ == "__main__":
 def spec(ctx):
     """Manage project specifications"""
     if ctx.invoked_subcommand is None:
-        # Smart default: show current spec
-        project_file = Path("PROJECT.md")
-        if project_file.exists():
-            click.echo("📋 Current Project Specification:")
+        # Smart default: show project config
+        from .config_manager import ConfigManager
+
+        config = ConfigManager(RFD().rfd_dir)
+        if config.is_configured():
+            import yaml
+
+            click.echo("📋 Project Configuration:")
             click.echo("=" * 50)
-            content = project_file.read_text()
-            click.echo(content)
+            click.echo(yaml.dump(config.load_config(), default_flow_style=False))
+            click.echo("\n📦 Features: run 'rfd feature list' to see features")
         else:
-            click.echo("❌ No PROJECT.md found. Run 'rfd spec init' to create one.")
+            click.echo("❌ No config found. Run 'rfd init' to initialize.")
 
 
-@spec.command("init")
-@click.pass_obj
-def spec_init(rfd):
-    """Create initial specification interactively"""
-    rfd.spec.create_interactive()
-    click.echo("✅ Specification created: PROJECT.md")
+# spec init removed - use 'rfd init' to create config.yaml
 
 
 @spec.command("review")
@@ -176,50 +188,8 @@ def spec_clarify(rfd, feature_id):
     click.echo("✅ Clarification analysis complete")
 
 
-@spec.command("add")
-@click.argument("feature_id")
-@click.option("--description", "-d", required=True, help="Feature description")
-@click.option("--acceptance", "-a", help="Acceptance criteria")
-@click.pass_obj
-def spec_add(rfd, feature_id, description, acceptance):
-    """Add a new feature to the specification"""
-    # Add to PROJECT.md
-    spec = rfd.load_project_spec()
-    if "features" not in spec:
-        spec["features"] = []
-    
-    # Check if feature already exists
-    for feature in spec["features"]:
-        if feature.get("id") == feature_id:
-            click.echo(f"❌ Feature '{feature_id}' already exists")
-            return
-    
-    # Add new feature
-    new_feature = {
-        "id": feature_id,
-        "description": description,
-        "acceptance": acceptance or f"{description} is complete and working",
-        "status": "pending"
-    }
-    spec["features"].append(new_feature)
-    
-    # Save to PROJECT.md
-    rfd.save_project_spec(spec)
-    
-    # Add to database
-    conn = sqlite3.connect(rfd.rfd_dir / "memory.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO features (id, description, status) VALUES (?, ?, ?)",
-        (feature_id, description, "pending")
-    )
-    conn.commit()
-    conn.close()
-    
-    click.echo(f"✅ Added feature '{feature_id}' to specification")
-    click.echo(f"   Description: {description}")
-    click.echo(f"   Acceptance: {new_feature['acceptance']}")
-    click.echo(f"\nNext: rfd session start {feature_id}")
+# REMOVED spec add - use 'rfd feature add' instead
+
 
 @spec.command("generate")
 @click.option(
@@ -466,6 +436,12 @@ def dashboard(rfd):
 @click.pass_obj
 def check(rfd):
     """Quick health check"""
+    # Check for updates (once per day max)
+    check_for_updates()
+
+    # Auto-sync templates on check
+    auto_sync_on_init(Path.cwd())
+
     state = rfd.get_current_state()
 
     # Quick status
@@ -560,13 +536,7 @@ def checkpoint(rfd, message):
     )
     conn.commit()
 
-    # Update PROGRESS.md
-    with open("PROGRESS.md", "a") as f:
-        f.write(f"\n## {datetime.now().strftime('%Y-%m-%d %H:%M')} - Checkpoint\n")
-        f.write(f"MESSAGE: {message}\n")
-        f.write(f"VALIDATION: {'✅' if validation['passing'] else '❌'}\n")
-        f.write(f"BUILD: {'✅' if build['passing'] else '❌'}\n")
-        f.write(f"COMMIT: {git_hash[:7]}\n")
+    # Checkpoint saved to database, no more PROGRESS.md
 
     click.echo(f"✅ Checkpoint saved: {message}")
 
@@ -876,6 +846,10 @@ def upgrade_check(rfd):
 
     except Exception as e:
         click.echo(f"⚠️ Update check failed: {e}")
+
+
+# Add feature commands (database-first)
+feature = create_feature_commands(cli, RFD)
 
 
 @cli.group(invoke_without_command=True)

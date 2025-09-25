@@ -1,7 +1,7 @@
-# PROJECT.md Schema Documentation
+# RFD Configuration Schema
 
 ## Overview
-PROJECT.md is the single source of truth for your project specification in RFD. It uses YAML frontmatter with markdown content.
+RFD uses `.rfd/config.yaml` for immutable project configuration and `.rfd/memory.db` for all dynamic state.
 
 ## Complete Schema Definition
 
@@ -42,18 +42,6 @@ rules:
   max_dependencies: integer      # Maximum number of dependencies
   security_scan: boolean         # Run security scanning on checkpoints
 
-# Features (required, at least 1)
-features:
-  - id: string                   # Unique feature identifier (required)
-    description: string          # What this feature does (required)
-    acceptance: string           # Acceptance criteria (required)
-    status: enum                 # pending|building|testing|complete|blocked
-    priority: enum               # critical|high|medium|low (optional)
-    assigned_to: string          # Developer/team assigned (optional)
-    depends_on: [string]         # Feature dependencies by ID (optional)
-    estimated_hours: number      # Time estimate (optional)
-    actual_hours: number         # Actual time spent (optional)
-    
 # Constraints (optional but recommended)
 constraints:
   - string                       # List of project constraints/rules
@@ -107,23 +95,7 @@ team:
   reviewers: [string]            # Code reviewers
   stakeholders: [string]         # Project stakeholders
 
-# Milestones (optional)
-milestones:
-  - id: string                   # Milestone ID
-    name: string                 # Milestone name
-    due_date: date               # Target date (YYYY-MM-DD)
-    features: [string]           # Feature IDs in this milestone
-    status: enum                 # planned|active|complete|delayed
-
-# Metrics (optional, auto-populated by RFD)
-metrics:
-  total_checkpoints: integer     # Total checkpoints created
-  passing_checkpoints: integer   # Checkpoints that passed validation
-  failed_checkpoints: integer    # Checkpoints that failed
-  drift_incidents: integer       # Number of drift detections
-  avg_feature_time: number       # Average time per feature (hours)
-  test_coverage: number          # Current test coverage percentage
-  code_quality_score: number     # Aggregate quality score
+# All dynamic data (features, milestones, metrics) is stored in the database
 
 # RFD Configuration (optional)
 rfd_config:
@@ -196,76 +168,56 @@ The `stack` section is required but highly extensible:
 - `max_dependencies`: Dependency limit
 - `security_scan`: Enable security scanning
 
-### Features
+### Dynamic Data (Database)
 
-Each feature must have:
-- `id`: Unique identifier
-- `description`: What it does
-- `acceptance`: How to verify completion
-- `status`: Current status
+All features, milestones, and metrics are managed in the database:
+- Use `rfd feature add` to add features
+- Use `rfd feature list` to view features
+- Use `rfd feature complete` to mark complete
+- Use `rfd progress` to view metrics
 
-Optional feature fields:
-- `priority`: Feature priority
-- `assigned_to`: Developer assigned
-- `depends_on`: Dependencies
-- `estimated_hours`: Time estimate
-- `actual_hours`: Actual time spent
+## Configuration Management
 
-## Updating PROJECT.md
-
-### Manual Updates
-Edit PROJECT.md directly for:
-- Major feature additions
-- Stack changes
+### Static Configuration (.rfd/config.yaml)
+Edit config.yaml for:
+- Stack changes (requires migration)
 - Rule modifications
 - Constraint updates
 
-### Automatic Updates
-RFD automatically updates:
-- Feature status
-- Metrics
-- Checkpoint counts
-- Time tracking
-
-### Using RFD Commands
+### Dynamic State (Database)
+All dynamic data managed through commands:
 
 ```bash
-# Update feature status
-rfd feature update <feature_id> --status complete
+# Feature management
+rfd feature add <id> -d "description" -a "acceptance"
+rfd feature list
+rfd feature start <id>
+rfd feature complete <id>
 
-# Add new feature
-rfd feature add
-
-# Update metrics
-rfd metrics update
-
-# Validate schema
-rfd spec validate
+# Progress tracking
+rfd checkpoint "message"
+rfd progress
 ```
 
 ## Examples
 
-### Minimal PROJECT.md
+### Minimal config.yaml
 ```yaml
----
-name: "My API"
-description: "Simple REST API"
-version: "0.1.0"
+project:
+  name: "My API"
+  description: "Simple REST API"
+  version: "0.1.0"
+  
 stack:
   language: python
   framework: fastapi
   database: sqlite
+  
 rules:
   max_files: 50
   max_loc_per_file: 500
   must_pass_tests: true
   no_mocks_in_prod: true
-features:
-  - id: health_check
-    description: "Basic health check endpoint"
-    acceptance: "GET /health returns 200"
-    status: pending
----
 ```
 
 ### Full PROJECT.md
@@ -296,23 +248,7 @@ rules:
   require_docs: true
   max_dependencies: 50
   security_scan: true
-features:
-  - id: user_auth
-    description: "User authentication system"
-    acceptance: "Users can signup, login, logout"
-    status: complete
-    priority: critical
-    assigned_to: "@john"
-    estimated_hours: 40
-    actual_hours: 45
-  - id: billing
-    description: "Subscription billing"
-    acceptance: "Process payments via Stripe"
-    status: building
-    priority: high
-    assigned_to: "@sarah"
-    depends_on: ["user_auth"]
-    estimated_hours: 60
+# Features stored in database, not config file
 constraints:
   - "Must be GDPR compliant"
   - "Support 10,000 concurrent users"
