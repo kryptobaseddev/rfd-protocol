@@ -7,7 +7,11 @@ import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from packaging import version
+try:
+    from packaging import version
+    HAS_PACKAGING = True
+except ImportError:
+    HAS_PACKAGING = False
 
 
 def check_pypi_version(package_name: str = "rfd-protocol") -> str | None:
@@ -54,6 +58,10 @@ def check_for_updates(silent: bool = False) -> bool:
     Returns:
         True if update is available
     """
+    # Skip if packaging module not available
+    if not HAS_PACKAGING:
+        return False
+    
     # Check at most once per day to avoid spamming PyPI
     cache_file = Path.home() / ".rfd" / ".update_check"
     cache_file.parent.mkdir(exist_ok=True)
