@@ -118,15 +118,15 @@ class SpecGenerator:
         """Generate PROJECT CONSTITUTION document"""
 
         constitution = f"""# PROJECT CONSTITUTION
-**{project_info['name'].upper()}**
+**{project_info["name"].upper()}**
 *Generated: {datetime.now().strftime("%Y-%m-%d")}*
 
 ## IMMUTABLE PRINCIPLES
 
 ### Core Purpose
-{project_info['problem']}
+{project_info["problem"]}
 
-**Solution Approach**: {project_info['solution']}
+**Solution Approach**: {project_info["solution"]}
 
 ### Non-Negotiable Requirements
 """
@@ -275,7 +275,7 @@ class SpecGenerator:
                 type="development",
                 duration_weeks=2,
             )
-            feature_phase.dependencies = [f"phase-{i-1}"]
+            feature_phase.dependencies = [f"phase-{i - 1}"]
             feature_phase.deliverables = [
                 f"Working {feature} implementation",
                 "Feature tests",
@@ -776,9 +776,9 @@ project-root/
         guidelines += f"""
 ### Naming Conventions
 - **Classes**: PascalCase (e.g., UserAccount)
-- **Functions/Methods**: {'snake_case' if 'Python' in language else 'camelCase'}
+- **Functions/Methods**: {"snake_case" if "Python" in language else "camelCase"}
 - **Constants**: UPPER_SNAKE_CASE
-- **Files**: {'snake_case.py' if 'Python' in language else 'kebab-case.ts'}
+- **Files**: {"snake_case.py" if "Python" in language else "kebab-case.ts"}
 
 ## Development Workflow
 

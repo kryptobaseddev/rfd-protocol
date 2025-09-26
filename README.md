@@ -32,7 +32,7 @@ RFD (Reality-First Development) is a development protocol that makes **AI halluc
 - **[Getting Started Guide](docs/GETTING_STARTED.md)** - 5-minute tutorial
 - **[CLI Reference](docs/CLI_REFERENCE.md)** - All commands documented
 - **[Claude Code Guide](docs/CLAUDE_CODE_GUIDE.md)** - AI integration guide
-- **[PROJECT.md Schema](docs/PROJECT_SCHEMA.md)** - Complete configuration reference
+- **[Configuration Schema](docs/CONFIG_SCHEMA.md)** - Complete .rfd/config.yaml reference
 - **[Installation Guide](docs/INSTALL.md)** - Detailed setup instructions
 
 ## Quick Start (90 Seconds)
@@ -45,8 +45,9 @@ pip install rfd-protocol
 cd your-project
 rfd init --wizard
 
-# Start building
-rfd session start my_feature
+# Start building with database-first workflow
+rfd feature add user_auth -d "User authentication"
+rfd session start user_auth
 rfd build
 rfd validate
 rfd checkpoint "Feature complete"
@@ -58,11 +59,18 @@ That's it. RFD now guards your development.
 
 ### 1. Specification Lock
 ```yaml
-# PROJECT.md defines what can be built
-features:
-  - id: user_auth
-    acceptance: "Users can register and login"
-    status: pending
+# .rfd/config.yaml defines project configuration
+project:
+  name: "My Project"
+  description: "Project managed by RFD"
+stack:
+  language: python
+  framework: fastapi
+  database: postgresql
+
+# Features stored in database (.rfd/memory.db)
+$ rfd feature list
+- user_auth: "Users can register and login" (pending)
 ```
 
 ### 2. Reality Enforcement
@@ -101,13 +109,17 @@ rfd init --from-prd doc.md # Initialize from requirements doc
 rfd init --mode brownfield # For existing projects
 ```
 
-### Spec-Kit Style Commands (NEW v3.0!)
+### Database-First Commands (NEW v5.0!)
 ```bash
-rfd speckit constitution   # Create immutable project principles
-rfd speckit specify       # Define detailed specifications
-rfd speckit clarify      # Identify ambiguities
-rfd speckit plan         # Create implementation plan
-rfd speckit tasks        # Generate task breakdown
+rfd audit                    # Database-first compliance check
+rfd feature add <id> -d "desc"  # Add feature to database
+rfd feature list            # List all features
+rfd feature start <id>      # Start working on feature
+rfd session status          # Show current session details
+rfd session current         # Alias for status
+rfd gaps                     # Show gap analysis from database
+rfd gaps --status missing   # Show missing functionality
+rfd gaps --priority critical # Show critical gaps
 ```
 
 ### Development Workflow
@@ -123,7 +135,9 @@ rfd session end             # Complete feature
 ```bash
 rfd check                   # Quick status check
 rfd status                  # Detailed project status
-rfd analyze                # Cross-artifact consistency check (NEW!)
+rfd audit                   # Database-first compliance check (NEW v5.0!)
+rfd gaps                    # Gap analysis report (NEW v5.0!)
+rfd analyze                # Cross-artifact consistency check
 rfd dashboard              # Visual progress dashboard
 rfd spec review            # Review current specification
 ```
@@ -135,7 +149,13 @@ rfd memory show            # Display context memory
 rfd memory reset           # Clear context (careful!)
 ```
 
-## Advanced Features (NEW in v3.0)
+## Advanced Features (NEW in v5.0)
+
+### Database-First Architecture
+- All features stored in SQLite database
+- Immutable config in .rfd/config.yaml
+- No more PROJECT.md/PROGRESS.md conflicts
+- Protected context files with DO NOT EDIT warnings
 
 ### SQLite with WAL Mode
 - Write-Ahead Logging for better concurrency
@@ -180,6 +200,9 @@ $ rfd check
 > Last checkpoint: "Created User model"  
 > Next task: Implement registration endpoint
 
+# Claude reads (but never edits) context files:
+$ cat .rfd/context/current.md  # AUTO-GENERATED - DO NOT EDIT
+
 # Claude cannot fake progress:
 $ rfd checkpoint "Added authentication"
 ❌ Cannot checkpoint - validation failing
@@ -189,23 +212,24 @@ $ rfd checkpoint "Added authentication"
 
 For other AI tools, enforce this workflow:
 
-1. Read `PROJECT.md` for specifications
-2. Check `.rfd/context/current.md` for current task
-3. Run `rfd validate` after every change
-4. Only checkpoint when validation passes
+1. Read `.rfd/config.yaml` for project configuration
+2. Check `.rfd/context/current.md` for current task (READ-ONLY)
+3. Use `rfd feature list` to see features from database
+4. Run `rfd validate` after every change
+5. Only checkpoint when validation passes
 
 ## Project Configuration
 
-### PROJECT.md Schema
+### Configuration Schema (.rfd/config.yaml)
 
-RFD uses a flexible, extensible schema:
+RFD uses a flexible, extensible configuration:
 
 ```yaml
----
 # Required Fields
-name: "Your Project"
-description: "What it does"
-version: "1.0.0"
+project:
+  name: "Your Project"
+  description: "What it does"
+  version: "1.0.0"
 
 # Technology Stack (extensible)
 stack:
@@ -225,14 +249,11 @@ rules:
   no_mocks_in_prod: true
   min_test_coverage: 80
 
-# Features
-features:
-  - id: core_api
-    description: "RESTful API"
-    acceptance: "All endpoints return correct data"
-    status: pending
-    priority: high
-    depends_on: []
+# Features are stored in database, not config file
+# Use these commands to manage features:
+# rfd feature add core_api -d "RESTful API" -a "All endpoints return correct data"
+# rfd feature list
+# rfd feature start core_api
 
 # Constraints
 constraints:
@@ -401,7 +422,9 @@ pytest  # Run tests
 
 ## Version History
 
-- **v3.0.0**: SQLite WAL mode, cross-artifact analysis, spec-kit feature parity, comprehensive walkthrough
+- **v5.0.0**: Complete database-first migration, protected context files, audit command, deprecated PROJECT.md
+- **v4.x**: Transition to database-first architecture, config.yaml introduction
+- **v3.0.0**: SQLite WAL mode, cross-artifact analysis, spec-kit feature parity
 - **v2.3.0**: Mock detection, critical fixes, session persistence improvements
 - **v2.0.0**: Spec generation, gated workflow, AI validation
 - **v1.0.0**: Production release with modern Python packaging and full documentation

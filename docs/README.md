@@ -5,7 +5,7 @@
 - **[Getting Started](GETTING_STARTED.md)** - Start here! 5-minute tutorial
 - **[CLI Reference](CLI_REFERENCE.md)** - Complete command documentation
 - **[Claude Code Guide](CLAUDE_CODE_GUIDE.md)** - Using RFD with AI assistants
-- **[PROJECT.md Schema](PROJECT_SCHEMA.md)** - Configuration reference
+- **[Configuration Schema](CONFIG_SCHEMA.md)** - .rfd/config.yaml reference
 
 ## Documentation Structure
 
@@ -15,8 +15,9 @@
 |----------|-------------|---------|
 | [GETTING_STARTED.md](GETTING_STARTED.md) | Quick start tutorial | New users |
 | [CLI_REFERENCE.md](CLI_REFERENCE.md) | All RFD commands | All users |
-| [PROJECT_SCHEMA.md](PROJECT_SCHEMA.md) | PROJECT.md configuration | Project setup |
+| [CONFIG_SCHEMA.md](CONFIG_SCHEMA.md) | .rfd/config.yaml configuration | Project setup |
 | [TERMINOLOGY.md](TERMINOLOGY.md) | RFD concepts explained | Understanding RFD |
+| Gap Analysis | Use `rfd gaps` command | Understanding project gaps |
 
 ### 🤖 AI Integration
 
@@ -59,10 +60,10 @@
    - Find specific command syntax
    - See examples and options
 
-4. **Configuring PROJECT.md?**
-   - Review [PROJECT_SCHEMA.md](PROJECT_SCHEMA.md)
-   - Understand all fields
-   - See examples
+4. **Configuring project?**
+   - Review [CONFIG_SCHEMA.md](CONFIG_SCHEMA.md)
+   - Understand .rfd/config.yaml structure
+   - Learn database-first features
 
 ## Key Concepts
 
@@ -96,25 +97,27 @@ graph LR
     F --> G[Next Feature]
 ```
 
-### Core Files
+### Core Files (v5.0 Database-First)
 
 ```
-PROJECT.md         # Single source of truth
-PROGRESS.md        # Append-only progress log
 CLAUDE.md          # AI configuration
 .rfd/              # RFD system directory
-  ├── memory.db    # SQLite database
-  ├── context/     # Session management
-  │   ├── current.md      # Active session
-  │   ├── memory.json     # AI memory
-  │   └── snapshots/      # Recovery points
-  └── *.py         # RFD system files
-specs/             # Generated specifications
+  ├── config.yaml  # Project configuration (immutable)
+  ├── memory.db    # Features & checkpoints database
+  └── context/     # Session management
+      ├── current.md      # Active session (AUTO-GENERATED)
+      ├── memory.json     # AI memory
+      └── snapshots/      # Recovery points
+specs/             # Generated specifications (optional)
   ├── CONSTITUTION.md     # Project principles
   ├── PHASES.md          # Development phases
-  ├── API_CONTRACT.md    # API specs
-  └── *.md               # Other specs
+  └── API_CONTRACT.md    # API specs
 ```
+
+**v5.0 Architecture:**
+- Features stored in database
+- Configuration in .rfd/config.yaml
+- Context files are auto-generated (DO NOT EDIT)
 
 ## Common Tasks
 
@@ -126,6 +129,7 @@ rfd init --wizard
 ### Start Daily Work
 ```bash
 rfd check
+rfd gaps --status missing    # See what needs work
 rfd session start <feature>
 ```
 

@@ -180,7 +180,7 @@ All features, milestones, and metrics are managed in the database:
 
 ### Static Configuration (.rfd/config.yaml)
 Edit config.yaml for:
-- Stack changes (requires migration)
+- Stack changes (requires reinit)
 - Rule modifications
 - Constraint updates
 
@@ -220,7 +220,7 @@ rules:
   no_mocks_in_prod: true
 ```
 
-### Full PROJECT.md
+### Full config.yaml Example
 ```yaml
 ---
 name: "Enterprise Platform"
@@ -279,11 +279,11 @@ milestones:
 
 ## Schema Validation
 
-RFD validates PROJECT.md on:
+RFD validates .rfd/config.yaml on:
 - Every `rfd init`
 - Every `rfd checkpoint`
 - Every `rfd validate`
-- Every `rfd spec validate`
+- Every `rfd audit`
 
 Validation checks:
 - Required fields present
@@ -304,15 +304,12 @@ Validation checks:
 
 ## Migration Guide
 
-### From v1 to v2 Schema
+### From PROJECT.md to config.yaml (v5.0)
 ```bash
-# Backup current PROJECT.md
-cp PROJECT.md PROJECT.md.backup
+# Initialize with wizard
+rfd init --wizard
 
-# Run migration
-rfd migrate project-schema
-
-# Validate new schema
+# Validate new configuration
 rfd spec validate
 ```
 

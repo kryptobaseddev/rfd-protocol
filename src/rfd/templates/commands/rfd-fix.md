@@ -14,7 +14,7 @@ Automatically detect and fix common RFD issues:
 - Test failures
 
 ## 1. Check current status
-!./rfd check
+!rfd check
 
 ## 2. Fix environment issues
 !python3 setup.py
@@ -26,6 +26,6 @@ Automatically detect and fix common RFD issues:
 Analyze test failures and fix them systematically.
 
 ## 5. Validate fixes
-!./rfd validate
+!rfd validate
 
 Track all fixes in todo list for visibility.

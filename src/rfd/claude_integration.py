@@ -14,79 +14,79 @@ class ClaudeIntegration:
     COMMANDS = {
         "rfd-check.md": """---
 description: Check RFD project status
-allowed-tools: Bash(./rfd check), Read(PROJECT.md)
+allowed-tools: Bash(rfd check), Read(PROJECT.md)
 ---
 
 # RFD Status Check
 
 Check project health and next actions.
 
-!./rfd check""",
+!rfd check""",
         "rfd-build.md": """---
 description: Build current or specified feature
 argument-hint: [feature-id]
-allowed-tools: Bash(./rfd build*), Read(*), Write(*), Edit(*)
+allowed-tools: Bash(rfd build*), Read(*), Write(*), Edit(*)
 ---
 
 # RFD Build
 
 Build the specified feature.
 
-!./rfd build $1""",
+!rfd build $1""",
         "rfd-validate.md": """---
 description: Validate project against specifications
 argument-hint: [--feature feature-id]
-allowed-tools: Bash(./rfd validate*), Read(PROJECT.md)
+allowed-tools: Bash(rfd validate*), Read(PROJECT.md)
 ---
 
 # RFD Validate
 
 Validate project or specific feature.
 
-!./rfd validate $ARGUMENTS""",
+!rfd validate $ARGUMENTS""",
         "rfd-complete.md": """---
 description: Mark feature as complete (auto-updates PROJECT.md)
 argument-hint: feature-id
-allowed-tools: Bash(./rfd complete*)
+allowed-tools: Bash(rfd complete*)
 ---
 
 # RFD Complete Feature
 
 Mark feature complete and auto-sync PROJECT.md.
 
-!./rfd complete $1""",
+!rfd complete $1""",
         "rfd-dashboard.md": """---
 description: Show project dashboard
-allowed-tools: Bash(./rfd dashboard)
+allowed-tools: Bash(rfd dashboard)
 ---
 
 # RFD Dashboard
 
 Display project status, progress, and statistics.
 
-!./rfd dashboard""",
+!rfd dashboard""",
         "rfd-session.md": """---
 description: Manage development sessions
 argument-hint: [start|status|end] [feature-id]
-allowed-tools: Bash(./rfd session*), TodoWrite
+allowed-tools: Bash(rfd session*), TodoWrite
 ---
 
 # RFD Session
 
 Manage development sessions.
 
-!./rfd session $ARGUMENTS""",
+!rfd session $ARGUMENTS""",
         "rfd-checkpoint.md": """---
 description: Save project checkpoint
 argument-hint: message
-allowed-tools: Bash(./rfd checkpoint*)
+allowed-tools: Bash(rfd checkpoint*)
 ---
 
 # RFD Checkpoint
 
 Save current state with message.
 
-!./rfd checkpoint "$ARGUMENTS" """,
+!rfd checkpoint "$ARGUMENTS" """,
         "rfd.md": """---
 description: Complete RFD workflow for a feature
 argument-hint: feature-id
@@ -99,22 +99,22 @@ Execute full RFD workflow for a feature.
 
 ## Steps:
 1. Check status
-!./rfd check
+!rfd check
 
 2. Start session
-!./rfd session start $1
+!rfd session start $1
 
 3. Build feature
-!./rfd build $1
+!rfd build $1
 
 4. Validate
-!./rfd validate --feature $1
+!rfd validate --feature $1
 
 5. If passing, complete
-!./rfd complete $1
+!rfd complete $1
 
 6. Checkpoint
-!./rfd checkpoint "Completed $1"
+!rfd checkpoint "Completed $1"
 
 Track all work with TodoWrite.""",
     }

@@ -169,9 +169,12 @@ def spec_validate(rfd):
 @spec.command("constitution")
 @click.pass_obj
 def spec_constitution(rfd):
-    """Generate project constitution"""
-    path = rfd.speckit.create_constitution()
-    click.echo(f"📜 Constitution created: {path}")
+    """Store project constitution in database"""
+    success = rfd.speckit.create_constitution()
+    if success:
+        click.echo(f"📜 Constitution stored in database")
+    else:
+        click.echo(f"❌ Failed to store constitution")
 
 
 @spec.command("clarify")
@@ -374,12 +377,12 @@ def status(rfd):
     # Next Actions
     click.echo("\n➡️ Suggested Next Actions:")
     if stats["in_progress"] > 0:
-        click.echo("   1. Continue current feature: ./rfd build")
-        click.echo("   2. Run validation: ./rfd validate")
+        click.echo("   1. Continue current feature: rfd build")
+        click.echo("   2. Run validation: rfd validate")
     elif stats["pending"] > 0:
         next_feature = next((f for f in data["features"] if f["status"] == "pending"), None)
         if next_feature:
-            click.echo(f"   1. Start next feature: ./rfd session start {next_feature['id']}")
+            click.echo(f"   1. Start next feature: rfd session start {next_feature['id']}")
     else:
         click.echo("   ✨ All features complete! Consider adding new features to PROJECT.md")
 
@@ -406,10 +409,10 @@ def status(rfd):
 def audit(rfd):
     """Audit database-first compliance"""
     from .database_accountability import DatabaseAccountability
-    
+
     auditor = DatabaseAccountability(rfd.db_path)
     audit_result = auditor.audit_database_first(Path.cwd())
-    
+
     if audit_result["compliant"]:
         click.echo("✅ Database-First Compliance: PASSING")
     else:
@@ -419,11 +422,11 @@ def audit(rfd):
             click.echo(f"❌ {violation['message']}")
             if "fix" in violation:
                 click.echo(f"   Fix: {violation['fix']}")
-        
+
         click.echo("\n📋 Recommendations:")
         for rec in audit_result["recommendations"]:
             click.echo(f"   • {rec}")
-    
+
     return audit_result["compliant"]
 
 
@@ -524,17 +527,15 @@ def session_status(rfd):
     """Show current session status"""
     current = rfd.session.get_current()
     if current:
-        click.echo(f"📍 Current session:")
+        click.echo("📍 Current session:")
         click.echo(f"   Feature: {current.get('feature_id', 'unknown')}")
         click.echo(f"   Started: {current.get('started_at', 'unknown')}")
         click.echo(f"   Session ID: {current.get('id', 'unknown')}")
         # Show feature status from database
         import sqlite3
+
         conn = sqlite3.connect(rfd.db_path)
-        cursor = conn.execute(
-            "SELECT status, description FROM features WHERE id = ?",
-            (current.get('feature_id'),)
-        )
+        cursor = conn.execute("SELECT status, description FROM features WHERE id = ?", (current.get("feature_id"),))
         result = cursor.fetchone()
         conn.close()
         if result:
@@ -1019,6 +1020,82 @@ def analyze(rfd, scope, format):
         click.echo("=" * 60)
 
 
+@cli.command()
+@click.option(
+    "--category",
+    type=click.Choice(["core_problems", "critical_missing", "all"]),
+    default="all",
+    help="Filter by gap category",
+)
+@click.option(
+    "--status", type=click.Choice(["solved", "partial", "missing", "all"]), default="all", help="Filter by gap status"
+)
+@click.option(
+    "--priority",
+    type=click.Choice(["critical", "high", "medium", "low", "all"]),
+    default="all",
+    help="Filter by priority",
+)
+@click.option("--format", type=click.Choice(["table", "json"]), default="table", help="Output format")
+@click.pass_obj
+def gaps(rfd, category, status, priority, format):
+    """Show gap analysis from database"""
+    from .db_utils import get_db_connection
+
+    conn = get_db_connection(rfd.db_path)
+    cursor = conn.cursor()
+
+    # Build query with filters
+    query = "SELECT * FROM gap_analysis WHERE 1=1"
+    params = []
+
+    if category != "all":
+        query += " AND gap_category = ?"
+        params.append(category)
+
+    if status != "all":
+        query += " AND current_status = ?"
+        params.append(status)
+
+    if priority != "all":
+        query += " AND priority = ?"
+        params.append(priority)
+
+    query += " ORDER BY priority DESC, gap_category, gap_title"
+
+    cursor.execute(query, params)
+    gaps = cursor.fetchall()
+
+    if format == "json":
+        gap_list = []
+        for gap in gaps:
+            gap_dict = dict(gap)
+            gap_list.append(gap_dict)
+        click.echo(json.dumps(gap_list, indent=2))
+    else:
+        click.echo("\n🔍 RFD Gap Analysis Report")
+        click.echo("=" * 80)
+
+        if not gaps:
+            click.echo("No gaps found matching your criteria.")
+            conn.close()
+            return
+
+        for gap in gaps:
+            status_icon = {"solved": "✅", "partial": "⚠️", "missing": "❌"}[gap["current_status"]]
+            priority_icon = {"critical": "🚨", "high": "🔴", "medium": "🟡", "low": "🟢"}[gap["priority"]]
+
+            click.echo(f"\n{status_icon} {gap['gap_title']} {priority_icon}")
+            click.echo(f"   Category: {gap['gap_category']}")
+            click.echo(f"   Status: {gap['current_status']}")
+            click.echo(f"   Priority: {gap['priority']}")
+            click.echo(f"   Target: {gap['target_version']}")
+            click.echo(f"   Issue: {gap['original_issue']}")
+            click.echo(f"   Strategy: {gap['mitigation_strategy']}")
+
+    conn.close()
+
+
 @cli.group()
 @click.pass_obj
 def memory(rfd):
@@ -1060,7 +1137,7 @@ You are operating in a Reality-First Development (RFD) project. Your ONLY job is
 ## Critical Rules
 1. Read @PROJECT.md for the specification
 2. Check @.rfd/context/current.md for your current task
-3. Read @PROGRESS.md for what's already done
+3. Check database for what's already done
 4. Run `rfd check` before ANY changes
 5. Every code change MUST improve `rfd validate` output
 6. NEVER mock data - use real implementations
@@ -1076,7 +1153,7 @@ rfd check
 ### 2. Read Context
 - @PROJECT.md - What we're building
 - @.rfd/context/current.md - Current feature/task
-- @PROGRESS.md - What already works
+- Database checkpoints - What already works
 
 ### 3. Write Code
 - Minimal code to fix the FIRST failing test

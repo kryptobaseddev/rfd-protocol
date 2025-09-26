@@ -2,8 +2,8 @@ project:
   name: RFD Protocol Dogfooding
   description: Using RFD to fix RFD and achieve 100% test pass rate
   created_at: '2025-09-24T22:36:42.631263'
-  rfd_version: 4.1.0
-  migrated_from: PROJECT.md
+  rfd_version: 5.0.0
+  version: '5.0.0'
 stack:
   database: sqlite
   framework: click

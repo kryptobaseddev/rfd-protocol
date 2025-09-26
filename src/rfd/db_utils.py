@@ -56,33 +56,36 @@ def init_database(db_path: str | Path) -> None:
         """
         CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY,
+            started_at TEXT,
+            ended_at TEXT,
             feature_id TEXT,
-            started_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            completed_at TEXT,
-            status TEXT DEFAULT 'active'
+            success BOOLEAN,
+            changes JSON,
+            errors JSON
         );
 
         CREATE TABLE IF NOT EXISTS features (
             id TEXT PRIMARY KEY,
             description TEXT,
-            acceptance TEXT,
+            acceptance_criteria TEXT,
             status TEXT DEFAULT 'pending',
-            priority TEXT,
-            started_at TEXT,
+            created_at TEXT,
             completed_at TEXT,
-            estimated_hours REAL,
-            actual_hours REAL
+            started_at TEXT,
+            assigned_to TEXT,
+            priority INTEGER DEFAULT 0,
+            tags JSON,
+            metadata JSON
         );
 
         CREATE TABLE IF NOT EXISTS checkpoints (
             id INTEGER PRIMARY KEY,
-            session_id INTEGER,
-            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
-            message TEXT,
+            feature_id TEXT,
+            timestamp TEXT,
             validation_passed BOOLEAN,
             build_passed BOOLEAN,
             git_hash TEXT,
-            feature_id TEXT
+            evidence JSON
         );
 
         CREATE TABLE IF NOT EXISTS context (
@@ -189,11 +192,88 @@ def init_database(db_path: str | Path) -> None:
             FOREIGN KEY (feature_id) REFERENCES features (id)
         );
 
+        -- Gap analysis and tracking
+        CREATE TABLE IF NOT EXISTS gap_analysis (
+            id INTEGER PRIMARY KEY,
+            feature_id TEXT,
+            gap_category TEXT,
+            gap_title TEXT,
+            original_issue TEXT,
+            current_status TEXT CHECK (current_status IN ('solved', 'partial', 'missing')),
+            mitigation_strategy TEXT,
+            priority TEXT CHECK (priority IN ('high', 'medium', 'low', 'critical')),
+            target_version TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (feature_id) REFERENCES features (id)
+        );
+
+        -- Multi-agent coordination
+        CREATE TABLE IF NOT EXISTS agent_sessions (
+            id INTEGER PRIMARY KEY,
+            session_id INTEGER,
+            agent_type TEXT,
+            agent_role TEXT,
+            status TEXT DEFAULT 'active',
+            started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            completed_at TEXT,
+            handoff_data JSON,
+            FOREIGN KEY (session_id) REFERENCES sessions (id)
+        );
+
+        CREATE TABLE IF NOT EXISTS agent_handoffs (
+            id INTEGER PRIMARY KEY,
+            from_agent_id INTEGER,
+            to_agent_id INTEGER,
+            handoff_type TEXT,
+            context_data JSON,
+            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (from_agent_id) REFERENCES agent_sessions (id),
+            FOREIGN KEY (to_agent_id) REFERENCES agent_sessions (id)
+        );
+
+        -- Git worktree management
+        CREATE TABLE IF NOT EXISTS git_worktrees (
+            id INTEGER PRIMARY KEY,
+            feature_id TEXT,
+            worktree_path TEXT,
+            branch_name TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            cleaned_up_at TEXT,
+            status TEXT DEFAULT 'active',
+            FOREIGN KEY (feature_id) REFERENCES features (id)
+        );
+
+        -- Technology stack bootstrapping
+        CREATE TABLE IF NOT EXISTS stack_templates (
+            id INTEGER PRIMARY KEY,
+            stack_type TEXT,
+            language TEXT,
+            framework TEXT,
+            template_path TEXT,
+            bootstrap_commands JSON,
+            dependencies JSON,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS project_scaffolds (
+            id INTEGER PRIMARY KEY,
+            project_id TEXT,
+            stack_template_id INTEGER,
+            generated_files JSON,
+            status TEXT DEFAULT 'active',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (stack_template_id) REFERENCES stack_templates (id)
+        );
+
         -- Create indexes for better performance
         CREATE INDEX IF NOT EXISTS idx_sessions_feature ON sessions(feature_id);
         CREATE INDEX IF NOT EXISTS idx_tasks_feature ON tasks(feature_id);
         CREATE INDEX IF NOT EXISTS idx_workflow_state_feature ON workflow_state(feature_id);
         CREATE INDEX IF NOT EXISTS idx_api_contracts_feature ON api_contracts(feature_id);
+        CREATE INDEX IF NOT EXISTS idx_gap_analysis_feature ON gap_analysis(feature_id);
+        CREATE INDEX IF NOT EXISTS idx_agent_sessions_session ON agent_sessions(session_id);
+        CREATE INDEX IF NOT EXISTS idx_git_worktrees_feature ON git_worktrees(feature_id);
     """
     )
 
@@ -271,6 +351,12 @@ def verify_database_integrity(db_path: str | Path) -> bool:
             "drift_log",
             "constitution",
             "api_contracts",
+            "gap_analysis",
+            "agent_sessions",
+            "agent_handoffs",
+            "git_worktrees",
+            "stack_templates",
+            "project_scaffolds",
         ]
 
         cursor.execute(

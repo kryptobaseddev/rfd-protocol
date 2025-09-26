@@ -18,4 +18,4 @@ This command will:
 !python3 setup.py
 
 After setup, initialize the project:
-!./rfd init
+!rfd init

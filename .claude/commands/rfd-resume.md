@@ -14,13 +14,13 @@ This command automatically:
 ## Load Context
 @.rfd/context/current.md
 @.rfd/context/memory.json
-@PROJECT.md
+@.rfd/config.yaml
 
 ## Check Status
-!./rfd-new dashboard
+!rfd dashboard
 
 ## Show Current Session
-!./rfd-new session status
+!rfd session status
 
 ## Display Next Actions
 Based on the context, suggest next steps and create a TodoWrite list.

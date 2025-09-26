@@ -62,37 +62,40 @@ rfd init
 ```
 
 This creates:
-- `PROJECT.md` - Project specification
+- `.rfd/config.yaml` - Project configuration (immutable)
+- `.rfd/memory.db` - Features and checkpoints database
 - `CLAUDE.md` - Claude Code configuration  
-- `PROGRESS.md` - Build progress log
-- `.rfd/` - RFD system directory
+- `.rfd/context/` - Session context (auto-generated)
 
 ### Step 2: Configure Your Specification
 
-The init command runs an interactive wizard, or you can edit `PROJECT.md` manually:
+The init command runs an interactive wizard to create `.rfd/config.yaml`:
 
-```markdown
----
-version: "1.0"
-name: "My Project"
+```yaml
+project:
+  name: "My Project"
+  description: "What your project does"
+  version: "1.0.0"
+
 stack:
   language: python          # python, javascript, typescript, go, rust, etc.
   framework: fastapi        # fastapi, express, django, react, etc.
   database: sqlite          # sqlite, postgresql, mysql, mongodb, none
-features:
-  - id: core_feature
-    description: "Core functionality"
-    acceptance: "Feature works as specified"
-    status: pending
+
 rules:
   max_files: 20
   max_loc_per_file: 200
   must_pass_tests: true
----
+  no_mocks_in_prod: true
 
-# My Project Description
+constraints:
+  - "Use secure authentication"
+  - "Follow REST standards"
+```
 
-What your project does...
+Add features using commands (v5.0+):
+```bash
+rfd feature add core_feature -d "Core functionality" -a "Feature works as specified"
 ```
 
 ### Step 3: Verify Setup
@@ -129,7 +132,7 @@ RFD automatically configures Claude Code integration:
 
 If using Claude through other interfaces, follow this workflow:
 
-1. **Read specification**: `@PROJECT.md`
+1. **Read configuration**: `.rfd/config.yaml`
 2. **Check current task**: `@.rfd/context/current.md`  
 3. **Follow commands**: `rfd build && rfd validate`
 4. **Save progress**: `rfd checkpoint "message"`
@@ -164,7 +167,7 @@ Uses `go.mod` for dependency management.
 
 ### Other Languages
 
-RFD supports any language through custom build commands in PROJECT.md:
+RFD supports any language through configuration in .rfd/config.yaml:
 
 ```yaml
 stack:
@@ -182,15 +185,14 @@ stack:
 
 ```
 your-project/
-├── PROJECT.md              # ← Project specification (edit this)
 ├── CLAUDE.md               # ← Claude Code integration
-├── PROGRESS.md             # ← Build history (auto-updated)
 ├── .rfd/                   # ← RFD system files (auto-created)
-│   ├── memory.db           #   SQLite database for state
+│   ├── config.yaml         #   Project configuration
+│   ├── memory.db           #   Features & checkpoints database
 │   └── context/            #   AI context and memory
-│       ├── current.md      #   Current session info
+│       ├── current.md      #   Current session (AUTO-GENERATED)
 │       ├── memory.json     #   AI memory persistence
-│       └── checkpoints/    #   Checkpoint storage
+│       └── snapshots/      #   Session snapshots
 ├── requirements.txt        # ← Your dependencies (if Python)
 ├── package.json           # ← Your dependencies (if JS/TS)
 └── [your source code]     # ← Your actual project files
@@ -227,8 +229,9 @@ mkdir my-fullstack && cd my-fullstack
 rfd init
 # Choose: Python + FastAPI + PostgreSQL
 
-# Add multiple features
-rfd spec review  # Edit PROJECT.md to add frontend feature
+# Add multiple features (v5.0+)
+rfd feature add backend -d "API backend" -a "API works"
+rfd feature add frontend -d "UI frontend" -a "UI works"
 ```
 
 ## Verification Checklist
@@ -236,7 +239,7 @@ rfd spec review  # Edit PROJECT.md to add frontend feature
 After installation, verify everything works:
 
 - [ ] `rfd --version` shows version number
-- [ ] `rfd init` creates PROJECT.md, CLAUDE.md, PROGRESS.md
+- [ ] `rfd init` creates .rfd/config.yaml, CLAUDE.md, .rfd/memory.db
 - [ ] `rfd check` shows status (even if failing)
 - [ ] `rfd spec review` displays your specification
 - [ ] `.rfd/` directory exists with proper structure
@@ -312,7 +315,7 @@ To remove RFD from a project:
 
 ```bash
 # Remove RFD files (optional - keeps your code)
-rm -rf .rfd/ PROJECT.md CLAUDE.md PROGRESS.md
+rm -rf .rfd/ CLAUDE.md
 
 # Uninstall package
 pip uninstall rfd-protocol

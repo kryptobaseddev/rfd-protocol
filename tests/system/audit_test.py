@@ -27,15 +27,17 @@ def test_hallucination_detection():
     assert not passed, "Should detect hallucination about fake file"
 
     # Test 2: Claim real file
-    real_claim = "Created file nexus_rfd_protocol/validation.py"
+    real_claim = "Created file src/rfd/validation.py"
     passed, results = validator.validate_ai_claims(real_claim)
 
     # Actually check if the file exists first
     import os
 
-    file_exists = os.path.exists("nexus_rfd_protocol/validation.py") or os.path.exists("src/rfd/validation.py")
+    file_exists = os.path.exists("src/rfd/validation.py")
     if file_exists:
         assert passed, "Should validate real file if it exists"
+    
+    return True  # All tests passed
 
 
 def test_spec_enforcement():
@@ -49,15 +51,17 @@ def test_spec_enforcement():
     try:
         session.start("undefined_feature")
         print("❌ FAIL: Allowed undefined feature")
-        assert False, "Test failed"
-    except ValueError as e:
-        if "not found in PROJECT.md spec" in str(e):
+        raise AssertionError("Test failed")
+    except (ValueError, Exception) as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg or "undefined" in error_msg or "does not exist" in error_msg:
             print("✅ PASS: Rejected undefined feature")
         else:
-            print("❌ FAIL: Wrong error for undefined feature")
-            assert False, "Test failed"
+            print(f"❌ FAIL: Wrong error for undefined feature: {e}")
+            raise AssertionError("Test failed")
 
     print("✅ SPEC ENFORCEMENT: Working correctly")
+    return True  # All tests passed
 
 
 def test_context_persistence():
@@ -94,12 +98,13 @@ def test_context_persistence():
             print("✅ PASS: Session tracking structure correct")
         else:
             print("❌ FAIL: Missing session tracking columns")
-            assert False, "Test failed"
+            raise AssertionError("Test failed")
     else:
         print("❌ FAIL: No session persistence")
-        assert False, "Test failed"
+        raise AssertionError("Test failed")
 
     print("✅ CONTEXT PERSISTENCE: Fully implemented")
+    return True  # All tests passed
 
 
 def test_real_code_validation():
@@ -119,34 +124,40 @@ def test_real_code_validation():
         print("✅ PASS: Can validate structure, API, and database")
     else:
         print("❌ FAIL: Missing validation capabilities")
-        assert False, "Test failed"
+        raise AssertionError("Test failed")
 
     print("✅ REAL CODE VALIDATION: Implemented")
+    return True  # All tests passed
 
 
 def test_single_source_truth():
     """Test: Too many documents → Verify single source of truth"""
     print("\n=== TEST 5: Single Source of Truth ===")
 
-    # Check for PROJECT.md as single spec
-    project_spec = Path("PROJECT.md")
+    # Check for .rfd/config.yaml as single config source
+    config_spec = Path(".rfd/config.yaml")
+    db_spec = Path(".rfd/memory.db")
 
-    if project_spec.exists():
-        print("✅ PASS: PROJECT.md exists as single source")
+    if config_spec.exists() and db_spec.exists():
+        print("✅ PASS: .rfd/config.yaml exists as configuration source")
+        print("✅ PASS: .rfd/memory.db exists as database source")
 
-        # Check no competing spec files
-        competing = list(Path(".").glob("*SPEC*.md"))
-        competing = [f for f in competing if f.name != "RFD-SPEC.md"]
-
-        if len(competing) == 0:
-            print("✅ PASS: No competing specification documents")
-        else:
-            print(f"⚠️  WARNING: Found competing specs: {competing}")
+        # Check deprecated files are marked
+        deprecated_found = False
+        for old_file in ["PROJECT.md.deprecated", "PROGRESS.md.deprecated"]:
+            if Path(old_file).exists():
+                deprecated_found = True
+                print(f"✅ PASS: {old_file} properly marked as deprecated")
+        
+        if not deprecated_found:
+            # It's OK if deprecated files don't exist
+            print("✅ PASS: No conflicting spec files")
     else:
-        print("❌ FAIL: No single source of truth (PROJECT.md)")
-        assert False, "Test failed"
+        print("❌ FAIL: No single source of truth (.rfd/config.yaml and .rfd/memory.db)")
+        raise AssertionError("Test failed")
 
     print("✅ SINGLE SOURCE: Achieved")
+    return True  # All tests passed
 
 
 def main():

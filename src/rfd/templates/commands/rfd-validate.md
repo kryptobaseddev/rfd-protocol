@@ -1,7 +1,7 @@
 ---
 description: Validate project or specific feature against specifications
 argument-hint: [feature-id | 'list'] - Examples: cli_refactor, mock_detection, or 'list' to see all
-allowed-tools: Bash(rfd validate*, rfd feature*), Read(PROJECT.md), TodoWrite
+allowed-tools: Bash(rfd validate*, rfd feature*), Read(.rfd/config.yaml), TodoWrite
 ---
 
 # RFD Validate

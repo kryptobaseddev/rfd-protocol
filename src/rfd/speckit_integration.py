@@ -14,80 +14,52 @@ class SpecKitIntegration:
 
     def __init__(self, rfd):
         self.rfd = rfd
-        self.specs_dir = Path("specs")
-        self.memory_dir = Path("memory")
+        # All directories should be under .rfd/ for proper encapsulation
+        self.specs_dir = self.rfd.rfd_dir / "specs"
+        self.memory_dir = self.rfd.rfd_dir / "memory"
         self.templates_dir = self.rfd.rfd_dir / "templates"
 
         # Create directories
         self.specs_dir.mkdir(exist_ok=True)
         self.memory_dir.mkdir(exist_ok=True)
 
-    def create_constitution(self) -> Path:
+    def create_constitution(self) -> bool:
         """
-        Create project constitution (immutable principles)
-        Like spec-kit's memory/constitution.md
+        Store project constitution in database (immutable principles)
+        No more file-based constitution!
         """
-        constitution_file = self.memory_dir / "constitution.md"
+        from .db_utils import get_db_connection
+        
+        conn = get_db_connection(self.rfd.db_path)
+        try:
+            # Check if constitution already exists
+            existing = conn.execute("SELECT COUNT(*) FROM constitution").fetchone()[0]
+            if existing > 0:
+                print("Constitution already exists in database")
+                return True
 
-        if constitution_file.exists():
-            print("Constitution already exists")
-            return constitution_file
+            spec = self.rfd.load_project_spec()
 
-        spec = self.rfd.load_project_spec()
-
-        constitution = f"""# Project Constitution
-Generated: {datetime.now().isoformat()}
-
-## Core Principles
-These principles are IMMUTABLE and guide all development decisions.
-
-### 1. Reality First
-- Code must run and pass tests before considered complete
-- No mock data in production code
-- All features must have acceptance tests
-
-### 2. Single Responsibility
-- One feature at a time
-- Complete current work before starting new
-- No feature creep or scope expansion
-
-### 3. Spec-Driven
-- Specification before implementation
-- Intent drives development, not code
-- Changes require spec updates first
-
-## Technical Constraints
-{chr(10).join(f"- {c}" for c in spec.get('constraints', []))}
-
-## What We Will NOT Do
-- No premature optimization
-- No authentication until core features work
-- No frontend until API is complete
-- No abstractions until patterns emerge
-- No AI-generated code without validation
-
-## Stack Decisions
-- Language: {spec.get('stack', {}).get('language', 'not specified')}
-- Framework: {spec.get('stack', {}).get('framework', 'not specified')}
-- Database: {spec.get('stack', {}).get('database', 'not specified')}
-
-## Feature Prioritization
-Features must be implemented in order:
-{chr(10).join(f"{i+1}. {f['id']}: {f['description']}" for i, f in enumerate(spec.get('features', [])))}
-
-## Success Metrics
-- All acceptance criteria met
-- Zero hallucination incidents
-- No mock data in codebase
-- 100% feature completion before new work
-
----
-This constitution is immutable. Any changes require unanimous agreement and version bump.
-"""
-
-        constitution_file.write_text(constitution)
-        print(f"✅ Created constitution at {constitution_file}")
-        return constitution_file
+            # Store core principles in database
+            principles = [
+                ("Reality First", "Code must run and pass tests before considered complete", 1),
+                ("Single Responsibility", "One feature at a time, complete current work before starting new", 2),
+                ("Spec-Driven", "Specification before implementation, intent drives development", 3),
+                ("No Mocks", "No mock data in production code or tests", 4),
+                ("No Hallucination", "AI claims must be validated, no lying about completions", 5)
+            ]
+            
+            for principle, description, priority in principles:
+                conn.execute(
+                    "INSERT INTO constitution (principle, description, priority, created_at) VALUES (?, ?, ?, ?)",
+                    (principle, description, priority, datetime.now().isoformat())
+                )
+            
+            conn.commit()
+            print(f"✅ Stored constitution in database")
+            return True
+        finally:
+            conn.close()
 
     def specify_feature(self, feature_id: str) -> Path:
         """
@@ -114,16 +86,16 @@ This constitution is immutable. Any changes require unanimous agreement and vers
         # Create spec.md
         spec_file = feature_dir / "spec.md"
 
-        spec_content = f"""# Feature Specification: {feature['description']}
+        spec_content = f"""# Feature Specification: {feature["description"]}
 Feature ID: {feature_id}
 Created: {datetime.now().isoformat()}
-Status: {feature.get('status', 'pending')}
+Status: {feature.get("status", "pending")}
 
 ## Overview
-{feature['description']}
+{feature["description"]}
 
 ## Acceptance Criteria
-{feature.get('acceptance', 'Not specified')}
+{feature.get("acceptance", "Not specified")}
 
 ## User Journey
 1. User initiates {feature_id}
@@ -337,13 +309,13 @@ Generated: {datetime.now().isoformat()}
 ## Execution Commands
 ```bash
 # After each task, validate:
-./rfd validate --feature {feature_id}
+rfd validate --feature {feature_id}
 
 # If validation fails:
-./rfd revert
+rfd revert
 
 # When all tasks complete:
-./rfd complete {feature_id}
+rfd complete {feature_id}
 ```
 
 ## Success Checklist

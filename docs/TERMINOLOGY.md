@@ -9,7 +9,7 @@ A **checkpoint** is a verified save point in your development process where:
 - Validation rules are met
 - A git commit exists
 
-**Location**: Recorded in `.rfd/memory.db` and `PROGRESS.md`
+**Location**: Recorded in `.rfd/memory.db` (checkpoints table)
 **Command**: `rfd checkpoint "message"`
 **Purpose**: Save working state that can be reverted to
 
@@ -43,7 +43,7 @@ A **feature** is a discrete unit of functionality:
 - Tracks status (pending, building, testing, complete, blocked)
 - Can have dependencies on other features
 
-**Location**: Defined in `PROJECT.md`, tracked in `.rfd/memory.db`
+**Location**: Stored in `.rfd/memory.db` (features table)
 **Commands**: `rfd feature add`, `rfd feature update`
 **Purpose**: Organize work into manageable pieces
 
@@ -55,7 +55,7 @@ A **feature** is a discrete unit of functionality:
 - API contracts
 - Database state
 
-**Location**: Results in `.rfd/memory.db`, rules in `PROJECT.md`
+**Location**: Results in `.rfd/memory.db`, rules in `.rfd/config.yaml`
 **Command**: `rfd validate`
 **Purpose**: Ensure code matches specification
 
@@ -79,12 +79,12 @@ SQLite database containing:
 - Sessions table (development periods)
 - Memory table (AI context)
 
-### `PROGRESS.md`
-Human-readable progress log:
-- Checkpoint summaries
-- Validation status
-- Build status
-- Git commit references
+### `.rfd/config.yaml`
+Immutable project configuration:
+- Stack definition
+- Validation rules
+- Project constraints
+- Basic project info
 
 ### `.rfd/context/`
 Active session management:
@@ -92,12 +92,12 @@ Active session management:
 - `memory.json` - AI memory state
 - `snapshots/` - Historical session snapshots
 
-### `PROJECT.md`
-Single source of truth:
-- Project specification
-- Feature definitions
-- Validation rules
-- Stack configuration
+### `.rfd/context/current.md`
+Auto-generated session context (READ-ONLY):
+- Active feature
+- Current status
+- Required actions
+- Session metadata
 
 ## Command Flow
 
@@ -155,7 +155,7 @@ created → validated → saved
 2. **One session per feature** for focus
 3. **Validate before checkpoint** to ensure quality
 4. **End sessions properly** to create snapshots
-5. **Review PROGRESS.md** to track history
+5. **Use `rfd dashboard`** to track progress
 
 ## Common Misconceptions
 
@@ -177,4 +177,4 @@ created → validated → saved
 - **Reality Checkpoint**: A validation point that ensures code actually works
 - **Session Context**: The current state and focus of development
 - **Spec Drift**: Deviation from the defined specification
-- **Truth Source**: PROJECT.md as the authoritative specification
+- **Truth Source**: Database (.rfd/memory.db) for features, config.yaml for configuration

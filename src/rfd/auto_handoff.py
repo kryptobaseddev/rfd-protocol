@@ -209,7 +209,7 @@ class AutoHandoff:
     def _get_available_commands(self) -> List[str]:
         """Get list of available RFD commands"""
         try:
-            result = subprocess.run(["./rfd", "--help"], capture_output=True, text=True, timeout=2)
+            result = subprocess.run(["rfd", "--help"], capture_output=True, text=True, timeout=2)
 
             # Parse commands from help output
             commands = []
@@ -222,11 +222,11 @@ class AutoHandoff:
                     break
                 if in_commands and line.strip():
                     cmd = line.split()[0]
-                    commands.append(f"./rfd {cmd}")
+                    commands.append(f"rfd {cmd}")
 
             return commands
         except Exception:
-            return ["./rfd --help"]
+            return ["rfd --help"]
 
     def _get_next_actions(self) -> List[str]:
         """Determine next actions based on current state"""
@@ -236,8 +236,8 @@ class AutoHandoff:
         session = self._get_current_session()
 
         if not session.get("feature"):
-            actions.append("./rfd session start <feature>")
-            actions.append("./rfd workflow start <feature>")
+            actions.append("rfd session start <feature>")
+            actions.append("rfd workflow start <feature>")
             return actions
 
         feature = session.get("feature")
@@ -250,14 +250,14 @@ class AutoHandoff:
 
             # Map states to actions
             state_actions = {
-                "ideation": "./rfd workflow proceed",
-                "specification": f"./rfd speckit specify {feature}",
-                "clarification": "./rfd workflow proceed",
-                "planning": f"./rfd speckit plan {feature}",
-                "task_generation": f"./rfd speckit tasks {feature}",
-                "implementation": f"./rfd speckit implement {feature}",
-                "validation": f"./rfd validate --feature {feature}",
-                "completion": f"./rfd complete {feature}",
+                "ideation": "rfd workflow proceed",
+                "specification": f"rfd speckit specify {feature}",
+                "clarification": "rfd workflow proceed",
+                "planning": f"rfd speckit plan {feature}",
+                "task_generation": f"rfd speckit tasks {feature}",
+                "implementation": f"rfd speckit implement {feature}",
+                "validation": f"rfd validate --feature {feature}",
+                "completion": f"rfd complete {feature}",
             }
 
             if state in state_actions:
@@ -266,17 +266,17 @@ class AutoHandoff:
         # Check validation
         validation = self._get_validation_status()
         if not validation["validation_passing"]:
-            actions.append("./rfd validate")
+            actions.append("rfd validate")
         if not validation["build_passing"]:
-            actions.append("./rfd build")
+            actions.append("rfd build")
 
         # Default actions
         if not actions:
             actions.extend(
                 [
-                    "./rfd check",
-                    "./rfd status",
-                    "./rfd workflow status " + feature if feature else "",
+                    "rfd check",
+                    "rfd status",
+                    "rfd workflow status " + feature if feature else "",
                 ]
             )
 
@@ -293,7 +293,7 @@ class AutoHandoff:
                 {
                     "type": "queries",
                     "description": f"{len(pending['unresolved_queries'])} unresolved queries",
-                    "action": "Resolve with: ./rfd workflow resolve <id> 'answer'",
+                    "action": "Resolve with: rfd workflow resolve <id> 'answer'",
                 }
             )
 
@@ -304,7 +304,7 @@ class AutoHandoff:
                 {
                     "type": "validation",
                     "description": f"{len(validation['validation_failures'])} validation failures",
-                    "action": "Fix issues then: ./rfd validate",
+                    "action": "Fix issues then: rfd validate",
                 }
             )
 
@@ -320,7 +320,7 @@ class AutoHandoff:
                             {
                                 "type": "stale_lock",
                                 "description": f"Feature {w['feature']} has stale lock",
-                                "action": f"Clear with: ./rfd workflow start {w['feature']}",
+                                "action": f"Clear with: rfd workflow start {w['feature']}",
                             }
                         )
 
@@ -332,7 +332,7 @@ class AutoHandoff:
             "database_exists": Path(self.db_path).exists(),
             "context_dir_exists": (self.rfd.rfd_dir / "context").exists(),
             "project_md_exists": Path("PROJECT.md").exists(),
-            "rfd_executable": Path("./rfd").exists(),
+            "rfd_executable": Path("rfd").exists(),
             "source_intact": len(list(Path("src/rfd").glob("*.py"))) > 10,
             "ai_validator_ready": Path("src/rfd/ai_validator.py").exists(),
             "workflow_ready": Path("src/rfd/workflow_engine.py").exists(),
@@ -442,12 +442,12 @@ class AutoHandoff:
         # Quick Command Reference
         print("\n📋 Quick Commands:")
         commands = [
-            ("./rfd resume", "Show this handoff"),
-            ("./rfd status", "Full project status"),
-            ("./rfd workflow status <feature>", "Check workflow state"),
-            ("./rfd validate", "Run validation"),
-            ("./rfd speckit specify <feature>", "Create specification"),
-            ("./rfd checkpoint <msg>", "Save progress"),
+            ("rfd resume", "Show this handoff"),
+            ("rfd status", "Full project status"),
+            ("rfd workflow status <feature>", "Check workflow state"),
+            ("rfd validate", "Run validation"),
+            ("rfd speckit specify <feature>", "Create specification"),
+            ("rfd checkpoint <msg>", "Save progress"),
         ]
         for cmd, desc in commands[:6]:
             print(f"   {cmd:<35} # {desc}")
@@ -462,7 +462,7 @@ class AutoHandoff:
         print("   • Automatic handoff - no manual docs!")
 
         print("\n" + "=" * 60)
-        print("TO RESUME: Just run './rfd resume' in new session")
+        print("TO RESUME: Just run 'rfd resume' in new session")
         print("ALL STATE IN: .rfd/memory.db + .rfd/context/")
         print("=" * 60 + "\n")
 

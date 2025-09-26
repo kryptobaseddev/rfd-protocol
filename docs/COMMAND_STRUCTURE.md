@@ -57,6 +57,12 @@ rfd
 ├── status         # Detailed status
 ├── dashboard      # Visual progress
 │
+├── gaps           # Gap analysis (NEW v5.0!)
+│   --category     # core_problems/critical_missing/all
+│   --status       # solved/partial/missing/all
+│   --priority     # critical/high/medium/low/all
+│   --format       # table/json
+│
 ├── memory         # Context management
 │   ├── show       # Display memory
 │   └── reset      # Clear memory
@@ -90,6 +96,7 @@ Claude slash commands map directly to CLI:
 | `/rfd-build` | `rfd build` | Build feature |
 | `/rfd-validate` | `rfd validate` | Validate implementation |
 | `/rfd-check` | `rfd check` | Quick status |
+| `/rfd-gaps` | `rfd gaps` | Gap analysis report |
 
 ## Benefits of New Structure
 
@@ -115,7 +122,7 @@ $ rfd init --wizard
 
 # Review specification
 $ rfd spec
-> Shows PROJECT.md content
+> Shows current specification from .rfd/config.yaml
 
 # Create implementation plan
 $ rfd plan create user_auth

@@ -123,21 +123,29 @@ python3 setup.py
 
 ## 📝 Configuration
 
-### PROJECT.md Structure
+### Configuration Structure (v5.0)
 
+**.rfd/config.yaml:**
 ```yaml
----
-name: "Your Project"
-version: "1.0.0"
+project:
+  name: "Your Project"
+  description: "Project description"
+  version: "1.0.0"
 stack:
   language: "python"
   framework: "fastapi"
-features:
-  - id: "feature-1"
-    description: "Feature description"
-    acceptance: "Test criteria"
-    status: "pending"
----
+  database: "sqlite"
+rules:
+  max_files: 50
+  max_loc_per_file: 1200
+  must_pass_tests: true
+```
+
+**Features in Database:**
+```bash
+# Features are stored in .rfd/memory.db, not files
+rfd feature add feature-1 -d "Feature description" -a "Test criteria"
+rfd feature list  # Shows all features from database
 ```
 
 ### Custom Commands
@@ -166,8 +174,8 @@ The RFD Protocol is considered "bulletproof" when:
 ## 📚 Additional Resources
 
 - Run `/rfd-help` for command reference
-- Check `PROGRESS.md` for development history
-- Read `.rfd/context/current.md` for session state
+- Use `rfd dashboard` for progress visualization
+- Read `.rfd/context/current.md` for session state (READ-ONLY - AUTO-GENERATED)
 - View `.rfd/memory.db` for persistent storage
 
 ---

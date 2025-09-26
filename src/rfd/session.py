@@ -52,15 +52,25 @@ class SessionManager:
 
                         CREATE TABLE IF NOT EXISTS features (
                             id TEXT PRIMARY KEY,
+                            description TEXT,
+                            acceptance_criteria TEXT,
                             status TEXT DEFAULT 'pending',
+                            created_at TEXT,
+                            completed_at TEXT,
                             started_at TEXT,
-                            completed_at TEXT
+                            assigned_to TEXT,
+                            priority INTEGER DEFAULT 0,
+                            tags JSON,
+                            metadata JSON
                         );
 
                         CREATE TABLE IF NOT EXISTS checkpoints (
                             id INTEGER PRIMARY KEY,
-                            type TEXT,
-                            status TEXT,
+                            feature_id TEXT,
+                            timestamp TEXT,
+                            validation_passed BOOLEAN,
+                            build_passed BOOLEAN,
+                            git_hash TEXT,
                             evidence JSON
                         );
                     """
@@ -153,27 +163,23 @@ class SessionManager:
 
         # Generate context for AI using ContextManager
         from .context_manager import ContextManager
-        
+
         context_mgr = ContextManager(self.rfd.rfd_dir)
-        
+
         # Get feature data from database
         conn = get_db_connection(self.rfd.db_path)
         feature_data = conn.execute(
-            "SELECT id, description, acceptance_criteria, status FROM features WHERE id = ?",
-            (feature_id,)
+            "SELECT id, description, acceptance_criteria, status FROM features WHERE id = ?", (feature_id,)
         ).fetchone()
         conn.close()
-        
+
         if feature_data:
             context_mgr.update_current_session(
                 session_id=session_id,
                 feature_id=feature_id,
                 status="building",
-                feature_data={
-                    "description": feature_data[1],
-                    "acceptance_criteria": feature_data[2]
-                },
-                validation_results=self.rfd.validator.validate(feature=feature_id)
+                feature_data={"description": feature_data[1], "acceptance_criteria": feature_data[2]},
+                validation_results=self.rfd.validator.validate(feature=feature_id),
             )
 
         return session_id
@@ -288,11 +294,11 @@ class SessionManager:
 
         # Check validation status
         if not state["validation"]["passing"]:
-            return "./rfd validate  # Fix validation errors"
+            return "rfd validate  # Fix validation errors"
 
         # Check build status
         if not state["build"]["passing"]:
-            return "./rfd build  # Fix build errors"
+            return "rfd build  # Fix build errors"
 
         # Check for pending features
         conn = get_db_connection(self.rfd.db_path)
@@ -305,9 +311,9 @@ class SessionManager:
         ).fetchone()
 
         if pending:
-            return f"./rfd session start {pending[0]}"
+            return f"rfd session start {pending[0]}"
 
-        return "./rfd check  # All features complete!"
+        return "rfd check  # All features complete!"
 
     def _generate_context(self, feature_id: str):
         """DEPRECATED - Now using ContextManager for context generation"""
@@ -320,22 +326,6 @@ class SessionManager:
         # This method is no longer used
         # Memory is now managed by ContextManager
         pass
-        if memory_file.exists():
-            memory = json.loads(memory_file.read_text())
-        else:
-            memory = {
-                "features_completed": [],
-                "common_errors": [],
-                "working_patterns": [],
-            }
-
-        # Update with current session
-        memory["current_feature"] = feature_id
-        memory["last_validation"] = validation
-        memory["session_started"] = self.current_session["started_at"]
-
-        # Save memory
-        memory_file.write_text(json.dumps(memory, indent=2))
 
     def _create_session_snapshot(self, session_id: int, success: bool):
         """Create a snapshot of the current session state"""

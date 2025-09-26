@@ -13,7 +13,7 @@ pip install rfd-protocol
 Then use it in their projects:
 ```bash
 cd my-project/
-rfd init  # Creates PROJECT.md, CLAUDE.md, .rfd/
+rfd init  # Creates .rfd/config.yaml, CLAUDE.md, .rfd/memory.db
 rfd session start my_feature
 ```
 
@@ -29,7 +29,8 @@ pip install -e .  # Editable install
 
 Since RFD is a tool for building software, we use RFD to build RFD:
 
-1. **We have PROJECT.md** - Defines RFD's own features
+1. **We have .rfd/config.yaml** - RFD's project configuration
+2. **Features in database** - Using .rfd/memory.db for features
 2. **We run `./rfd`** - This uses our development version from `src/rfd/`
 3. **We validate with `./rfd validate`** - Tests our implementation
 4. **We checkpoint with `./rfd checkpoint`** - Saves progress
@@ -79,10 +80,10 @@ pip install --upgrade rfd-protocol
 
 ### Q: What files does RFD create in user projects?
 A: Only these:
-- `PROJECT.md` - User's specification
+- `.rfd/config.yaml` - User's project configuration
+- `.rfd/memory.db` - Features and checkpoints database
 - `CLAUDE.md` - Claude integration
-- `PROGRESS.md` - Progress log
-- `.rfd/` - Database and context (NOT source code)
+- `.rfd/context/` - Session context (auto-generated)
 
 ### Q: What's in `.rfd/` directory?
 A: Only user data:

@@ -6,9 +6,9 @@ RFD enforces reality-based development through **concrete checkpoints** that can
 
 ### Anti-Squirrel Mechanisms
 
-1. **Feature Lock**: You can ONLY work on features defined in PROJECT.md
+1. **Feature Lock**: You can ONLY work on features stored in database
 2. **Validation Gates**: Can't proceed without passing validation
-3. **Session Context**: Claude always knows what you're working on
+3. **Session Context**: Claude reads (never edits) `.rfd/context/current.md`
 4. **Reality Checks**: Code must actually run - no theoretical progress
 5. **Automatic Recovery**: Pick up exactly where you left off
 
@@ -19,16 +19,18 @@ RFD enforces reality-based development through **concrete checkpoints** that can
 ```
 Continue work on the RFD project. Check the current session and continue the active feature. Use these commands:
 1. rfd check - to see current status
-2. rfd session start <feature> - if no session active
-3. rfd validate - to check progress
-4. Follow the acceptance criteria in PROJECT.md
+2. rfd feature list - to see features from database
+3. rfd session start <feature> - if no session active
+4. rfd validate - to check progress
+5. Remember: .rfd/context files are READ-ONLY
 ```
 
 ### Claude Will Automatically:
 1. Read `CLAUDE.md` for instructions
-2. Check `.rfd/context/current.md` for active session
-3. Review `PROGRESS.md` for what's done
-4. Continue exactly where you left off
+2. Check `.rfd/context/current.md` for active session (READ-ONLY)
+3. Use `rfd feature list` to see features from database
+4. Read `.rfd/config.yaml` for project configuration
+5. Continue exactly where you left off
 
 ## 📋 Complete Command Reference
 
@@ -39,6 +41,9 @@ rfd session start user_auth
 
 # Check current session
 rfd check
+
+# Show session status (NEW v5.0)
+rfd session status
 
 # End session (creates snapshot)
 rfd session end
@@ -126,7 +131,7 @@ rfd feature add
 # Show project metrics
 rfd metrics
 
-# Update PROJECT.md from database
+# Sync features with database
 rfd project sync
 ```
 
@@ -134,7 +139,7 @@ rfd project sync
 
 ### 1. **Feature-Level Lock**
 ```yaml
-# PROJECT.md defines allowed work
+# Database defines allowed features
 features:
   - id: user_auth
     description: "User authentication"
@@ -179,7 +184,7 @@ Files that maintain context:
 - `.rfd/context/current.md` - Active session details
 - `.rfd/context/memory.json` - What worked/failed
 - `.rfd/context/snapshots/` - Session history
-- `PROGRESS.md` - Append-only truth log
+- `.rfd/memory.db` - Database with features and progress
 
 ## 🔄 Session Recovery Scenarios
 
@@ -240,7 +245,7 @@ rfd validate  # See what needs fixing
 ```bash
 # Try to work on undefined feature
 rfd session start random_feature
-> ❌ Error: Feature 'random_feature' not found in PROJECT.md
+> ❌ Error: Feature 'random_feature' not found in database
 ```
 
 2. **Test Reality Check:**
@@ -276,7 +281,7 @@ rfd check
 
 ## 🚨 Red Flags That RFD Catches
 
-1. **"I'll just quickly add this feature"** → ❌ Not in PROJECT.md
+1. **"I'll just quickly add this feature"** → ❌ Not in database
 2. **"Let me refactor everything"** → ❌ Not current feature
 3. **"This mock data is fine for now"** → ❌ no_mocks_in_prod
 4. **"Tests can wait"** → ❌ must_pass_tests
@@ -338,7 +343,7 @@ rfd check
 
 ### For Maximum Focus:
 1. Start each session with `rfd check`
-2. Read the acceptance criteria in PROJECT.md
+2. Read the acceptance criteria from `rfd feature show <id>`
 3. Only work on the active feature
 4. Checkpoint every small success
 5. End sessions properly with `rfd session end`
@@ -352,7 +357,7 @@ rfd check
 ### For Skeptics:
 1. Try to break it - you'll see it catches everything
 2. Check `.rfd/memory.db` - it's a real database
-3. Look at `PROGRESS.md` - append-only truth
+3. Look at `rfd dashboard` - shows progress from database
 4. Review `.rfd/context/` - your entire history
 
 ## 🆘 When Things Go Wrong
@@ -386,7 +391,7 @@ rfd revert
 ## 🎯 The Bottom Line
 
 **RFD makes squirreling impossible because:**
-1. Features are locked in PROJECT.md
+1. Features are locked in database
 2. Progress requires passing validation
 3. Context persists across sessions
 4. Reality beats theory every time

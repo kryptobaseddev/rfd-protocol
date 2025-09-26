@@ -1,25 +1,23 @@
 <!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
-session_id: 15
-feature: test_resume
-started: 2025-09-25T17:15:48.825134
+session_id: 1
+feature: undefined_feature
+started: 2025-09-25T17:42:33.242675
 status: building
 ---
 
-# Current Session: test_resume
+# Current Session: undefined_feature
 
 ## Feature Specification
-Test the resume functionality
+Feature undefined_feature
 
 **Acceptance Criteria:**
-Test the resume functionality is complete and working
+None
 
 ## Current Status
 ```
-./rfd validate --feature test_resume
-✅ max_files: 44 files (max: 50)
-❌ feature_test_resume: Test the resume functionality - building
-✅ database: Database found: .rfd/memory.db
+rfd validate --feature undefined_feature
+❌ feature_undefined_feature: Feature undefined_feature not found in spec
 ```
 
 ## Required Actions
@@ -29,9 +27,9 @@ Test the resume functionality is complete and working
 
 ## Commands
 ```bash
-./rfd build          # Build current feature
-./rfd validate       # Check if tests pass
-./rfd checkpoint     # Save working state
+rfd build          # Build current feature
+rfd validate       # Check if tests pass
+rfd checkpoint     # Save working state
 ```
 
 ## Constraints from .rfd/config.yaml

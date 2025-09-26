@@ -3,21 +3,19 @@ Real dogfooding tests - verify RFD actually works end-to-end
 """
 
 import os
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
-import sqlite3
-import json
 
 import pytest
-import sys
 
 sys.path.insert(0, "src")
 
+from rfd.ai_validator import AIClaimValidator
 from rfd.rfd import RFD
 from rfd.session import SessionManager
 from rfd.validation import ValidationEngine
-from rfd.ai_validator import AIClaimValidator
 
 
 class TestRealDogfooding:
@@ -129,7 +127,7 @@ def get_data():
 
         # Create initial session
         session1 = SessionManager(rfd)
-        session_id = session1.create_session("feature1")
+        session1.create_session("feature1")
         session1.store_context("work_done", "Started implementation")
 
         # Simulate restart - create new session manager
@@ -178,7 +176,7 @@ def get_data():
         Path("PROJECT.md").write_text(frontmatter.dumps(post))
 
         # Try to checkpoint - should fail
-        session = SessionManager(rfd)
+        SessionManager(rfd)
 
         # Validation should fail
         validator = ValidationEngine(rfd)

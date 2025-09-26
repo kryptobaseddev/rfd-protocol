@@ -29,6 +29,9 @@ rfd init --from-prd requirements.md
 
 ### 3. Start Your First Session
 ```bash
+# Add a feature to the database (NEW in v5.0!)
+rfd feature add hello_world -d "Hello world endpoint"
+
 # See available features
 rfd feature list
 
@@ -91,20 +94,21 @@ Continue answering the wizard questions:
 
 ### Step 2: Review Generated Specifications
 
-The wizard created comprehensive specs for you:
+The wizard created your project configuration:
 
 ```bash
-ls specs/
-# CONSTITUTION.md      - Project principles
-# PHASES.md           - Development phases  
-# API_CONTRACT.md     - API endpoints
-# GUIDELINES.md       - Coding standards
-# ADR-001-tech.md     - Tech decisions
-```
+# Configuration is in .rfd/config.yaml (NEW in v5.0!)
+cat .rfd/config.yaml
+# project:
+#   name: todo-api
+#   description: Simple TODO API with authentication
+# stack:
+#   language: python
+#   framework: fastapi
+#   database: postgresql
 
-Review your project structure:
-```bash
-rfd spec review
+# Features are stored in database (NEW in v5.0!)
+rfd feature list
 ```
 
 ### Step 3: Start First Development Session
@@ -156,8 +160,8 @@ rfd checkpoint "Health check endpoint working"
 ### Step 6: Complete the Feature
 
 ```bash
-# Mark feature complete
-rfd feature update health_check --status complete
+# Mark feature complete (NEW v5.0 syntax!)
+rfd feature complete health_check
 
 # End session
 rfd session end
@@ -192,10 +196,11 @@ I'm working on an RFD project. Please run 'rfd check' and continue the current s
 ### What Claude Will Do
 
 1. **Check Status**: Run `rfd check`
-2. **Read Context**: Review `.rfd/context/current.md`
-3. **Follow Spec**: Read acceptance criteria from PROJECT.md
-4. **Validate Work**: Run `rfd validate` after changes
-5. **Save Progress**: Run `rfd checkpoint` when working
+2. **Read Context**: Review `.rfd/context/current.md` (READ-ONLY)
+3. **Follow Spec**: Read config from `.rfd/config.yaml`
+4. **Get Features**: Run `rfd feature list` (from database)
+5. **Validate Work**: Run `rfd validate` after changes
+6. **Save Progress**: Run `rfd checkpoint` when working
 
 ### Example Claude Conversation
 
@@ -216,18 +221,18 @@ rfd validate
 rfd checkpoint "Login endpoint implemented"
 ```
 
-## PROJECT.md Configuration
+## Configuration (Database-First Architecture v5.0)
 
-### Understanding PROJECT.md Structure
+### Understanding .rfd/config.yaml Structure
 
-Your PROJECT.md defines everything about your project:
+Your `.rfd/config.yaml` defines project configuration:
 
 ```yaml
----
 # REQUIRED FIELDS
-name: "Your Project"
-description: "What it does"
-version: "0.1.0"
+project:
+  name: "Your Project"
+  description: "What it does"
+  version: "0.1.0"
 
 # TECHNOLOGY STACK (extensible)
 stack:
@@ -247,20 +252,16 @@ rules:
   no_mocks_in_prod: true
   min_test_coverage: 80     # Optional
   
-# FEATURES (your work items)
-features:
-  - id: feature_1
-    description: "What this feature does"
-    acceptance: "How to verify it works"
-    status: pending
-    priority: high          # Optional
-    depends_on: []          # Optional
----
+# Features are stored in database, not config file!
+# Use commands to manage features:
+# rfd feature add <id> -d "description" -a "acceptance"
+# rfd feature list
+# rfd feature start <id>
 ```
 
 ### Customizing Rules
 
-Edit PROJECT.md to adjust limits:
+Edit `.rfd/config.yaml` to adjust limits:
 
 ```yaml
 rules:
@@ -270,18 +271,17 @@ rules:
   require_types: true      # Enforce type hints
 ```
 
-### Adding Features
+### Adding Features (Database-First v5.0)
 
 ```bash
-# Interactive
-rfd feature add
+# Add feature to database
+rfd feature add new_feature -d "New functionality" -a "Tests pass"
 
-# Or edit PROJECT.md directly:
-features:
-  - id: new_feature
-    description: "New functionality"
-    acceptance: "Tests pass"
-    status: pending
+# List all features
+rfd feature list
+
+# Start working on feature
+rfd feature start new_feature
 ```
 
 ## Common Scenarios
@@ -319,8 +319,8 @@ rfd check
 rfd check
 # Shows exactly where you left off Friday
 
-# Review progress
-cat PROGRESS.md
+# Review progress (from database)
+rfd dashboard
 
 # Continue
 rfd session start <feature>
@@ -343,12 +343,12 @@ rfd validate
 ```bash
 # Try to work on it
 rfd session start random_feature
-# ❌ Error: Feature 'random_feature' not in PROJECT.md
+# ❌ Error: Feature 'random_feature' not in database
 
-# Proper way:
-rfd feature add
-# Add it to spec first
-rfd session start new_feature
+# Proper way (v5.0):
+rfd feature add random_feature -d "New feature" -a "Acceptance criteria"
+# Feature added to database
+rfd session start random_feature
 # Now you can work on it
 ```
 
@@ -402,9 +402,9 @@ rfd validate
 
 ### "Can't Start Session"
 ```bash
-# Feature must exist in PROJECT.md
-rfd feature list         # See available
-rfd feature add          # Add new one
+# Feature must exist in database
+rfd feature list         # See available from database
+rfd feature add <id> -d "desc"  # Add new one to database
 ```
 
 ### "Validation Keeps Failing"
@@ -426,7 +426,7 @@ rfd session restore <id>    # Restore specific
 rfd memory reset        # Clear memory
 rfd revert             # Go to last checkpoint
 # Or completely fresh:
-rm -rf .rfd PROJECT.md PROGRESS.md
+rm -rf .rfd
 rfd init --wizard
 ```
 
@@ -434,14 +434,14 @@ rfd init --wizard
 
 1. **Read Full Documentation**
    - [CLI Reference](CLI_REFERENCE.md) - All commands
-   - [PROJECT.md Schema](PROJECT_SCHEMA.md) - Configuration
+   - [Configuration Schema](CONFIG_SCHEMA.md) - .rfd/config.yaml reference
    - [Claude Code Guide](CLAUDE_CODE_GUIDE.md) - AI integration
 
 2. **Try Advanced Features**
    ```bash
    rfd spec generate --type all  # Generate all specs
    rfd metrics                   # See progress metrics
-   rfd project sync             # Sync PROJECT.md with database
+   rfd audit                    # Database-first compliance check
    ```
 
 3. **Join Community**

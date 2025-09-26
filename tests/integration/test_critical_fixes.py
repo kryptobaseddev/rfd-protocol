@@ -53,20 +53,20 @@ features:
         print("✅ PASS: Valid feature accepted")
     except ValueError as e:
         print(f"❌ FAIL: Valid feature rejected: {e}")
-        assert False, "Test failed"
+        raise AssertionError("Test failed")
 
     # Test 2: Invalid feature should fail
     print("Test 2: Starting session with invalid feature 'fake_feature'...")
     try:
         rfd.session.start("fake_feature")
         print("❌ FAIL: Invalid feature was accepted (should have been rejected)")
-        assert False, "Test failed"
+        raise AssertionError("Test failed")
     except ValueError as e:
         if "not found in" in str(e) and ("PROJECT.md" in str(e) or "database" in str(e)):
             print(f"✅ PASS: Invalid feature rejected with error: {e}")
         else:
             print(f"❌ FAIL: Wrong error message: {e}")
-            assert False, "Test failed"
+            raise AssertionError("Test failed")
 
     # Cleanup
     os.chdir("..")

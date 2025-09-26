@@ -283,20 +283,18 @@ class ValidationEngine:
 
         # Get status from DATABASE, not spec (database-first!)
         import sqlite3
+
         conn = sqlite3.connect(self.rfd.db_path)
-        cursor = conn.execute(
-            "SELECT status FROM features WHERE id = ?",
-            (feature_id,)
-        )
+        cursor = conn.execute("SELECT status FROM features WHERE id = ?", (feature_id,))
         result = cursor.fetchone()
         conn.close()
-        
+
         # Use database status if exists, otherwise fall back to spec
         if result:
             status = result[0]
         else:
             status = feature.get("status", "pending")
-            
+
         self.results.append(
             {
                 "test": f"feature_{feature_id}",

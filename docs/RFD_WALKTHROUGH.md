@@ -5,7 +5,7 @@ This walkthrough demonstrates RFD from installation to shipping your first featu
 ## Table of Contents
 1. [Installation & Verification](#installation--verification)
 2. [Project Initialization](#project-initialization)
-3. [Understanding PROJECT.md](#understanding-projectmd)
+3. [Understanding Configuration](#understanding-configuration)
 4. [Starting Your First Feature](#starting-your-first-feature)
 5. [The Build-Validate-Checkpoint Cycle](#the-build-validate-checkpoint-cycle)
 6. [Working with AI Tools](#working-with-ai-tools)
@@ -125,24 +125,28 @@ After initialization, you'll have:
 
 ```
 your-project/
-├── PROJECT.md       # Your project specification
 ├── CLAUDE.md        # AI assistant configuration
-├── PROGRESS.md      # Progress tracking log
 └── .rfd/           # RFD system directory
-    ├── memory.db    # SQLite database (WAL mode)
+    ├── config.yaml  # Project configuration (immutable)
+    ├── memory.db    # SQLite database (features, checkpoints)
     └── context/     # Session context
-        └── memory.json
+        ├── current.md    # Active session (AUTO-GENERATED)
+        └── memory.json   # AI memory state
 ```
 
-## Understanding PROJECT.md
+## Understanding Configuration
 
-PROJECT.md is your single source of truth. Let's examine a real example:
+RFD uses a database-first architecture (v5.0+). Configuration is split between:
+- `.rfd/config.yaml` - Immutable project configuration
+- `.rfd/memory.db` - Features and dynamic state
+
+### Configuration File (.rfd/config.yaml)
 
 ```yaml
----
-name: "User Management API"
-description: "RESTful API for user registration and authentication"
-version: "1.0.0"
+project:
+  name: "User Management API"
+  description: "RESTful API for user registration and authentication"
+  version: "1.0.0"
 
 stack:
   language: python
@@ -155,33 +159,29 @@ rules:
   must_pass_tests: true   # Tests are mandatory
   no_mocks_in_prod: true  # Real implementations only
 
-features:
-  - id: user_registration
-    description: "User signup system"
-    acceptance: "Users can register with email/password"
-    status: pending
-    
-  - id: user_login
-    description: "Authentication system"
-    acceptance: "Users can login and receive JWT token"
-    status: pending
-    depends_on: [user_registration]
-
 constraints:
   - "Passwords must be hashed with bcrypt"
   - "Email validation required"
   - "JWT tokens expire after 24 hours"
----
+```
 
-# User Management API
+### Features in Database (v5.0+)
 
-This API provides secure user registration and authentication...
+Features are now stored in the database, not config files:
+
+```bash
+# Add features to database
+rfd feature add user_registration -d "User signup system" -a "Users can register with email/password"
+rfd feature add user_login -d "Authentication system" -a "Users can login and receive JWT token"
+
+# List features
+rfd feature list
 ```
 
 ### Key Points:
-- **Features are locked**: You can't work on undefined features
+- **Features are in database**: Managed via `rfd feature` commands
+- **Config is immutable**: .rfd/config.yaml for static configuration
 - **Acceptance criteria are contracts**: They must be provably met
-- **Dependencies are enforced**: Can't start user_login before user_registration
 - **Rules are validated**: Every checkpoint must pass these rules
 
 ## Starting Your First Feature
@@ -232,6 +232,7 @@ cat .rfd/context/current.md
 
 Shows:
 ```markdown
+<!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
 session_id: 1
 feature: user_registration
@@ -384,7 +385,7 @@ Output:
 ✅ Feature completed: user_registration
 Duration: 1 hour 15 minutes
 Checkpoints: 1
-Status updated in PROJECT.md
+Status updated in database
 
 → Next feature available: user_login
 ```
@@ -552,10 +553,10 @@ source ~/.bashrc
 python -m rfd.cli init
 ```
 
-#### "No feature specified in PROJECT.md"
+#### "No feature specified in database"
 ```bash
-# Edit PROJECT.md and add feature
-nano PROJECT.md
+# Add feature to database
+rfd feature add new_feature -d "Description" -a "Acceptance criteria"
 
 # Or use spec command
 rfd spec add-feature
@@ -660,7 +661,8 @@ mkdir todo-api && cd todo-api
 rfd init --wizard
 # Choose: Python, FastAPI, SQLite
 
-# 2. Define features in PROJECT.md
+# 2. Define features in database
+rfd feature add <id> -d "description"
 features:
   - id: create_todo
     acceptance: "POST /todos creates a todo"
@@ -725,7 +727,7 @@ RFD ensures that:
 
 This walkthrough covered the essential workflow. For more advanced topics, see:
 - [CLI Reference](CLI_REFERENCE.md) - All commands in detail
-- [PROJECT.md Schema](PROJECT_SCHEMA.md) - Full configuration options
+- [Configuration Schema](CONFIG_SCHEMA.md) - Full configuration options
 - [Claude Integration Guide](CLAUDE_CODE_GUIDE.md) - AI tool specifics
 
 ---

@@ -1,6 +1,6 @@
 ---
 description: Resume RFD work - shows status, context, and continues where you left off
-allowed-tools: Bash(*), Read(.rfd/context/current.md, .rfd/context/memory.json, PROJECT.md), TodoWrite
+allowed-tools: Bash(*), Read(.rfd/context/current.md, .rfd/context/memory.json, .rfd/config.yaml), TodoWrite
 ---
 
 # RFD Resume - Continue Where You Left Off
@@ -17,10 +17,10 @@ This command automatically:
 @.rfd/config.yaml
 
 ## Check Status
-!./rfd-new dashboard
+!rfd dashboard
 
 ## Show Current Session
-!./rfd-new session status
+!rfd session status
 
 ## Display Next Actions
 Based on the context, suggest next steps and create a TodoWrite list.

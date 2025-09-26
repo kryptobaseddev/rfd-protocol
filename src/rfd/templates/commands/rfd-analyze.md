@@ -9,7 +9,7 @@ This command performs comprehensive analysis across all project artifacts to ens
 
 ## Analysis Checks
 
-1. **Spec Alignment**: Verify code matches PROJECT.md specifications
+1. **Spec Alignment**: Verify code matches .rfd/config.yaml specifications
 2. **Task Consistency**: Check task completion vs feature status  
 3. **API Implementation**: Validate API contracts are implemented
 4. **Test Coverage**: Ensure acceptance criteria have tests
@@ -21,7 +21,7 @@ This command performs comprehensive analysis across all project artifacts to ens
 
 Run the comprehensive cross-artifact analysis:
 
-!python -c "from src.rfd.rfd import RFD; from src.rfd.analyze import ArtifactAnalyzer; rfd = RFD(); analyzer = ArtifactAnalyzer(rfd); analysis = analyzer.analyze_cross_artifact_consistency(); print(analyzer.generate_report(analysis))"
+!rfd analyze
 
 ## Interpretation
 

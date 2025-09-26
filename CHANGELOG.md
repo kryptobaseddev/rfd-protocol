@@ -2,6 +2,36 @@
 
 <!-- version list -->
 
+## v5.1.0 (2025-09-25)
+
+### Features
+
+- **true-database-first**: Complete removal of file-based progress tracking
+  - Removed all PROGRESS.md generation and references
+  - Constitution now stored in database, not files
+  - All specs and memory directories moved under `.rfd/`
+  - Single database (`memory.db`) - removed redundant `rfd.db`
+
+### Bug Fixes
+
+- **schema-consistency**: Fixed database schema inconsistencies
+  - Standardized `features` table schema across all modules
+  - Fixed `sessions` table to use consistent columns
+  - Fixed `checkpoints` table to include evidence column
+  - Updated tests to reflect database-first approach
+
+- **hallucination-prevention**: Added "No Hallucination" principle to constitution
+  - AI claims must be validated
+  - No lying about completions
+  - Addresses core issues from brain-dump.md
+
+### Improvements
+
+- **file-organization**: Proper encapsulation in `.rfd/` directory
+  - No project-specific files outside `.rfd/`
+  - Cleaner project root
+  - Better separation of concerns
+
 ## v5.0.0 (2025-09-25)
 
 ### Breaking Changes

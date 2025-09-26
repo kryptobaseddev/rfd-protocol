@@ -477,10 +477,7 @@ class InitWizard:
         # Create CLAUDE.md
         self.create_claude_md()
 
-        # Create PROGRESS.md
-        if not Path("PROGRESS.md").exists():
-            with open("PROGRESS.md", "w") as f:
-                f.write(f"# Build Progress\n\n*Started: {datetime.now().isoformat()}*\n\n")
+        # DO NOT create PROGRESS.md - we're database-first!
 
     def create_claude_md(self):
         """Create CLAUDE.md for AI assistance"""
@@ -519,7 +516,7 @@ You are working on a Reality-First Development (RFD) project.
   - PHASES.md - Development phases
   - API_CONTRACT.md - API specifications
   - DEVELOPMENT_GUIDELINES.md - Coding standards
-- @PROGRESS.md - Development progress
+- Database checkpoints - Development progress
 - @.rfd/context/ - Session context
 
 ## Workflow
@@ -550,7 +547,7 @@ rfd spec generate   # Generate specifications
 - Validate before claiming completion
 - Use real implementations
 - Track progress with checkpoints
-- Update PROGRESS.md regularly
+- Use 'rfd checkpoint' to save progress
 """
         with open("CLAUDE.md", "w") as f:
             f.write(claude_md)

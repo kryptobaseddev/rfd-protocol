@@ -2,8 +2,10 @@
 """
 Setup configuration for RFD Protocol package
 """
-from setuptools import setup, find_packages
+
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Read the README for long description
 readme_file = Path(__file__).parent / "README.md"
@@ -13,7 +15,7 @@ if readme_file.exists():
 
 setup(
     name="rfd-protocol",
-    version="2.3.0",
+    version="5.1.0",
     author="RFD Protocol Team",
     author_email="team@rfd-protocol.dev",
     description="Reality-First Development Protocol - Prevents AI hallucination and ensures spec-driven development",

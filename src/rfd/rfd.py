@@ -11,8 +11,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-import frontmatter
-
 from .build import BuildEngine
 from .db_utils import get_db_connection, init_database
 from .project_updater import ProjectUpdater
@@ -74,7 +72,12 @@ class RFD:
                 acceptance_criteria TEXT,
                 status TEXT DEFAULT 'pending',
                 created_at TEXT,
-                completed_at TEXT
+                completed_at TEXT,
+                started_at TEXT,
+                assigned_to TEXT,
+                priority INTEGER DEFAULT 0,
+                tags JSON,
+                metadata JSON
             );
 
             CREATE TABLE IF NOT EXISTS checkpoints (
@@ -112,30 +115,27 @@ class RFD:
         """Load project spec from database and config.yaml"""
         from .config_manager import ConfigManager
         from .db_utils import get_db_connection
-        
+
         # Get config from config.yaml
         config_mgr = ConfigManager(self.rfd_dir)
         config = config_mgr.load_config() or {}
-        
+
         # Get features from database
         conn = get_db_connection(self.db_path)
         features = []
-        
+
         try:
             cursor = conn.execute(
-                """SELECT id, description, acceptance_criteria, status 
+                """SELECT id, description, acceptance_criteria, status
                    FROM features ORDER BY created_at"""
             )
             for row in cursor.fetchall():
-                features.append({
-                    "id": row[0],
-                    "description": row[1],
-                    "acceptance": row[2] or "Not specified",
-                    "status": row[3]
-                })
+                features.append(
+                    {"id": row[0], "description": row[1], "acceptance": row[2] or "Not specified", "status": row[3]}
+                )
         finally:
             conn.close()
-        
+
         # Combine config and features
         spec = {
             "name": config.get("project", {}).get("name", "Unknown Project"),
@@ -144,9 +144,9 @@ class RFD:
             "stack": config.get("stack", {}),
             "rules": config.get("rules", {}),
             "constraints": config.get("constraints", []),
-            "features": features
+            "features": features,
         }
-        
+
         return spec
 
     def get_current_state(self) -> Dict[str, Any]:
@@ -236,14 +236,7 @@ class RFD:
         finally:
             conn.close()
 
-        # Update PROGRESS.md
-        progress_file = self.root / "PROGRESS.md"
-        with open(progress_file, "a") as f:
-            f.write(f"\n## {datetime.now().strftime('%Y-%m-%d %H:%M')} - Checkpoint\n")
-            f.write(f"MESSAGE: {message}\n")
-            f.write(f"VALIDATION: {'✅' if validation['passing'] else '❌'}\n")
-            f.write(f"BUILD: {'✅' if build['passing'] else '❌'}\n")
-            f.write(f"COMMIT: {git_hash[:7]}\n")
+        # DO NOT write to PROGRESS.md - we're database-first!
 
     def revert_to_last_checkpoint(self):
         """Revert to last working checkpoint"""

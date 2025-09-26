@@ -33,12 +33,13 @@ rfd [OPTIONS] COMMAND [ARGS]...
 |---------|-------------|--------------|
 | `init` | Initialize RFD in project | `rfd init --wizard` |
 | `check` | Quick status check | `rfd check` |
+| `audit` | Database-first compliance check | `rfd audit` |
 | `session` | Manage dev sessions | `rfd session start <feature>` |
 | `build` | Build current feature | `rfd build` |
 | `validate` | Validate against spec | `rfd validate` |
 | `checkpoint` | Save working state | `rfd checkpoint "message"` |
-| `spec` | Manage specifications | `rfd spec generate --type all` |
-| `feature` | Manage features | `rfd feature add` |
+| `spec` | Manage specifications | `rfd spec review` |
+| `feature` | Manage features (database) | `rfd feature add <id> -d "desc"` |
 | `memory` | Manage AI memory | `rfd memory show` |
 | `revert` | Revert to checkpoint | `rfd revert` |
 
@@ -69,10 +70,10 @@ rfd init --wizard --mode exploration # Research project
 - `--mode [0-to-1|brownfield|exploration]` - Development mode
 
 **Creates:**
-- `PROJECT.md` - Project specification
+- `.rfd/config.yaml` - Project configuration (immutable)
+- `.rfd/memory.db` - Database for features and state
 - `CLAUDE.md` - AI assistant configuration  
-- `PROGRESS.md` - Progress tracking
-- `.rfd/` - RFD system directory
+- `.rfd/context/` - Session context (auto-generated)
 - `specs/` - Specification documents (with wizard)
 
 ---
@@ -123,8 +124,9 @@ rfd session end --failed  # Mark as failed
 # List all sessions
 rfd session list
 
-# Show current session
-rfd session current
+# Show current session (NEW in v5.0!)
+rfd session status    # Primary command
+rfd session current   # Alias for status
 
 # Restore from snapshot
 rfd session restore <snapshot-id>
@@ -134,7 +136,8 @@ rfd session restore <snapshot-id>
 - `start <feature-id>` - Start working on a feature
 - `end [--success|--failed]` - End current session
 - `list` - Show session history
-- `current` - Show active session
+- `status` - Show active session details (NEW v5.0)
+- `current` - Alias for status (NEW v5.0)
 - `restore <id>` - Restore from snapshot
 
 **Session lifecycle:**
@@ -163,10 +166,10 @@ rfd build --verbose
 - `--verbose` - Show detailed build output
 
 **Build process:**
-1. Detects language/framework from PROJECT.md
+1. Detects language/framework from .rfd/config.yaml
 2. Runs appropriate build commands
 3. Validates build success
-4. Updates build status
+4. Updates build status in database
 
 ---
 
@@ -282,31 +285,31 @@ rfd spec generate --type adr
 ---
 
 ### `rfd feature`
-Manage project features.
+Manage project features (database-first in v5.0).
 
 ```bash
-# Add new feature
-rfd feature add
+# Add new feature to database
+rfd feature add user_auth -d "User authentication" -a "Users can login"
 
-# List all features
+# List all features from database
 rfd feature list
 
-# Update feature status
-rfd feature update user_auth --status complete
+# Start working on a feature
+rfd feature start user_auth
+
+# Mark feature as complete
+rfd feature complete user_auth
 
 # Show feature details
 rfd feature show user_auth
-
-# Remove feature
-rfd feature remove old_feature
 ```
 
 **Subcommands:**
-- `add` - Add new feature interactively
-- `list` - Show all features
-- `update <id>` - Update feature properties
-- `show <id>` - Show feature details
-- `remove <id>` - Remove feature
+- `add <id> -d "desc" [-a "acceptance"]` - Add feature to database
+- `list` - Show all features from database
+- `start <id>` - Start working on feature
+- `complete <id>` - Mark feature as complete
+- `show <id>` - Show feature details from database
 
 **Update options:**
 - `--status [pending|building|testing|complete|blocked]`
@@ -396,14 +399,14 @@ rfd metrics --type velocity
 # Export metrics
 rfd metrics --export metrics.json
 
-# Update metrics in PROJECT.md
-rfd metrics --update
+# Show metrics
+rfd metrics
 ```
 
 **Options:**
 - `--type [progress|quality|velocity]` - Metric category
 - `--export FILE` - Export to file
-- `--update` - Update PROJECT.md
+- Metrics shown in dashboard
 
 **Metrics shown:**
 - Total/passing/failed checkpoints
@@ -415,28 +418,23 @@ rfd metrics --update
 
 ---
 
-### `rfd project`
-Manage PROJECT.md file.
+### `rfd audit`
+Database-first compliance check (NEW in v5.0!).
 
 ```bash
-# Sync PROJECT.md with database
-rfd project sync
+# Check database-first compliance
+rfd audit
 
-# Validate PROJECT.md schema
-rfd project validate
-
-# Update specific field
-rfd project update --field version --value 1.1.0
-
-# Show project info
-rfd project show
+# Check with verbose output
+rfd audit --verbose
 ```
 
-**Subcommands:**
-- `sync` - Sync with database
-- `validate` - Validate schema
-- `update` - Update field
-- `show` - Display project info
+**Checks for:**
+- Database exists and is accessible
+- Config.yaml properly configured
+- Database-first architecture
+- Features stored in database only
+- Context files are read-only
 
 ---
 
@@ -593,9 +591,15 @@ rfd memory show               # Memory state
 rfd recover --check  # Fix database
 ```
 
-### "Can't find PROJECT.md"
+### "Can't find config.yaml"
 ```bash
 rfd init  # Initialize RFD first
+```
+
+### "Config not found"
+```bash
+# Initialize RFD first
+rfd init --wizard
 ```
 
 ---
@@ -609,6 +613,6 @@ rfd init  # Initialize RFD first
 5. **Use verbose flags when debugging** - More information helps
 6. **Trust validation over intuition** - Reality beats assumptions
 7. **Keep features small** - Easier to complete and validate
-8. **Update PROJECT.md regularly** - Keep spec current
+8. **Use database commands** - Features live in database, not files
 9. **Review metrics weekly** - Track progress trends
 10. **Use recovery early** - Don't wait until totally stuck
