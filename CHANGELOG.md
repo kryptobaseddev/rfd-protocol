@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v5.3.0 (2025-09-26)
+
+### Bug Fixes
+
+- Add validate-commit command for pre-commit hook
+  ([`96b3c0e`](https://github.com/kryptobaseddev/rfd-protocol/commit/96b3c0e7005e20df14f09c3df2de6ae5225441e3))
+
+### Features
+
+- Add gap-aware resume and template sync checking
+  ([`ed346e8`](https://github.com/kryptobaseddev/rfd-protocol/commit/ed346e89b3e6d231c90c8315d6b0979506419f29))
+
+- Implement partial enforcement features for v5.2.0
+  ([`4589ab5`](https://github.com/kryptobaseddev/rfd-protocol/commit/4589ab5c0c4ebe946e9489ed320e4745bc138d91))
+
+
 ## v5.2.0 (2025-09-26)
 
 ### Features
