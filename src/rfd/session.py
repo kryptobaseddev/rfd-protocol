@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from .db_utils import get_db_connection
+from .workflow_isolation import WorkflowIsolation
 
 
 class SessionManager:
@@ -84,6 +85,9 @@ class SessionManager:
 
         self.current_session = None
         self.context_dir = self.rfd.rfd_dir / "context"
+        
+        # Initialize workflow isolation capabilities
+        self.isolation = WorkflowIsolation(self.rfd)
 
         # Load active session if exists
         self._load_active_session()
@@ -261,6 +265,71 @@ class SessionManager:
             pass
 
         return None
+
+    # Enhanced session methods with optional isolation
+    def start_with_isolation(self, feature_id: str, agent_type: str = "coding") -> int:
+        """
+        Start session with git worktree isolation
+        Creates isolated workspace for preventing context contamination
+        """
+        # First start normal session (all existing logic)
+        session_id = self.start(feature_id)
+        
+        # Then add isolation
+        try:
+            worktree_info = self.isolation.create_isolated_worktree(feature_id, agent_type)
+            
+            # Update session in memory with worktree info
+            if self.current_session:
+                self.current_session["worktree"] = worktree_info
+                self.current_session["isolated"] = True
+                self.current_session["agent_type"] = agent_type
+                
+            return session_id
+        except Exception as e:
+            # If isolation fails, end the session to maintain consistency
+            self.end(success=False)
+            raise RuntimeError(f"Failed to create isolated session: {e}")
+    
+    def get_current_with_worktree(self) -> Optional[Dict[str, Any]]:
+        """
+        Get current session info including worktree details if isolated
+        """
+        current = self.get_current()
+        if not current:
+            return None
+            
+        # Check if session has associated worktree
+        worktree_info = self.isolation.get_session_worktree(current["id"])
+        if worktree_info:
+            current["worktree"] = worktree_info
+            current["isolated"] = True
+            current["working_directory"] = worktree_info["worktree_path"]
+        else:
+            current["isolated"] = False
+            current["working_directory"] = str(self.rfd.rfd_dir.parent)
+            
+        return current
+    
+    def end_with_cleanup(self, success: bool = True) -> Optional[int]:
+        """
+        End session with automatic worktree cleanup if isolated
+        """
+        if not self.current_session:
+            return None
+            
+        # Check if session has worktree that needs cleanup
+        worktree_info = self.isolation.get_session_worktree(self.current_session["id"])
+        
+        # End normal session first
+        session_id = self.end(success)
+        
+        # Clean up worktree if it exists
+        if worktree_info and success:
+            # Only cleanup on success - preserve failed worktrees for debugging
+            self.isolation.cleanup_worktree(worktree_info["id"])
+            
+        return session_id
 
     # Backwards compatible aliases
     def start_session(self, feature_id: str) -> int:

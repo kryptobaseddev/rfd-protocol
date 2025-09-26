@@ -10,6 +10,6 @@ Initialize a new RFD project with proper structure and specifications.
 !rfd init
 
 After initialization:
-1. Review PROJECT.md for specifications
+1. Review .rfd/config.yaml for configuration
 2. Check .rfd/context/ for session management
 3. Create initial feature plan with TodoWrite

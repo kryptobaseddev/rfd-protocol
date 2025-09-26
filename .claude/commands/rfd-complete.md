@@ -1,14 +1,14 @@
 ---
-description: Mark a feature as complete (auto-updates PROJECT.md and database)
+description: Mark a feature as complete (updates database)
 argument-hint: <feature-id | 'list'> - Example: cli_refactor, or 'list' to see features
-allowed-tools: Bash(rfd complete*, rfd feature*), Read(PROJECT.md)
+allowed-tools: Bash(rfd complete*, rfd feature*), Read(.rfd/config.yaml)
 ---
 
 # RFD Complete Feature
 
 Marks a feature as complete and automatically:
 - Updates database status
-- Syncs PROJECT.md 
+- Updates database 
 - Records completion timestamp
 - Validates acceptance criteria
 
@@ -30,5 +30,5 @@ else
   echo "✅ Marking feature as complete: $1"
   rfd complete $1
   echo ""
-  echo "🎉 No more manual PROJECT.md editing!"
+  echo "🎉 No more manual .rfd/config.yaml editing!"
 fi

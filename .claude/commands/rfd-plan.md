@@ -1,7 +1,7 @@
 ---
 description: Create and manage implementation plans
 argument-hint: [create|tasks|phases] [feature-id] - Default shows current plans
-allowed-tools: Bash(rfd plan*, rfd feature*), Read(specs/*, PROJECT.md), Write(specs/*), TodoWrite
+allowed-tools: Bash(rfd plan*, rfd feature*), Read(specs/*, .rfd/config.yaml), Write(specs/*), TodoWrite
 ---
 
 # RFD Planning & Task Management

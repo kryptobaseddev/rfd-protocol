@@ -1,7 +1,7 @@
 ---
 description: View and manage project specifications
 argument-hint: [constitution|clarify|validate] - Default shows current spec
-allowed-tools: Bash(rfd spec*), Read(PROJECT.md, specs/*), Write(specs/*)
+allowed-tools: Bash(rfd spec*), Read(.rfd/config.yaml, specs/*), Write(specs/*)
 ---
 
 # RFD Specification Management
@@ -11,7 +11,7 @@ View and manage your project specifications.
 !if [ -z "$1" ] || [ "$1" = "show" ]; then
   echo "📋 Current Project Specification"
   echo "=================================="
-  rfd spec 2>/dev/null || cat PROJECT.md 2>/dev/null | head -50
+  rfd spec 2>/dev/null || cat .rfd/config.yaml 2>/dev/null | head -50
   echo ""
   echo "💡 Spec Commands:"
   echo "  • /rfd-spec constitution - Generate project principles"

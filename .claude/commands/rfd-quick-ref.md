@@ -1,6 +1,6 @@
 ---
 description: Quick reference guide for all RFD commands and current project state
-allowed-tools: Bash(rfd*), Read(.rfd/*, PROJECT.md)
+allowed-tools: Bash(rfd*), Read(.rfd/*, .rfd/config.yaml)
 ---
 
 # RFD Quick Reference Guide

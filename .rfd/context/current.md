@@ -1,24 +1,24 @@
 <!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
-session_id: 15
-feature: test_resume
-started: 2025-09-25T17:15:48.825134
+session_id: 17
+feature: test_context
+started: 2025-09-25T21:43:55.045175
 status: building
 ---
 
-# Current Session: test_resume
+# Current Session: test_context
 
 ## Feature Specification
-Test the resume functionality
+Test automated context generation
 
 **Acceptance Criteria:**
-Test the resume functionality is complete and working
+Test automated context generation is complete and working
 
 ## Current Status
 ```
-./rfd validate --feature test_resume
-✅ max_files: 44 files (max: 50)
-❌ feature_test_resume: Test the resume functionality - building
+rfd validate --feature test_context
+✅ max_files: 46 files (max: 50)
+❌ feature_test_context: Test automated context generation - building
 ✅ database: Database found: .rfd/memory.db
 ```
 
@@ -29,9 +29,9 @@ Test the resume functionality is complete and working
 
 ## Commands
 ```bash
-./rfd build          # Build current feature
-./rfd validate       # Check if tests pass
-./rfd checkpoint     # Save working state
+rfd build          # Build current feature
+rfd validate       # Check if tests pass
+rfd checkpoint     # Save working state
 ```
 
 ## Constraints from .rfd/config.yaml
