@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v5.4.0 (2025-09-26)
+
+### Chores
+
+- Bump version to 5.3.1 (patch release)
+  ([`9c3c963`](https://github.com/kryptobaseddev/rfd-protocol/commit/9c3c963240371bc3dee0a5bcea34fdcd67b2a02c))
+
+### Features
+
+- Implement automated QA cycles feature (v5.3.1)
+  ([`c6fe377`](https://github.com/kryptobaseddev/rfd-protocol/commit/c6fe3770f697876d36dc46c0ea869bfbe848bb7b))
+
+
 ## v5.3.0 (2025-09-26)
 
 ### Bug Fixes
