@@ -1,24 +1,24 @@
 <!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
-session_id: 21
-feature: branch_cleanup_test
-started: 2025-09-25T22:53:23.930830
+session_id: 23
+feature: automated_qa_cycles
+started: 2025-09-26T09:11:40.191114
 status: building
 ---
 
-# Current Session: branch_cleanup_test
+# Current Session: automated_qa_cycles
 
 ## Feature Specification
-Test branch cleanup functionality
+Implement automated QA and review cycles with multi-stage validation
 
 **Acceptance Criteria:**
-Branch cleanup works properly after session end
+Automated review triggers work; Code-QA-Fix loops are enforced; Review handoffs between agents functional
 
 ## Current Status
 ```
-rfd validate --feature branch_cleanup_test
-✅ max_files: 46 files (max: 50)
-❌ feature_branch_cleanup_test: Test branch cleanup functionality - building
+rfd validate --feature automated_qa_cycles
+✅ max_files: 49 files (max: 50)
+❌ feature_automated_qa_cycles: Implement automated QA and review cycles with multi-stage validation - building
 ✅ database: Database found: .rfd/memory.db
 ```
 

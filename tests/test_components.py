@@ -93,22 +93,26 @@ class TestRFDCore(unittest.TestCase):
 
         rfd = RFD()
 
-        # Create a mock spec file
-        spec_content = {
-            "name": "test-project",
-            "version": "1.0.0",
-            "features": [],
-            "rules": {"max_files": 100, "max_loc_per_file": 500},
-        }
+        # Create .rfd directory for config
+        os.makedirs(".rfd", exist_ok=True)
 
-        Path("RFD-SPEC.md").write_text(
-            f"""---
-{json.dumps(spec_content)}
----
-
-# Test Specification
+        # Create a mock config file using new format
+        config_content = """project:
+  name: test-project
+  description: Test project
+  version: '1.0.0'
+stack:
+  database: sqlite
+  framework: click
+  language: python
+rules:
+  max_files: 100
+  max_loc_per_file: 500
+  must_pass_tests: true
+constraints:
+- Test constraint
 """
-        )
+        Path(".rfd/config.yaml").write_text(config_content)
 
         # Load spec
         spec = rfd.load_project_spec()
@@ -116,6 +120,7 @@ class TestRFDCore(unittest.TestCase):
         # Should have loaded spec
         self.assertIsNotNone(spec)
         if spec:
+            # The spec loader returns a flattened structure
             self.assertEqual(spec.get("name"), "test-project")
 
 
@@ -160,8 +165,11 @@ class TestValidationEngine(unittest.TestCase):
 
         # Check results mention hallucination
         for result in results:
-            if "super_important_file.py" in result["target"]:
-                self.assertIn("MISSING", result["message"])
+            # Results have different keys based on type (path for files, function for functions)
+            if result.get("type") == "file_claim":
+                if result.get("path") == "super_important_file.py":
+                    self.assertFalse(result["valid"], "File should be marked as invalid")
+                    self.assertIn("not exist", result["reason"])
 
     def test_validate_ai_claims_confirms_truth(self):
         """Test AI claim validation confirms true claims"""

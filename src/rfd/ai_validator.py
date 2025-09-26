@@ -125,14 +125,17 @@ class AIClaimValidator:
         """Extract file paths mentioned in AI claims"""
         patterns = [
             # Match file creation/modification claims with file extensions
-            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+"
-            r"(?:file\s+)?([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp|md|txt|yml|"
+            # Order matters - jsx/tsx before js/ts to match more specific extensions first
+            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote|Made)\s+"
+            r"(?:to\s+)?(?:file\s+)?([/\w.-]+\.(?:py|jsx|tsx|js|ts|go|rs|java|cpp|c|h|hpp|md|txt|yml|"
             r"yaml|json|xml|html|css|scss|sql|sh|bash))",
             # Match file creation/modification with descriptive text
-            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote)\s+"
-            r"a?\s?(?:new\s+)?file\s+(?:called\s+|named\s+)?([/\w.-]+)",
+            r"(?:Created|Modified|Updated|Added|Implemented|Fixed|Enhanced|Wrote|Made)\s+"
+            r"(?:to\s+)?a?\s?(?:new\s+)?file\s+(?:called\s+|named\s+)?([/\w.-]+)",
             r"(?:In|At|File)\s+([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp))",
-            r"`([/\w.-]+\.(?:py|js|ts|go|rs|java|cpp|c|h|hpp))`",
+            r"`([/\w.-]+\.(?:py|js|ts|jsx|tsx|go|rs|java|cpp|c|h|hpp))`",
+            # Match quoted filenames
+            r"['\"]([/\w.-]+\.(?:py|js|ts|jsx|tsx|go|rs|java|cpp|c|h|hpp|md|txt|yml|yaml|json))['\"]",
         ]
 
         files = set()
@@ -182,6 +185,10 @@ class AIClaimValidator:
             r"`class\s+(\w+)`",
             r"`function\s+(\w+)`",
             r"`func\s+(\w+)`",
+            # Actual code definitions (not just mentions)
+            r"^\s*def\s+(\w+)\s*\(",
+            r"^\s*async\s+def\s+(\w+)\s*\(",
+            r"^\s*class\s+(\w+)\s*[:\(]",
         ]
 
         functions = set()
@@ -380,6 +387,11 @@ class AIClaimValidator:
             ),
             # Database integration
             (
+                r"[aA]dded\s+database\s+connection\s+to\s+(\w+)",
+                "database_connection",
+                "added database connection",
+            ),
+            (
                 r"[iI]ntegrated\s+(?:database\s+)?(?:with\s+)?(\w+)\s+with\s+(?:the\s+)?database",
                 "database_integration",
                 "integrated with database",
@@ -422,6 +434,22 @@ class AIClaimValidator:
                 r"[oO]ptimized\s+(?:the\s+)?(\w+)",
                 "optimization",
                 "optimized performance",
+            ),
+            # Async version claims
+            (
+                r"[iI]mplemented\s+async\s+version\s+of\s+(\w+)",
+                "async_version",
+                "implemented async version",
+            ),
+            (
+                r"[cC]reated\s+async\s+version\s+of\s+(\w+)",
+                "async_version",
+                "created async version",
+            ),
+            (
+                r"[cC]onverted\s+(\w+)\s+to\s+async",
+                "async_version",
+                "converted to async",
             ),
             # General modifications
             (r"[mM]odified\s+(\w+)", "general_modification", "modified"),
@@ -550,7 +578,7 @@ class AIClaimValidator:
                 ]
                 return any(ind in function_content for ind in validation_indicators)
 
-            elif modification_type == "database_integration":
+            elif modification_type in ["database_integration", "database_connection"]:
                 # Look for database-related code
                 db_indicators = [
                     "cursor",
@@ -563,11 +591,21 @@ class AIClaimValidator:
                     "UPDATE",
                     "DELETE",
                     "connection",
+                    "connect(",
+                    "db.",
+                    "database",
+                    "sql",
                 ]
                 return any(ind in function_content for ind in db_indicators)
+            
+            elif modification_type == "async_version":
+                # Check if the function is actually async
+                # The function_content should start with async def
+                return "async def" in function_content or "async " in function_content[:100]
 
             elif modification_type in ["general_modification", "bug_fix"]:
                 # For general modifications, we can't verify without original code
+                # But we should return False to be conservative
                 return False
 
             # Default to false for unknown modification types

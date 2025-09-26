@@ -1091,6 +1091,10 @@ Check @.rfd/context/current.md for next failing test. Repeat.
 - Reality (passing tests) > Theory (perfect code)
 """
     Path("CLAUDE.md").write_text(content)
+# Add enforcement commands
+from .cli_enforcement import enforce
+cli.add_command(enforce)
+
 def main():
     """Main entry point for the CLI"""
     cli()
