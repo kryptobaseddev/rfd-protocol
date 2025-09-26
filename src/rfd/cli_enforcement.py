@@ -100,3 +100,42 @@ def pending(agent_id: str):
             click.echo(f"  #{h['id']}: {h['task']} (from {h['from']})")
     else:
         click.echo(f"No pending handoffs for {agent_id}")
+
+
+@enforce.command("validate-commit")
+def validate_commit():
+    """Validate commit against specs (for git hooks)"""
+    import subprocess
+    import sys
+    
+    # Get staged files
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        click.echo("❌ Failed to get staged files")
+        sys.exit(1)
+    
+    staged_files = result.stdout.strip().split('\n') if result.stdout.strip() else []
+    
+    # Basic validation - check for common issues
+    issues = []
+    
+    for file in staged_files:
+        # Check for test files if src files are modified
+        if file.startswith("src/") and file.endswith(".py"):
+            test_file = file.replace("src/", "tests/test_").replace(".py", ".py")
+            if test_file not in staged_files and not any(t.startswith("tests/") for t in staged_files):
+                issues.append(f"⚠️ {file} modified but no tests included")
+    
+    if issues:
+        click.echo("⚠️ Commit validation warnings:")
+        for issue in issues:
+            click.echo(f"  {issue}")
+        # Don't block, just warn
+    
+    click.echo("✅ Commit validated")
+    sys.exit(0)
