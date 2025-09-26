@@ -42,17 +42,17 @@ class SpecKitIntegration:
 
             # Store core principles in database
             principles = [
-                ("Reality First", "Code must run and pass tests before considered complete", 1),
-                ("Single Responsibility", "One feature at a time, complete current work before starting new", 2),
-                ("Spec-Driven", "Specification before implementation, intent drives development", 3),
-                ("No Mocks", "No mock data in production code or tests", 4),
-                ("No Hallucination", "AI claims must be validated, no lying about completions", 5)
+                ("Code must run and pass tests before considered complete", "Reality First"),
+                ("One feature at a time, complete current work before starting new", "Single Responsibility"),
+                ("Specification before implementation, intent drives development", "Spec-Driven"),
+                ("No mock data in production code or tests", "No Mocks"),
+                ("AI claims must be validated, no lying about completions", "No Hallucination")
             ]
             
-            for principle, description, priority in principles:
+            for principle, category in principles:
                 conn.execute(
-                    "INSERT INTO constitution (principle, description, priority, created_at) VALUES (?, ?, ?, ?)",
-                    (principle, description, priority, datetime.now().isoformat())
+                    "INSERT INTO constitution (principle, category) VALUES (?, ?)",
+                    (principle, category)
                 )
             
             conn.commit()
