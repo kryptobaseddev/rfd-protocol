@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v5.2.0 (2025-09-26)
+
+### Features
+
+- Enhanced session management with optional git worktree isolation
+  ([`9a2c97c`](https://github.com/kryptobaseddev/rfd-protocol/commit/9a2c97c41e648402cb564524ef232acadf1362ed))
+
+
 ## v5.1.1 (2025-09-26)
 
 ### Bug Fixes
