@@ -45,11 +45,14 @@ features:
     from rfd.rfd import RFD
 
     rfd = RFD()
-    
+
     # Add features to database (v5 is database-first)
     import sqlite3
+
     conn = sqlite3.connect(rfd.db_path)
-    conn.execute("INSERT INTO features (id, description, status) VALUES ('user_auth', 'User authentication', 'pending')")
+    conn.execute(
+        "INSERT INTO features (id, description, status) VALUES ('user_auth', 'User authentication', 'pending')"
+    )
     conn.execute("INSERT INTO features (id, description, status) VALUES ('data_api', 'Data API endpoints', 'pending')")
     conn.commit()
     conn.close()

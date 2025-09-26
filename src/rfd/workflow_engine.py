@@ -9,6 +9,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from .db_utils import get_db_connection
+
 
 class WorkflowState(Enum):
     """Workflow states with strict progression"""
@@ -526,3 +528,110 @@ class GatedWorkflow:
                 )
 
         return True, "Action allowed"
+    
+    def run_qa_cycle(self, feature_id: str, max_iterations: int = 5) -> Dict[str, Any]:
+        """
+        Run automated QA cycle until tests pass or max iterations reached
+        
+        Args:
+            feature_id: Feature to run QA cycle for
+            max_iterations: Maximum number of fix attempts
+            
+        Returns:
+            Results with final status and cycle count
+        """
+        from .enforcement import EnforcementEngine
+        from .auto_handoff import AutoHandoff
+        
+        enforcer = EnforcementEngine(self.rfd)
+        handoff = AutoHandoff(self.rfd)
+        
+        results = {
+            'feature_id': feature_id,
+            'cycles': 0,
+            'final_status': 'failed',
+            'reviews': []
+        }
+        
+        for cycle in range(max_iterations):
+            results['cycles'] = cycle + 1
+            
+            # Phase 1: Review
+            print(f"\n🔍 QA Cycle {cycle + 1}: Review Phase")
+            review_results = enforcer.trigger_review('pre_commit', feature_id)
+            results['reviews'].append(review_results)
+            
+            if review_results['passed']:
+                # Phase 2: Build validation
+                print("✅ Review passed, checking build...")
+                build_review = enforcer.trigger_review('post_build', feature_id)
+                results['reviews'].append(build_review)
+                
+                if build_review['passed']:
+                    results['final_status'] = 'passed'
+                    print(f"✅ QA Cycle complete - all checks passed!")
+                    break
+                else:
+                    # Handoff to fix agent for build issues
+                    handoff.handoff(
+                        from_agent='qa',
+                        to_agent='fix',
+                        task=f"Fix build issues for {feature_id}",
+                        context={'issues': build_review['issues']}
+                    )
+            else:
+                # Handoff to fix agent for review issues
+                handoff.handoff(
+                    from_agent='review',
+                    to_agent='fix',
+                    task=f"Fix review issues for {feature_id}",
+                    context={'issues': review_results['issues']}
+                )
+            
+            # Phase 3: Apply fixes (simulated - in real use would trigger fix agent)
+            print(f"🔧 Applying fixes for cycle {cycle + 1}...")
+            # In production, this would trigger the actual fix agent
+            # For now, we'll just continue to next cycle
+            
+        if results['final_status'] != 'passed':
+            print(f"⚠️ QA Cycle incomplete after {max_iterations} iterations")
+            
+        return results
+    
+    def get_qa_metrics(self, feature_id: str) -> Dict[str, Any]:
+        """Get QA cycle metrics for a feature"""
+        from .enforcement import EnforcementEngine
+        
+        enforcer = EnforcementEngine(self.rfd)
+        review_status = enforcer.get_review_status(feature_id)
+        
+        conn = get_db_connection(self.rfd.db_path)
+        try:
+            # Get cycle statistics
+            stats = conn.execute("""
+                SELECT 
+                    COUNT(*) as total_cycles,
+                    SUM(CASE WHEN status = 'passed' THEN 1 ELSE 0 END) as passed_cycles,
+                    SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_cycles,
+                    AVG(JULIANDAY(completed_at) - JULIANDAY(started_at)) * 24 * 60 as avg_duration_minutes
+                FROM qa_cycles
+                WHERE feature_id = ?
+            """, (feature_id,)).fetchone()
+            
+            return {
+                'feature_id': feature_id,
+                'current_status': review_status,
+                'metrics': {
+                    'total_cycles': stats[0] or 0,
+                    'passed_cycles': stats[1] or 0,
+                    'failed_cycles': stats[2] or 0,
+                    'success_rate': (stats[1] / stats[0] * 100) if stats[0] else 0,
+                    'avg_duration_minutes': stats[3] or 0
+                }
+            }
+        finally:
+            conn.close()
+
+
+# Alias for backwards compatibility and testing
+WorkflowEngine = GatedWorkflow

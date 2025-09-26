@@ -1,0 +1,94 @@
+{
+  "session_id": 20,
+  "feature_id": "nexus_protocol_phase2",
+  "started_at": "2025-09-25T22:50:33.829210",
+  "ended_at": "2025-09-25T22:52:10.481283",
+  "success": true,
+  "context": {
+    "content": "<!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->\n---\nsession_id: 20\nfeature: nexus_protocol_phase2\nstarted: 2025-09-25T22:50:34.009358\nstatus: building\n---\n\n# Current Session: nexus_protocol_phase2\n\n## Feature Specification\nImplement remaining Nexus Protocol workflow features\n\n**Acceptance Criteria:**\nMulti-agent handoff commands, phase validation, and real-time prevention hooks are implemented and working\n\n## Current Status\n```\nrfd validate --feature nexus_protocol_phase2\n\u2705 max_files: 46 files (max: 50)\n\u274c feature_nexus_protocol_phase2: Implement remaining Nexus Protocol workflow features - building\n\u2705 database: Database found: .rfd/memory.db\n```\n\n## Required Actions\n1. Make all validation tests pass\n2. Ensure code follows .rfd/config.yaml constraints\n3. No mocks - use real implementations\n\n## Commands\n```bash\nrfd build          # Build current feature\nrfd validate       # Check if tests pass\nrfd checkpoint     # Save working state\n```\n\n## Constraints from .rfd/config.yaml\n- NO new features until 100% tests pass\n- MUST use RFD workflow for all fixes\n- MUST validate each fix with tests\n- NO mock data in tests\n- MUST maintain backward compatibility\n",
+    "last_modified": "2025-09-25T22:50:34.009559"
+  },
+  "memory": {
+    "current_feature": "database_first_complete",
+    "session_started": "2025-09-25T14:00:00.000000",
+    "last_action": "Completed database-first migration",
+    "working_patterns": [
+      "Using src/rfd/ as main codebase",
+      "Using .rfd/memory.db as database",
+      "Using .rfd/config.yaml for configuration",
+      "PROJECT.md and PROGRESS.md deprecated"
+    ],
+    "completed_tasks": [
+      "All 8 features complete",
+      "Migrated to config.yaml",
+      "Added rfd audit command",
+      "Fixed session status/current",
+      "Updated all templates",
+      "Deprecated PROJECT.md"
+    ],
+    "source_of_truth": {
+      "code": "src/rfd/",
+      "database": ".rfd/memory.db",
+      "config": ".rfd/config.yaml",
+      "deprecated": [
+        "PROJECT.md.deprecated",
+        "PROGRESS.md.deprecated"
+      ]
+    },
+    "last_validation": {
+      "passing": true,
+      "database_first": true,
+      "accountability": "rfd audit command available"
+    }
+  },
+  "validation": {
+    "passing": false,
+    "results": [
+      {
+        "test": "max_files",
+        "passed": false,
+        "message": "92 files (max: 50)"
+      },
+      {
+        "test": "feature_nexus_protocol_phase2",
+        "passed": true,
+        "message": "Implement remaining Nexus Protocol workflow features - complete"
+      },
+      {
+        "test": "database",
+        "passed": true,
+        "message": "Database found: .rfd/memory.db"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "timestamp": "2025-09-25T22:50:45.315383",
+      "validation_passed": false,
+      "build_passed": false,
+      "git_hash": "9a2c97c41e648402cb564524ef232acadf1362ed",
+      "evidence": {
+        "message": "Testing RFD tracking system - verifying all tables populate correctly",
+        "validation": {
+          "passing": false,
+          "results": [
+            {
+              "test": "max_files",
+              "passed": false,
+              "message": "92 files (max: 50)"
+            },
+            {
+              "test": "database",
+              "passed": true,
+              "message": "Database found: .rfd/memory.db"
+            }
+          ]
+        },
+        "build": {
+          "passing": false,
+          "message": "No tests found and unknown stack"
+        }
+      }
+    }
+  ]
+}

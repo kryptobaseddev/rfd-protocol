@@ -444,6 +444,20 @@ features:
             f.write(project_content)
 
         rfd = RFD()
+
+        # Add feature to database (since RFD now uses database-first approach)
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('test-feature', 'Test feature', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session_mgr = SessionManager(rfd)
 
         # Create new session
@@ -472,6 +486,20 @@ features:
             f.write(project_content)
 
         rfd = RFD()
+
+        # Add feature to database
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('test-feature', 'Test feature', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session_mgr = SessionManager(rfd)
 
         # Create session with state
@@ -508,6 +536,20 @@ features:
             f.write(project_content)
 
         rfd = RFD()
+
+        # Add feature to database
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('test-feature', 'Test feature', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session_mgr = SessionManager(rfd)
 
         session_mgr.create_session("test-feature")
@@ -545,6 +587,20 @@ features:
             f.write(project_content)
 
         rfd = RFD()
+
+        # Add feature to database
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('test-feature', 'Test feature', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session_mgr = SessionManager(rfd)
 
         session_mgr.create_session("test-feature")
@@ -576,6 +632,20 @@ features:
 
         # First session manager
         rfd1 = RFD()
+
+        # Add feature to database
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd1.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('test-feature', 'Test feature', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session_mgr1 = SessionManager(rfd1)
         session_mgr1.create_session("test-feature")
         session_mgr1.store_context("session_data", {"key": "value"})
@@ -747,15 +817,28 @@ class TestIntegrationBasics(unittest.TestCase):
         from rfd.session import SessionManager
 
         rfd = RFD()
+
+        # Add feature to database
+        from rfd.db_utils import get_db_connection
+
+        conn = get_db_connection(rfd.db_path)
+        conn.execute(
+            """
+            INSERT INTO features (id, description, status, created_at) 
+            VALUES ('integration_test_fixes', 'Integration test fixes', 'pending', datetime('now'))
+        """
+        )
+        conn.commit()
+        conn.close()
+
         session = SessionManager(rfd)
 
         # Create session
         session.create_session("integration_test_fixes")
 
         # RFD should be aware of session
-        context = session.get_context()
-        self.assertIsNotNone(context)
-        self.assertEqual(context["current_session"]["feature"], "integration-feature")
+        self.assertIsNotNone(session.current_session)
+        self.assertEqual(session.current_session["feature"], "integration_test_fixes")
 
     def test_validation_with_spec(self):
         """Test ValidationEngine uses SpecEngine specs"""

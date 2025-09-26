@@ -1,0 +1,21 @@
+project:
+  name: RFD Protocol Dogfooding
+  description: Using RFD to fix RFD and achieve 100% test pass rate
+  created_at: '2025-09-24T22:36:42.631263'
+  rfd_version: 5.0.0
+  version: '5.0.0'
+stack:
+  database: sqlite
+  framework: click
+  language: python
+rules:
+  max_files: 50
+  max_loc_per_file: 1200
+  must_pass_tests: true
+  no_mocks_in_prod: true
+constraints:
+- NO new features until 100% tests pass
+- MUST use RFD workflow for all fixes
+- MUST validate each fix with tests
+- NO mock data in tests
+- MUST maintain backward compatibility

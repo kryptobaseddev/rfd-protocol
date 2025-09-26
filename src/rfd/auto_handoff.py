@@ -8,6 +8,7 @@ import sqlite3
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 from typing import Any, Dict, List
 
 
@@ -503,3 +504,94 @@ class AutoHandoff:
         if result:
             return json.loads(result[0])
         return {}
+    
+    def handoff(self, from_agent: str, to_agent: str, task: str, context: Optional[Dict] = None) -> int:
+        """
+        Create agent handoff for QA cycles
+        
+        Args:
+            from_agent: Agent handing off (e.g., 'coding', 'review', 'qa', 'fix')
+            to_agent: Agent receiving handoff
+            task: Task description
+            context: Optional context data
+            
+        Returns:
+            Handoff ID
+        """
+        conn = sqlite3.connect(self.rfd.db_path)
+        
+        # Validate agent types
+        valid_agents = ['coding', 'review', 'qa', 'fix']
+        if from_agent not in valid_agents or to_agent not in valid_agents:
+            conn.close()
+            raise ValueError(f"Invalid agent type. Must be one of: {valid_agents}")
+        
+        cursor = conn.execute("""
+            INSERT INTO agent_handoffs (from_agent, to_agent, task_description, context, created_at)
+            VALUES (?, ?, ?, ?, datetime('now'))
+        """, (from_agent, to_agent, task, json.dumps(context or {})))
+        
+        handoff_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        # Log the handoff
+        print(f"📋 Handoff #{handoff_id}: {from_agent} → {to_agent}")
+        print(f"   Task: {task}")
+        if context:
+            print(f"   Context: {list(context.keys())}")
+            
+        return handoff_id
+    
+    def get_pending_handoffs(self, agent_type: str) -> List[Dict[str, Any]]:
+        """
+        Get pending handoffs for a specific agent type
+        
+        Args:
+            agent_type: Agent type ('coding', 'review', 'qa', 'fix')
+            
+        Returns:
+            List of pending handoffs
+        """
+        conn = sqlite3.connect(self.rfd.db_path)
+        
+        handoffs = conn.execute("""
+            SELECT id, from_agent, task_description, context, created_at
+            FROM agent_handoffs
+            WHERE to_agent = ? AND status = 'pending'
+            ORDER BY created_at
+        """, (agent_type,)).fetchall()
+        
+        conn.close()
+        
+        return [
+            {
+                'id': h[0],
+                'from': h[1],
+                'task': h[2],
+                'context': json.loads(h[3]) if h[3] else {},
+                'created': h[4]
+            }
+            for h in handoffs
+        ]
+    
+    def complete_handoff(self, handoff_id: int, result: str = 'completed'):
+        """
+        Mark a handoff as complete
+        
+        Args:
+            handoff_id: ID of handoff to complete
+            result: Result status ('completed', 'failed', 'skipped')
+        """
+        conn = sqlite3.connect(self.rfd.db_path)
+        
+        conn.execute("""
+            UPDATE agent_handoffs
+            SET status = ?, completed_at = datetime('now')
+            WHERE id = ?
+        """, (result, handoff_id))
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"✅ Handoff #{handoff_id} marked as {result}")

@@ -197,6 +197,39 @@ class ValidationEngine:
                 }
             )
 
+    def _verify_function_exists(self, function_name: str, file_hint: Optional[str] = None) -> bool:
+        """Verify a function exists in the codebase"""
+        import ast
+
+        # Search in specific file if hint provided
+        if file_hint and Path(file_hint).exists():
+            try:
+                with open(file_hint, "r") as f:
+                    tree = ast.parse(f.read())
+                    for node in ast.walk(tree):
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                            if node.name == function_name:
+                                return True
+                    return False
+            except Exception:
+                return False
+
+        # Search across Python files
+        for py_file in Path(".").glob("**/*.py"):
+            if ".rfd" in str(py_file) or "__pycache__" in str(py_file):
+                continue
+            try:
+                with open(py_file, "r") as f:
+                    tree = ast.parse(f.read())
+                    for node in ast.walk(tree):
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                            if node.name == function_name:
+                                return True
+            except Exception:
+                continue
+
+        return False
+
     def _check_response(self, response, expected: str) -> bool:
         """Check if response matches expected status"""
         if isinstance(expected, int):

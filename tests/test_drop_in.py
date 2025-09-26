@@ -40,10 +40,10 @@ class TestDropInCompatibility(unittest.TestCase):
 
         # Import RFD modules - they should work without any project files
         try:
-            from build import BuildEngine
-            from session import SessionManager
-            from spec import SpecEngine
-            from validation import ValidationEngine
+            from rfd.build import BuildEngine
+            from rfd.session import SessionManager
+            from rfd.spec import SpecEngine
+            from rfd.validation import ValidationEngine
 
             from rfd import RFD
 
@@ -83,7 +83,7 @@ class TestDropInCompatibility(unittest.TestCase):
         self.assertIsNotNone(rfd)
 
         # Validation should work with JS files
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         ValidationEngine(rfd)
 
@@ -135,7 +135,7 @@ setup(name='test-project', version='1.0.0')
 
     def test_rfd_uses_relative_paths_only(self):
         """RFD should never use hardcoded absolute paths"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -221,7 +221,7 @@ setup(name='test-project', version='1.0.0')
 
     def test_validation_engine_tech_agnostic(self):
         """ValidationEngine should validate files regardless of tech stack"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -281,10 +281,10 @@ setup(name='test-project', version='1.0.0')
 
     def test_no_hardcoded_rfd_protocol_paths(self):
         """Ensure no /mnt/projects/rfd-protocol paths are hardcoded"""
-        from build import BuildEngine
-        from session import SessionManager
-        from spec import SpecEngine
-        from validation import ValidationEngine
+        from rfd.build import BuildEngine
+        from rfd.session import SessionManager
+        from rfd.spec import SpecEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -331,7 +331,7 @@ setup(name='test-project', version='1.0.0')
 
     def test_spec_engine_works_without_questionary(self):
         """SpecEngine should have fallback if questionary unavailable"""
-        from spec import SpecEngine
+        from rfd.spec import SpecEngine
 
         from rfd import RFD
 
@@ -364,7 +364,7 @@ class TestUniversalFileHandling(unittest.TestCase):
 
     def test_validation_detects_any_file_type(self):
         """ValidationEngine should detect existence of any file type"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -405,7 +405,7 @@ class TestUniversalFileHandling(unittest.TestCase):
 
     def test_validation_handles_nested_paths(self):
         """ValidationEngine should handle deeply nested file paths"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -438,7 +438,7 @@ class TestUniversalFileHandling(unittest.TestCase):
 
     def test_validation_case_sensitivity(self):
         """ValidationEngine should handle case-sensitive filesystems"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 
@@ -476,7 +476,7 @@ class TestCrossPlatformCompatibility(unittest.TestCase):
 
     def test_path_separators_handled_correctly(self):
         """RFD should handle both / and \\ path separators"""
-        from validation import ValidationEngine
+        from rfd.validation import ValidationEngine
 
         from rfd import RFD
 

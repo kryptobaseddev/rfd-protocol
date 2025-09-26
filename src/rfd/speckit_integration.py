@@ -29,7 +29,7 @@ class SpecKitIntegration:
         No more file-based constitution!
         """
         from .db_utils import get_db_connection
-        
+
         conn = get_db_connection(self.rfd.db_path)
         try:
             # Check if constitution already exists
@@ -38,7 +38,7 @@ class SpecKitIntegration:
                 print("Constitution already exists in database")
                 return True
 
-            spec = self.rfd.load_project_spec()
+            self.rfd.load_project_spec()
 
             # Store core principles in database
             principles = [
@@ -46,17 +46,14 @@ class SpecKitIntegration:
                 ("One feature at a time, complete current work before starting new", "Single Responsibility"),
                 ("Specification before implementation, intent drives development", "Spec-Driven"),
                 ("No mock data in production code or tests", "No Mocks"),
-                ("AI claims must be validated, no lying about completions", "No Hallucination")
+                ("AI claims must be validated, no lying about completions", "No Hallucination"),
             ]
-            
+
             for principle, category in principles:
-                conn.execute(
-                    "INSERT INTO constitution (principle, category) VALUES (?, ?)",
-                    (principle, category)
-                )
-            
+                conn.execute("INSERT INTO constitution (principle, category) VALUES (?, ?)", (principle, category))
+
             conn.commit()
-            print(f"✅ Stored constitution in database")
+            print("✅ Stored constitution in database")
             return True
         finally:
             conn.close()

@@ -4,7 +4,6 @@ Supports NEW and EXISTING projects with comprehensive spec generation
 """
 
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 

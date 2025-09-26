@@ -3,8 +3,8 @@ Status and dashboard commands extracted from CLI to reduce line count
 """
 
 import sqlite3
+
 import click
-from datetime import datetime
 
 
 def show_project_status(rfd):
@@ -53,7 +53,7 @@ def show_project_status(rfd):
     click.echo("\n🔄 Project Phases:")
     conn = sqlite3.connect(rfd.db_path)
     phases = conn.execute("SELECT name, status, order_index FROM project_phases ORDER BY order_index").fetchall()
-    
+
     if phases:
         for name, status, _ in phases:
             icon = "✅" if status == "complete" else "🔨" if status == "active" else "⏳"
@@ -131,8 +131,9 @@ def show_dashboard(rfd):
 def show_quick_check(rfd):
     """Quick health check"""
     from pathlib import Path
-    from .update_check import check_for_updates
+
     from .template_sync import auto_sync_on_init
+    from .update_check import check_for_updates
 
     # Check for updates (once per day max)
     check_for_updates()

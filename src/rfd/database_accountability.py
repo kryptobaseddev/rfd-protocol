@@ -38,7 +38,7 @@ class DatabaseAccountability:
 
         # Check 5: Tasks and phases should be tracked in database
         self._check_task_tracking()
-        
+
         # Check 6: Template sync status
         self._check_template_sync(project_root)
 
@@ -192,47 +192,51 @@ class DatabaseAccountability:
             )
 
         conn.close()
-    
+
     def _check_template_sync(self, project_root: Path):
         """Check if Claude command templates are in sync"""
         import hashlib
-        
+
         source_dir = project_root / "src" / "rfd" / "templates" / "commands"
         local_dir = project_root / ".claude" / "commands"
-        
+
         # Skip check if not in development (source dir won't exist in installed package)
         if not source_dir.exists():
             return
-            
+
         if not local_dir.exists():
-            self.violations.append({
-                "type": "missing_claude_commands",
-                "message": ".claude/commands/ directory not found",
-                "fix": "Run: rfd init"
-            })
+            self.violations.append(
+                {
+                    "type": "missing_claude_commands",
+                    "message": ".claude/commands/ directory not found",
+                    "fix": "Run: rfd init",
+                }
+            )
             return
-        
+
         def get_file_hash(filepath: Path) -> str:
             if not filepath.exists():
                 return ""
             with open(filepath, "rb") as f:
                 return hashlib.md5(f.read()).hexdigest()
-        
+
         source_files = list(source_dir.glob("*.md"))
         local_files = list(local_dir.glob("*.md"))
-        
+
         source_names = {f.name for f in source_files}
         local_names = {f.name for f in local_files}
-        
+
         # Check for missing files
         missing_in_local = source_names - local_names
         if missing_in_local:
-            self.violations.append({
-                "type": "template_sync_missing",
-                "message": f"Commands missing in .claude/: {', '.join(sorted(missing_in_local))}",
-                "fix": "Run: cp src/rfd/templates/commands/*.md .claude/commands/"
-            })
-        
+            self.violations.append(
+                {
+                    "type": "template_sync_missing",
+                    "message": f"Commands missing in .claude/: {', '.join(sorted(missing_in_local))}",
+                    "fix": "Run: cp src/rfd/templates/commands/*.md .claude/commands/",
+                }
+            )
+
         # Check for out-of-sync files
         out_of_sync = []
         for source_file in source_files:
@@ -240,13 +244,15 @@ class DatabaseAccountability:
             if local_file.exists():
                 if get_file_hash(source_file) != get_file_hash(local_file):
                     out_of_sync.append(source_file.name)
-        
+
         if out_of_sync:
-            self.violations.append({
-                "type": "template_sync_mismatch",
-                "message": f"Commands out of sync: {', '.join(sorted(out_of_sync))}",
-                "fix": "Run: cp src/rfd/templates/commands/*.md .claude/commands/"
-            })
+            self.violations.append(
+                {
+                    "type": "template_sync_mismatch",
+                    "message": f"Commands out of sync: {', '.join(sorted(out_of_sync))}",
+                    "fix": "Run: cp src/rfd/templates/commands/*.md .claude/commands/",
+                }
+            )
 
     def _get_recommendations(self) -> List[str]:
         """Get recommendations based on violations"""
@@ -260,7 +266,7 @@ class DatabaseAccountability:
 
         if any(v["type"] == "no_task_tracking" for v in self.violations):
             recommendations.append("Start tracking tasks: rfd plan tasks <feature-id>")
-        
+
         if any(v["type"] in ["template_sync_missing", "template_sync_mismatch"] for v in self.violations):
             recommendations.append("Sync templates: cp src/rfd/templates/commands/*.md .claude/commands/")
 

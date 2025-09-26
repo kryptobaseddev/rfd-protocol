@@ -2,11 +2,12 @@
 CLI commands for workflow enforcement
 """
 
-import click
 import json
 from typing import Optional
 
-from .enforcement import WorkflowEnforcer, ScopeDriftDetector, MultiAgentCoordinator
+import click
+
+from .enforcement import MultiAgentCoordinator, ScopeDriftDetector, WorkflowEnforcer
 from .rfd import RFD
 
 
@@ -23,7 +24,7 @@ def start(feature: str):
     rfd = RFD()
     enforcer = WorkflowEnforcer(rfd)
     result = enforcer.start_enforcement(feature)
-    
+
     if result["status"] == "active":
         click.echo(f"✅ Enforcement activated for feature: {feature}")
         click.echo(f"📏 Baseline captured: {result['baseline']['file_count']} files")
@@ -48,7 +49,7 @@ def check_drift(feature: str):
     rfd = RFD()
     detector = ScopeDriftDetector(rfd)
     result = detector.detect_drift(feature)
-    
+
     if result["drift_detected"]:
         click.echo(f"⚠️ Drift detected: {result['reason']}")
         click.echo(f"💡 {result['recommendation']}")
@@ -78,10 +79,10 @@ def handoff(from_agent: str, to_agent: str, task: str, context: Optional[str]):
     """Create handoff between agents"""
     rfd = RFD()
     coordinator = MultiAgentCoordinator(rfd)
-    
+
     ctx = json.loads(context) if context else {}
     result = coordinator.create_handoff(from_agent, to_agent, task, ctx)
-    
+
     click.echo(f"✅ Handoff created: #{result['handoff_id']}")
     click.echo(f"   {from_agent} → {to_agent}: {task}")
 
@@ -93,7 +94,7 @@ def pending(agent_id: str):
     rfd = RFD()
     coordinator = MultiAgentCoordinator(rfd)
     handoffs = coordinator.get_pending_handoffs(agent_id)
-    
+
     if handoffs:
         click.echo(f"📥 Pending handoffs for {agent_id}:")
         for h in handoffs:
@@ -107,35 +108,31 @@ def validate_commit():
     """Validate commit against specs (for git hooks)"""
     import subprocess
     import sys
-    
+
     # Get staged files
-    result = subprocess.run(
-        ["git", "diff", "--cached", "--name-only"],
-        capture_output=True,
-        text=True
-    )
-    
+    result = subprocess.run(["git", "diff", "--cached", "--name-only"], capture_output=True, text=True)
+
     if result.returncode != 0:
         click.echo("❌ Failed to get staged files")
         sys.exit(1)
-    
-    staged_files = result.stdout.strip().split('\n') if result.stdout.strip() else []
-    
+
+    staged_files = result.stdout.strip().split("\n") if result.stdout.strip() else []
+
     # Basic validation - check for common issues
     issues = []
-    
+
     for file in staged_files:
         # Check for test files if src files are modified
         if file.startswith("src/") and file.endswith(".py"):
             test_file = file.replace("src/", "tests/test_").replace(".py", ".py")
             if test_file not in staged_files and not any(t.startswith("tests/") for t in staged_files):
                 issues.append(f"⚠️ {file} modified but no tests included")
-    
+
     if issues:
         click.echo("⚠️ Commit validation warnings:")
         for issue in issues:
             click.echo(f"  {issue}")
         # Don't block, just warn
-    
+
     click.echo("✅ Commit validated")
     sys.exit(0)

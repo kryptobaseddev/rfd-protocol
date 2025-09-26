@@ -222,14 +222,14 @@ def init_database(db_path: str | Path) -> None:
         );
 
         CREATE TABLE IF NOT EXISTS agent_handoffs (
-            id INTEGER PRIMARY KEY,
-            from_agent_id INTEGER,
-            to_agent_id INTEGER,
-            handoff_type TEXT,
-            context_data JSON,
-            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (from_agent_id) REFERENCES agent_sessions (id),
-            FOREIGN KEY (to_agent_id) REFERENCES agent_sessions (id)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            from_agent TEXT,
+            to_agent TEXT,
+            task_description TEXT,
+            context TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            completed_at TEXT
         );
 
         -- Git worktree management

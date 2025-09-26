@@ -1,0 +1,89 @@
+---
+feature_id: automated_qa_cycles
+name: "Automated QA and Review Cycles"
+description: "Implement automated QA and review cycles with multi-stage validation"
+version: "1.0.0"
+created_at: "2025-09-26T11:00:00"
+
+acceptance_criteria:
+  - id: review_triggers
+    description: "Automated review triggers work"
+    validation: "Review is triggered on pre-commit and post-build"
+  - id: qa_loops  
+    description: "Code-QA-Fix loops are enforced"
+    validation: "System iterates until all tests pass"
+  - id: agent_handoffs
+    description: "Review handoffs between agents functional"
+    validation: "Context preserved between coding, review, and fix agents"
+
+components:
+  - name: "Review Hooks"
+    file: "src/rfd/enforcement.py"
+    description: "Pre-commit and post-build review triggers"
+    
+  - name: "QA Cycle Engine"  
+    file: "src/rfd/workflow_engine.py"
+    description: "Iterative Code-QA-Fix loop implementation"
+    
+  - name: "Agent Handoff"
+    file: "src/rfd/auto_handoff.py"  
+    description: "Review agent type and context preservation"
+
+workflow:
+  stages:
+    - name: "Code Phase"
+      description: "Developer writes code"
+      agent: "coding"
+      
+    - name: "Review Phase"
+      description: "Automated review triggered"
+      agent: "review"
+      triggers:
+        - pre_commit
+        - post_build
+        
+    - name: "QA Phase"
+      description: "Validation and testing"
+      agent: "qa"
+      actions:
+        - lint_check
+        - test_run
+        - acceptance_validation
+        
+    - name: "Fix Phase"  
+      description: "Apply fixes if needed"
+      agent: "fix"
+      condition: "qa_failed"
+      
+    - name: "Loop"
+      description: "Repeat until passing"
+      condition: "not_passing"
+      goto: "Review Phase"
+
+database_schema:
+  tables:
+    - name: "qa_cycles"
+      columns:
+        - "id INTEGER PRIMARY KEY"
+        - "feature_id TEXT"
+        - "cycle_number INTEGER"
+        - "status TEXT"
+        - "started_at DATETIME"
+        - "completed_at DATETIME"
+        
+    - name: "review_results"
+      columns:
+        - "id INTEGER PRIMARY KEY"
+        - "cycle_id INTEGER"
+        - "review_type TEXT"
+        - "passed BOOLEAN"
+        - "issues TEXT"
+        - "suggestions TEXT"
+
+implementation:
+  effort: "1 hour"
+  risk: "low"
+  dependencies:
+    - "existing enforcement.py"
+    - "existing workflow_engine.py"
+    - "existing auto_handoff.py"

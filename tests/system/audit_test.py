@@ -36,7 +36,7 @@ def test_hallucination_detection():
     file_exists = os.path.exists("src/rfd/validation.py")
     if file_exists:
         assert passed, "Should validate real file if it exists"
-    
+
     return True  # All tests passed
 
 
@@ -138,11 +138,12 @@ def test_real_code_validation():
 def test_single_source_truth():
     """Test: Too many documents → Verify single source of truth"""
     print("\n=== TEST 5: Single Source of Truth ===")
-    
+
     # Ensure we're checking the project's .rfd directory, not test temp dir
     import os
+
     original_dir = os.getcwd()
-    
+
     # Find the project root (where .rfd exists)
     project_root = Path(__file__).parent.parent.parent
     os.chdir(project_root)
@@ -161,7 +162,7 @@ def test_single_source_truth():
             if Path(old_file).exists():
                 deprecated_found = True
                 print(f"✅ PASS: {old_file} properly marked as deprecated")
-        
+
         if not deprecated_found:
             # It's OK if deprecated files don't exist
             print("✅ PASS: No conflicting spec files")

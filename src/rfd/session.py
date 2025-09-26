@@ -85,7 +85,7 @@ class SessionManager:
 
         self.current_session = None
         self.context_dir = self.rfd.rfd_dir / "context"
-        
+
         # Initialize workflow isolation capabilities
         self.isolation = WorkflowIsolation(self.rfd)
 
@@ -108,12 +108,14 @@ class SessionManager:
             # Get all available features from database for error message
             all_features = conn.execute("SELECT id FROM features ORDER BY created_at DESC").fetchall()
             available = [f[0] for f in all_features]
-            
+
             conn.close()
-            
+
             # Always raise error for undefined features
             if not available:
-                raise ValueError(f"Feature '{feature_id}' not found in database. No features exist yet - use 'rfd feature add' to create features.")
+                raise ValueError(
+                    f"Feature '{feature_id}' not found in database. No features exist yet - use 'rfd feature add' to create features."
+                )
             else:
                 raise ValueError(f"Feature '{feature_id}' not found in database. Available features: {available}")
 
@@ -269,23 +271,23 @@ class SessionManager:
         """
         # First start normal session (all existing logic)
         session_id = self.start(feature_id)
-        
+
         # Then add isolation
         try:
             worktree_info = self.isolation.create_isolated_worktree(feature_id, agent_type)
-            
+
             # Update session in memory with worktree info
             if self.current_session:
                 self.current_session["worktree"] = worktree_info
                 self.current_session["isolated"] = True
                 self.current_session["agent_type"] = agent_type
-                
+
             return session_id
         except Exception as e:
             # If isolation fails, end the session to maintain consistency
             self.end(success=False)
-            raise RuntimeError(f"Failed to create isolated session: {e}")
-    
+            raise RuntimeError(f"Failed to create isolated session: {e}") from e
+
     def get_current_with_worktree(self) -> Optional[Dict[str, Any]]:
         """
         Get current session info including worktree details if isolated
@@ -293,7 +295,7 @@ class SessionManager:
         current = self.get_current()
         if not current:
             return None
-            
+
         # Check if session has associated worktree
         worktree_info = self.isolation.get_session_worktree(current["id"])
         if worktree_info:
@@ -303,27 +305,27 @@ class SessionManager:
         else:
             current["isolated"] = False
             current["working_directory"] = str(self.rfd.rfd_dir.parent)
-            
+
         return current
-    
+
     def end_with_cleanup(self, success: bool = True) -> Optional[int]:
         """
         End session with automatic worktree cleanup if isolated
         """
         if not self.current_session:
             return None
-            
+
         # Check if session has worktree that needs cleanup
         worktree_info = self.isolation.get_session_worktree(self.current_session["id"])
-        
+
         # End normal session first
         session_id = self.end(success)
-        
+
         # Clean up worktree if it exists
         if worktree_info and success:
             # Only cleanup on success - preserve failed worktrees for debugging
             self.isolation.cleanup_worktree(worktree_info["id"])
-            
+
         return session_id
 
     # Backwards compatible aliases

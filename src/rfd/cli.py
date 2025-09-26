@@ -14,16 +14,21 @@ from pathlib import Path
 import click
 
 from . import __version__
+from .cli_enforcement import enforce
 from .feature_commands import create_feature_commands
 from .rfd import RFD
 from .template_sync import auto_sync_on_init
 from .update_check import check_for_updates
+
+
 @click.group()
 @click.version_option(version=__version__, prog_name="rfd")
 @click.pass_context
 def cli(ctx):
     """RFD: Reality-First Development System"""
     ctx.obj = RFD()
+
+
 @cli.command()
 @click.option("--wizard", is_flag=True, help="Run interactive initialization wizard")
 @click.option("--from-prd", type=click.Path(exists=True), help="Initialize from PRD document")
@@ -103,7 +108,6 @@ if __name__ == "__main__":
         create_claude_md()
         files_created.append("CLAUDE.md")
 
-
     from .migration import RFDMigration
 
     migrator = RFDMigration()
@@ -113,6 +117,8 @@ if __name__ == "__main__":
 
     click.echo(f"✅ RFD initialized! Created: {', '.join(files_created)}")
     click.echo("\n→ Next: rfd spec review")
+
+
 @cli.group(invoke_without_command=True)
 @click.pass_context
 def spec(ctx):
@@ -131,26 +137,34 @@ def spec(ctx):
             click.echo("\n📦 Features: run 'rfd feature list' to see features")
         else:
             click.echo("❌ No config found. Run 'rfd init' to initialize.")
+
+
 # spec init removed - use 'rfd init' to create config.yaml
 @spec.command("review")
 @click.pass_obj
 def spec_review(rfd):
     """Review current specification"""
     rfd.spec.review()
+
+
 @spec.command("validate")
 @click.pass_obj
 def spec_validate(rfd):
     """Validate specification completeness"""
     rfd.spec.validate()
+
+
 @spec.command("constitution")
 @click.pass_obj
 def spec_constitution(rfd):
     """Store project constitution in database"""
     success = rfd.speckit.create_constitution()
     if success:
-        click.echo(f"📜 Constitution stored in database")
+        click.echo("📜 Constitution stored in database")
     else:
-        click.echo(f"❌ Failed to store constitution")
+        click.echo("❌ Failed to store constitution")
+
+
 @spec.command("clarify")
 @click.argument("feature_id", required=False)
 @click.pass_obj
@@ -163,6 +177,8 @@ def spec_clarify(rfd, feature_id):
         click.echo("🔍 Analyzing project for ambiguities...")
         # TODO: Implement full project clarification
     click.echo("✅ Clarification analysis complete")
+
+
 # REMOVED spec add - use 'rfd feature add' instead
 @spec.command("generate")
 @click.option(
@@ -233,6 +249,8 @@ def spec_generate(rfd, spec_type):
             path.parent.mkdir(exist_ok=True)
             path.write_text(doc)
             click.echo(f"✅ Generated: {path}")
+
+
 @cli.command()
 @click.argument("feature_id", required=False)
 @click.pass_obj
@@ -253,6 +271,8 @@ def build(rfd, feature_id):
         rfd.checkpoint(f"Build passed for {feature_id}")
     else:
         click.echo("❌ Build failed - check errors above")
+
+
 @cli.command()
 @click.option("--feature", help="Validate specific feature")
 @click.option("--full", is_flag=True, help="Full validation")
@@ -264,6 +284,8 @@ def validate(rfd, feature, full):
 
     if not results["passing"]:
         sys.exit(1)
+
+
 @cli.command()
 @click.argument("feature_id")
 @click.pass_obj
@@ -280,6 +302,8 @@ def complete(rfd, feature_id):
         click.echo("📄 PROJECT.md updated automatically")
     else:
         click.echo(f"❌ Feature {feature_id} acceptance criteria not met")
+
+
 @cli.command()
 @click.pass_obj
 def status(rfd):
@@ -358,6 +382,8 @@ def status(rfd):
                 elif isinstance(started, str):
                     started = started[:19]
                 click.echo(f"   Started: {started}")
+
+
 @cli.command()
 @click.pass_obj
 def audit(rfd):
@@ -382,6 +408,8 @@ def audit(rfd):
             click.echo(f"   • {rec}")
 
     return audit_result["compliant"]
+
+
 @cli.command()
 @click.pass_obj
 def dashboard(rfd):
@@ -408,6 +436,8 @@ def dashboard(rfd):
         click.echo(f"  {icon} {feature['id']}: {feature['description'][:50]}")
         if feature["status"] == "in_progress" and feature["started_at"]:
             click.echo(f"      Started: {feature['started_at'][:10]}")
+
+
 @cli.command()
 @click.pass_obj
 def check(rfd):
@@ -436,11 +466,15 @@ def check(rfd):
         click.echo(f"  {icon} {fid} ({checkpoints} checkpoints)")
 
     click.echo(f"\n→ Next: {rfd.session.suggest_next_action()}")
+
+
 @cli.group()
 @click.pass_obj
 def session(rfd):
     """Manage development sessions"""
     pass
+
+
 @session.command("start")
 @click.argument("feature_id")
 @click.option("--isolate", is_flag=True, help="Create isolated git worktree for session")
@@ -451,10 +485,10 @@ def session_start(rfd, feature_id, isolate, agent_type):
     try:
         if isolate:
             # Use enhanced isolation method
-            session_id = rfd.session.start_with_isolation(feature_id, agent_type)
+            rfd.session.start_with_isolation(feature_id, agent_type)
             click.echo(f"🚀 Isolated session started for: {feature_id}")
             click.echo(f"🔒 Agent type: {agent_type}")
-            
+
             # Get worktree info for user
             current = rfd.session.get_current_with_worktree()
             if current and current.get("isolated"):
@@ -464,9 +498,9 @@ def session_start(rfd, feature_id, isolate, agent_type):
                 click.echo("\n⚠️  Work in isolated directory to prevent context contamination")
         else:
             # Use existing method (main directory)
-            session_id = rfd.session.start(feature_id)
+            rfd.session.start(feature_id)
             click.echo(f"🚀 Session started for: {feature_id}")
-            
+
         click.echo("📋 Context updated at: .rfd/context/current.md")
         click.echo("\n→ Next: rfd build")
     except ValueError as e:
@@ -475,6 +509,8 @@ def session_start(rfd, feature_id, isolate, agent_type):
     except RuntimeError as e:
         click.echo(f"❌ Isolation Error: {e}", err=True)
         sys.exit(1)
+
+
 @session.command("status")
 @click.pass_obj
 def session_status(rfd):
@@ -485,16 +521,16 @@ def session_status(rfd):
         click.echo(f"   Feature: {current.get('feature_id', 'unknown')}")
         click.echo(f"   Started: {current.get('started_at', 'unknown')}")
         click.echo(f"   Session ID: {current.get('id', 'unknown')}")
-        
+
         # Show isolation status
         if current.get("isolated"):
-            click.echo(f"   🔒 Isolated: Yes")
+            click.echo("   🔒 Isolated: Yes")
             click.echo(f"   📁 Working Directory: {current.get('working_directory')}")
             click.echo(f"   🌿 Branch: {current.get('worktree', {}).get('branch_name', 'unknown')}")
             click.echo(f"   🤖 Agent Type: {current.get('worktree', {}).get('agent_type', 'coding')}")
         else:
-            click.echo(f"   🔒 Isolated: No (main directory)")
-            
+            click.echo("   🔒 Isolated: No (main directory)")
+
         # Show feature status from database
         import sqlite3
 
@@ -509,12 +545,16 @@ def session_status(rfd):
         click.echo("💤 No active session")
         click.echo("\nStart a session with: rfd session start <feature-id>")
         click.echo("Or isolated session: rfd session start <feature-id> --isolate")
+
+
 @session.command("current")
 @click.pass_obj
 def session_current(rfd):
     """Show current feature being worked on (alias for status)"""
     ctx = click.get_current_context()
     ctx.invoke(session_status)
+
+
 @session.command("end")
 @click.option("--success/--failed", default=True)
 @click.option("--cleanup/--no-cleanup", default=True, help="Clean up worktree (if isolated)")
@@ -523,7 +563,7 @@ def session_end(rfd, success, cleanup):
     """End current session"""
     current = rfd.session.get_current_with_worktree()
     is_isolated = current and current.get("isolated", False)
-    
+
     if cleanup and is_isolated:
         # Use enhanced cleanup method
         session_id = rfd.session.end_with_cleanup(success=success)
@@ -540,6 +580,8 @@ def session_end(rfd, success, cleanup):
             click.echo(f"📝 Session {session_id} ended")
             if is_isolated and not cleanup:
                 click.echo("📁 Worktree preserved (use --cleanup to remove)")
+
+
 @cli.command()
 @click.argument("message")
 @click.pass_obj
@@ -571,8 +613,9 @@ def checkpoint(rfd, message):
     )
     conn.commit()
 
-
     click.echo(f"✅ Checkpoint saved: {message}")
+
+
 @cli.command()
 @click.pass_obj
 def revert(rfd):
@@ -583,6 +626,8 @@ def revert(rfd):
         click.echo(f"✅ {message}")
     else:
         click.echo(f"❌ {message}")
+
+
 @cli.command()
 @click.pass_obj
 def resume(rfd):
@@ -649,11 +694,15 @@ def resume(rfd):
             for desc, status in tasks:
                 icon = "✓" if status == "complete" else "○"
                 click.echo(f"   {icon} {desc}")
+
+
 @cli.group()
 @click.pass_obj
 def workflow(rfd):
     """Manage gated workflow for spec-driven development"""
     pass
+
+
 @workflow.command("start")
 @click.argument("feature_id")
 @click.pass_obj
@@ -682,6 +731,8 @@ def workflow_start(rfd, feature_id):
             click.echo("\n→ Resolve issues first")
     else:
         click.echo(f"❌ {message}")
+
+
 @workflow.command("status")
 @click.argument("feature_id")
 @click.pass_obj
@@ -713,6 +764,8 @@ def workflow_status(rfd, feature_id):
         click.echo(f"\n✅ Can Proceed: {reason}")
     else:
         click.echo(f"\n❌ Blocked: {reason}")
+
+
 @workflow.command("proceed")
 @click.argument("feature_id")
 @click.pass_obj
@@ -749,6 +802,8 @@ def workflow_proceed(rfd, feature_id):
     else:
         click.echo(f"❌ {message}")
         click.echo("\n→ Resolve issues before proceeding")
+
+
 @workflow.command("query")
 @click.argument("feature_id")
 @click.argument("question")
@@ -759,6 +814,8 @@ def workflow_query(rfd, feature_id, question):
     click.echo(f"✅ Query #{query_id} added")
     click.echo(f"❓ {question}")
     click.echo("\n→ Resolve with: rfd workflow resolve {query_id} 'answer'")
+
+
 @workflow.command("resolve")
 @click.argument("query_id", type=int)
 @click.argument("answer")
@@ -768,6 +825,8 @@ def workflow_resolve(rfd, query_id, answer):
     rfd.workflow.resolve_query(query_id, answer)
     click.echo(f"✅ Query #{query_id} resolved")
     click.echo(f"💡 {answer}")
+
+
 @cli.command()
 @click.pass_obj
 def migrate(rfd):
@@ -804,6 +863,8 @@ def migrate(rfd):
         click.echo(f"   Backup preserved at: {result['backup']}")
     else:
         click.echo("ℹ️ No migration needed")
+
+
 @cli.command()
 @click.pass_obj
 def upgrade_check(rfd):
@@ -842,8 +903,12 @@ def upgrade_check(rfd):
 
     except Exception as e:
         click.echo(f"⚠️ Update check failed: {e}")
+
+
 # Add feature commands (database-first)
 feature = create_feature_commands(cli, RFD)
+
+
 @cli.group(invoke_without_command=True)
 @click.pass_context
 def plan(ctx):
@@ -867,6 +932,8 @@ def plan(ctx):
                 click.echo("❌ No plans found. Run 'rfd plan create <feature>' to create one.")
         else:
             click.echo("❌ No specs directory. Run 'rfd init' first.")
+
+
 @plan.command("create")
 @click.argument("feature_id")
 @click.pass_obj
@@ -879,6 +946,8 @@ def plan_create(rfd, feature_id):
 
     path = rfd.speckit.create_plan(feature_id)
     click.echo(f"📋 Plan created: {path}")
+
+
 @plan.command("tasks")
 @click.argument("feature_id")
 @click.pass_obj
@@ -891,6 +960,8 @@ def plan_tasks(rfd, feature_id):
 
     path = rfd.speckit.create_tasks(feature_id)
     click.echo(f"📝 Tasks created: {path}")
+
+
 @plan.command("phases")
 @click.pass_obj
 def plan_phases(rfd):
@@ -910,6 +981,8 @@ def plan_phases(rfd):
         click.echo("📝 No phases defined yet.")
 
     conn.close()
+
+
 # Removed legacy speckit commands - use 'rfd spec' and 'rfd plan' instead
 # Add analyze as top-level command
 @cli.command()
@@ -934,6 +1007,8 @@ def analyze(rfd, scope, format):
         click.echo(f"Scope: {scope}")
         click.echo("Status: ✅ Complete")
         click.echo("=" * 60)
+
+
 @cli.command()
 @click.option(
     "--category",
@@ -1007,11 +1082,15 @@ def gaps(rfd, category, status, priority, format):
             click.echo(f"   Strategy: {gap['mitigation_strategy']}")
 
     conn.close()
+
+
 @cli.group()
 @click.pass_obj
 def memory(rfd):
     """Manage AI memory"""
     pass
+
+
 @memory.command("show")
 @click.pass_obj
 def memory_show(rfd):
@@ -1020,6 +1099,8 @@ def memory_show(rfd):
     if memory_file.exists():
         data = json.loads(memory_file.read_text())
         click.echo(json.dumps(data, indent=2))
+
+
 @memory.command("reset")
 @click.pass_obj
 def memory_reset(rfd):
@@ -1027,6 +1108,8 @@ def memory_reset(rfd):
     memory_file = rfd.rfd_dir / "context" / "memory.json"
     memory_file.write_text("{}")
     click.echo("✅ Memory reset")
+
+
 def create_claude_md():
     """Create CLAUDE.md for Claude Code CLI"""
     content = """---
@@ -1091,12 +1174,16 @@ Check @.rfd/context/current.md for next failing test. Repeat.
 - Reality (passing tests) > Theory (perfect code)
 """
     Path("CLAUDE.md").write_text(content)
+
+
 # Add enforcement commands
-from .cli_enforcement import enforce
 cli.add_command(enforce)
+
 
 def main():
     """Main entry point for the CLI"""
     cli()
+
+
 if __name__ == "__main__":
     main()

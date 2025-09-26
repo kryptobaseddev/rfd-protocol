@@ -597,7 +597,7 @@ class AIClaimValidator:
                     "sql",
                 ]
                 return any(ind in function_content for ind in db_indicators)
-            
+
             elif modification_type == "async_version":
                 # Check if the function is actually async
                 # The function_content should start with async def

@@ -1,0 +1,83 @@
+{
+  "session_id": 17,
+  "feature_id": "test_context",
+  "started_at": "2025-09-25T21:43:54.275674",
+  "ended_at": "2025-09-25T21:44:04.647257",
+  "success": true,
+  "context": {
+    "content": "<!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->\n---\nsession_id: 17\nfeature: test_context\nstarted: 2025-09-25T21:43:55.045175\nstatus: building\n---\n\n# Current Session: test_context\n\n## Feature Specification\nTest automated context generation\n\n**Acceptance Criteria:**\nTest automated context generation is complete and working\n\n## Current Status\n```\nrfd validate --feature test_context\n\u2705 max_files: 46 files (max: 50)\n\u274c feature_test_context: Test automated context generation - building\n\u2705 database: Database found: .rfd/memory.db\n```\n\n## Required Actions\n1. Make all validation tests pass\n2. Ensure code follows .rfd/config.yaml constraints\n3. No mocks - use real implementations\n\n## Commands\n```bash\nrfd build          # Build current feature\nrfd validate       # Check if tests pass\nrfd checkpoint     # Save working state\n```\n\n## Constraints from .rfd/config.yaml\n- NO new features until 100% tests pass\n- MUST use RFD workflow for all fixes\n- MUST validate each fix with tests\n- NO mock data in tests\n- MUST maintain backward compatibility\n",
+    "last_modified": "2025-09-25T21:43:55.045358"
+  },
+  "memory": {
+    "current_feature": "database_first_complete",
+    "session_started": "2025-09-25T14:00:00.000000",
+    "last_action": "Completed database-first migration",
+    "working_patterns": [
+      "Using src/rfd/ as main codebase",
+      "Using .rfd/memory.db as database",
+      "Using .rfd/config.yaml for configuration",
+      "PROJECT.md and PROGRESS.md deprecated"
+    ],
+    "completed_tasks": [
+      "All 8 features complete",
+      "Migrated to config.yaml",
+      "Added rfd audit command",
+      "Fixed session status/current",
+      "Updated all templates",
+      "Deprecated PROJECT.md"
+    ],
+    "source_of_truth": {
+      "code": "src/rfd/",
+      "database": ".rfd/memory.db",
+      "config": ".rfd/config.yaml",
+      "deprecated": [
+        "PROJECT.md.deprecated",
+        "PROGRESS.md.deprecated"
+      ]
+    },
+    "last_validation": {
+      "passing": true,
+      "database_first": true,
+      "accountability": "rfd audit command available"
+    }
+  },
+  "validation": {
+    "passing": false,
+    "results": [
+      {
+        "test": "max_files",
+        "passed": false,
+        "message": "90 files (max: 50)"
+      },
+      {
+        "test": "feature_test_context",
+        "passed": false,
+        "message": "Test automated context generation - building"
+      },
+      {
+        "test": "database",
+        "passed": true,
+        "message": "Database found: .rfd/memory.db"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "timestamp": "2025-09-25T13:54:00.369641",
+      "validation_passed": true,
+      "build_passed": false,
+      "git_hash": "4cef4d57f73abff8db99436854bc9cf08f7abbde",
+      "evidence": {
+        "message": "Context files now auto-generated and protected from manual editing",
+        "validation": {
+          "passing": true,
+          "results": []
+        },
+        "build": {
+          "passing": false,
+          "message": "No tests found and unknown stack"
+        }
+      }
+    }
+  ]
+}
