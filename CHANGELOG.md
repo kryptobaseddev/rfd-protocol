@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v5.1.1 (2025-09-26)
+
+### Bug Fixes
+
+- Update __version__ and fix constitution database schema
+  ([`00ce981`](https://github.com/kryptobaseddev/rfd-protocol/commit/00ce981092ec6c99fe64ccd373bbb886d37621a9))
+
+
 ## v5.1.0 (2025-09-25)
 
 ### Features
