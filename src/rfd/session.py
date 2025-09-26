@@ -108,18 +108,13 @@ class SessionManager:
             # Get all available features from database for error message
             all_features = conn.execute("SELECT id FROM features ORDER BY created_at DESC").fetchall()
             available = [f[0] for f in all_features]
-
-            # If no features at all, allow creating new one
+            
+            conn.close()
+            
+            # Always raise error for undefined features
             if not available:
-                # Add feature to database
-                conn.execute(
-                    """INSERT INTO features (id, description, status, created_at)
-                       VALUES (?, ?, 'pending', datetime('now'))""",
-                    (feature_id, f"Feature {feature_id}"),
-                )
-                conn.commit()
+                raise ValueError(f"Feature '{feature_id}' not found in database. No features exist yet - use 'rfd feature add' to create features.")
             else:
-                conn.close()
                 raise ValueError(f"Feature '{feature_id}' not found in database. Available features: {available}")
 
         # End any existing session

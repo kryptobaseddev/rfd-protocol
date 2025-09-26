@@ -1,24 +1,24 @@
 <!-- AUTO-GENERATED FILE - DO NOT EDIT MANUALLY -->
 ---
-session_id: 17
-feature: test_context
-started: 2025-09-25T21:43:55.045175
+session_id: 21
+feature: branch_cleanup_test
+started: 2025-09-25T22:53:23.930830
 status: building
 ---
 
-# Current Session: test_context
+# Current Session: branch_cleanup_test
 
 ## Feature Specification
-Test automated context generation
+Test branch cleanup functionality
 
 **Acceptance Criteria:**
-Test automated context generation is complete and working
+Branch cleanup works properly after session end
 
 ## Current Status
 ```
-rfd validate --feature test_context
+rfd validate --feature branch_cleanup_test
 ✅ max_files: 46 files (max: 50)
-❌ feature_test_context: Test automated context generation - building
+❌ feature_branch_cleanup_test: Test branch cleanup functionality - building
 ✅ database: Database found: .rfd/memory.db
 ```
 

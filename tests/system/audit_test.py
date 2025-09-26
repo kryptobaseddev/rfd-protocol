@@ -51,14 +51,19 @@ def test_spec_enforcement():
     try:
         session.start("undefined_feature")
         print("❌ FAIL: Allowed undefined feature")
-        raise AssertionError("Test failed")
-    except (ValueError, Exception) as e:
+        assert False, "Should not allow undefined feature"
+    except ValueError as e:
         error_msg = str(e).lower()
         if "not found" in error_msg or "undefined" in error_msg or "does not exist" in error_msg:
             print("✅ PASS: Rejected undefined feature")
         else:
             print(f"❌ FAIL: Wrong error for undefined feature: {e}")
-            raise AssertionError("Test failed")
+            assert False, f"Wrong error message: {e}"
+    except AssertionError:
+        raise  # Re-raise assertion errors
+    except Exception as e:
+        print(f"❌ FAIL: Unexpected error type: {type(e).__name__}: {e}")
+        assert False, f"Unexpected error: {e}"
 
     print("✅ SPEC ENFORCEMENT: Working correctly")
     return True  # All tests passed
@@ -133,6 +138,14 @@ def test_real_code_validation():
 def test_single_source_truth():
     """Test: Too many documents → Verify single source of truth"""
     print("\n=== TEST 5: Single Source of Truth ===")
+    
+    # Ensure we're checking the project's .rfd directory, not test temp dir
+    import os
+    original_dir = os.getcwd()
+    
+    # Find the project root (where .rfd exists)
+    project_root = Path(__file__).parent.parent.parent
+    os.chdir(project_root)
 
     # Check for .rfd/config.yaml as single config source
     config_spec = Path(".rfd/config.yaml")
@@ -154,9 +167,11 @@ def test_single_source_truth():
             print("✅ PASS: No conflicting spec files")
     else:
         print("❌ FAIL: No single source of truth (.rfd/config.yaml and .rfd/memory.db)")
+        os.chdir(original_dir)
         raise AssertionError("Test failed")
 
     print("✅ SINGLE SOURCE: Achieved")
+    os.chdir(original_dir)
     return True  # All tests passed
 
 

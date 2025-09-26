@@ -5,25 +5,57 @@ allowed-tools: Bash(*), Read(.rfd/context/current.md, .rfd/context/memory.json, 
 
 # RFD Resume - Continue Where You Left Off
 
-This command automatically:
-1. Loads your last session context
-2. Shows project status and progress
-3. Displays current phase and tasks
-4. Suggests next actions
+This command performs comprehensive session recovery:
+1. Loads last session context and memory
+2. Shows project status, gaps, and progress
+3. Checks for unresolved issues and blockers
+4. Suggests next actions based on gaps and priorities
 
-## Load Context
+## 1. Load Full Context
 @.rfd/context/current.md
 @.rfd/context/memory.json
 @.rfd/config.yaml
 
-## Check Status
+## 2. System Health Check
+!rfd check
+!rfd migrate  # Check for pending migrations
+!rfd upgrade-check  # Check if RFD needs updating
+
+## 3. Show Comprehensive Status
 !rfd dashboard
-
-## Show Current Session
+!rfd gaps  # Show critical gaps and missing features
 !rfd session status
+!rfd workflow status  # Check workflow enforcement status
 
-## Display Next Actions
-Based on the context, suggest next steps and create a TodoWrite list.
+## 4. Analyze Gaps and Priorities
+Based on `rfd gaps` output:
+- Identify critical gaps (🚨 priority)
+- Check partial implementations (⚠️)
+- Note what's already solved (✅)
+- Focus on highest priority missing items
 
-## Ask to Continue
-"Ready to continue with [current feature]? Or would you like to switch to something else?"
+## 5. Create Action Plan
+Create TodoWrite list based on:
+1. Critical gaps that block progress
+2. Current session/feature if active
+3. Missing workflow enforcement items
+4. Unresolved queries from `rfd workflow status`
+
+## 6. Suggest Workflow Commands
+Based on gaps, suggest proper commands:
+- `rfd workflow start <feature>` - For new features with enforcement
+- `rfd session start <feature> --isolate` - For isolated git worktree work
+- `rfd analyze` - For cross-artifact validation
+- `rfd audit` - For database-first compliance check
+
+## 7. Ask Strategic Question
+"Based on gap analysis:
+- 46.2% gaps solved, 46.2% still missing
+- Critical missing: [list top 3]
+
+Should we:
+1. Address critical gaps first?
+2. Continue with existing features?
+3. Start workflow-enforced development?
+
+What's your priority today?"

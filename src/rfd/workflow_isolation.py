@@ -131,6 +131,11 @@ class WorkflowIsolation:
             ], cwd=str(self.rfd.rfd_dir.parent), capture_output=True)
             
             if result.returncode == 0:
+                # Also delete the branch to prevent conflicts
+                branch_result = subprocess.run([
+                    "git", "branch", "-D", branch_name
+                ], cwd=str(self.rfd.rfd_dir.parent), capture_output=True)
+                
                 # Mark as cleaned up in database
                 conn.execute("""
                     UPDATE git_worktrees 
