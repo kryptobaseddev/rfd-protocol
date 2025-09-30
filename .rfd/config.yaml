@@ -9,7 +9,7 @@ stack:
   framework: click
   language: python
 rules:
-  max_files: 50
+  max_files: 75
   max_loc_per_file: 1200
   must_pass_tests: true
   no_mocks_in_prod: true
