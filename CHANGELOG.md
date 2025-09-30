@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v5.5.0 (2025-09-30)
+
+### Features
+
+- Implement complete prevention system v5.3.1
+  ([`919324c`](https://github.com/kryptobaseddev/rfd-protocol/commit/919324c1644b5f58532c1abfeb1177153b11bec2))
+
+
 ## v5.4.0 (2025-09-26)
 
 ### Chores
