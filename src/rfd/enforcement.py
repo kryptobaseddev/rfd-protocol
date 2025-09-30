@@ -292,117 +292,131 @@ class MultiAgentCoordinator:
             ]
         finally:
             conn.close()
-    
+
     def trigger_review(self, trigger_type: str, feature_id: str) -> Dict[str, Any]:
         """
         Trigger automated review based on event type
-        
+
         Args:
             trigger_type: 'pre_commit' or 'post_build'
             feature_id: Feature being reviewed
-            
+
         Returns:
             Review results with pass/fail status
         """
         from .validation import ValidationEngine
         from .build import BuildEngine
-        
+
         conn = get_db_connection(self.rfd.db_path)
         try:
             # Record review trigger
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 INSERT INTO qa_cycles (feature_id, cycle_number, status, started_at)
                 SELECT ?, COALESCE(MAX(cycle_number), 0) + 1, 'reviewing', datetime('now')
                 FROM qa_cycles WHERE feature_id = ?
-            """, (feature_id, feature_id))
+            """,
+                (feature_id, feature_id),
+            )
             cycle_id = cursor.lastrowid
             conn.commit()
-            
-            results = {
-                'cycle_id': cycle_id,
-                'trigger': trigger_type,
-                'passed': True,
-                'issues': [],
-                'suggestions': []
-            }
-            
+
+            results = {"cycle_id": cycle_id, "trigger": trigger_type, "passed": True, "issues": [], "suggestions": []}
+
             # Run appropriate review based on trigger
-            if trigger_type == 'pre_commit':
+            if trigger_type == "pre_commit":
                 # Check for mock data
                 validator = ValidationEngine(self.rfd)
                 validation_results = validator.validate(feature=feature_id)
-                
-                if not validation_results['passing']:
-                    results['passed'] = False
-                    results['issues'].append("Validation failed")
-                    for result in validation_results.get('results', []):
-                        if not result['passed']:
-                            results['issues'].append(result['message'])
-                            
-            elif trigger_type == 'post_build':
+
+                if not validation_results["passing"]:
+                    results["passed"] = False
+                    results["issues"].append("Validation failed")
+                    for result in validation_results.get("results", []):
+                        if not result["passed"]:
+                            results["issues"].append(result["message"])
+
+            elif trigger_type == "post_build":
                 # Check build status
                 builder = BuildEngine(self.rfd)
                 if not builder.run_tests():
-                    results['passed'] = False
-                    results['issues'].append("Tests failed")
-                    results['suggestions'].append("Fix failing tests before proceeding")
-            
+                    results["passed"] = False
+                    results["issues"].append("Tests failed")
+                    results["suggestions"].append("Fix failing tests before proceeding")
+
             # Record review results
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO review_results (cycle_id, review_type, passed, issues, suggestions)
                 VALUES (?, ?, ?, ?, ?)
-            """, (cycle_id, trigger_type, results['passed'], 
-                  json.dumps(results['issues']), json.dumps(results['suggestions'])))
-            
+            """,
+                (
+                    cycle_id,
+                    trigger_type,
+                    results["passed"],
+                    json.dumps(results["issues"]),
+                    json.dumps(results["suggestions"]),
+                ),
+            )
+
             # Update cycle status
-            status = 'passed' if results['passed'] else 'failed'
-            conn.execute("""
+            status = "passed" if results["passed"] else "failed"
+            conn.execute(
+                """
                 UPDATE qa_cycles 
                 SET status = ?, completed_at = datetime('now')
                 WHERE id = ?
-            """, (status, cycle_id))
-            
+            """,
+                (status, cycle_id),
+            )
+
             conn.commit()
             return results
-            
+
         finally:
             conn.close()
-    
+
     def get_review_status(self, feature_id: str) -> Dict[str, Any]:
         """Get current review status for a feature"""
         conn = get_db_connection(self.rfd.db_path)
         try:
-            cycle = conn.execute("""
+            cycle = conn.execute(
+                """
                 SELECT id, cycle_number, status, started_at, completed_at
                 FROM qa_cycles
                 WHERE feature_id = ?
                 ORDER BY cycle_number DESC
                 LIMIT 1
-            """, (feature_id,)).fetchone()
-            
+            """,
+                (feature_id,),
+            ).fetchone()
+
             if not cycle:
-                return {'status': 'no_reviews', 'cycles': 0}
-                
-            results = conn.execute("""
+                return {"status": "no_reviews", "cycles": 0}
+
+            results = conn.execute(
+                """
                 SELECT review_type, passed, issues, suggestions
                 FROM review_results
                 WHERE cycle_id = ?
-            """, (cycle[0],)).fetchall()
-            
+            """,
+                (cycle[0],),
+            ).fetchall()
+
             return {
-                'status': cycle[2],
-                'cycle_number': cycle[1],
-                'started': cycle[3],
-                'completed': cycle[4],
-                'reviews': [
+                "status": cycle[2],
+                "cycle_number": cycle[1],
+                "started": cycle[3],
+                "completed": cycle[4],
+                "reviews": [
                     {
-                        'type': r[0],
-                        'passed': bool(r[1]),
-                        'issues': json.loads(r[2]) if r[2] else [],
-                        'suggestions': json.loads(r[3]) if r[3] else []
+                        "type": r[0],
+                        "passed": bool(r[1]),
+                        "issues": json.loads(r[2]) if r[2] else [],
+                        "suggestions": json.loads(r[3]) if r[3] else [],
                     }
                     for r in results
-                ]
+                ],
             }
         finally:
             conn.close()

@@ -195,3 +195,103 @@ class RFDMigration:
         v1_parts = [int(x) for x in v1.split(".")]
         v2_parts = [int(x) for x in v2.split(".")]
         return v1_parts < v2_parts
+
+    def create_qa_tables(self, db_path: Path = None):
+        """Create tables for QA cycles and review results"""
+        if db_path is None:
+            db_path = self.rfd_dir / "memory.db"
+
+        conn = sqlite3.connect(db_path)
+
+        # Create qa_cycles table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS qa_cycles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                feature_id TEXT NOT NULL,
+                cycle_number INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                started_at DATETIME NOT NULL,
+                completed_at DATETIME,
+                FOREIGN KEY (feature_id) REFERENCES features(id)
+            )
+        """
+        )
+
+        # Create review_results table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS review_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cycle_id INTEGER NOT NULL,
+                review_type TEXT NOT NULL,
+                passed BOOLEAN NOT NULL,
+                issues TEXT,
+                suggestions TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (cycle_id) REFERENCES qa_cycles(id)
+            )
+        """
+        )
+
+        # Create agent_handoffs table
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS agent_handoffs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_agent TEXT,
+                to_agent TEXT,
+                task_description TEXT,
+                context TEXT,
+                status TEXT DEFAULT 'pending',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                completed_at TEXT
+            )
+        """
+        )
+
+        conn.commit()
+        conn.close()
+    
+    def create_prevention_tables(self, db_path: Path = None):
+        """Create tables for prevention system"""
+        if db_path is None:
+            db_path = self.rfd_dir / "memory.db"
+        
+        conn = sqlite3.connect(db_path)
+        
+        # Create workflows table for workflow specifications
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS workflows (
+                id TEXT PRIMARY KEY,
+                spec JSON,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Add missing columns to features table if they don't exist
+        try:
+            conn.execute("ALTER TABLE features ADD COLUMN name TEXT")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        try:
+            conn.execute("ALTER TABLE features ADD COLUMN scope_definition JSON")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        # Create prevention_stats table
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS prevention_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_path TEXT,
+                validation_type TEXT,
+                violations JSON,
+                prevented BOOLEAN,
+                timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        conn.commit()
+        conn.close()
