@@ -55,3 +55,8 @@ Thumbs.db
 --help/
 .rfd/memory.db
 nexus_rfd_protocol/__pycache__/
+# Coverage files
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/

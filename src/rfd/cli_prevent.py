@@ -24,8 +24,13 @@ def validate(file_path, code):
     hp = HallucinationPrevention()
 
     if not code:
-        # Read from stdin if no code provided
-        code = sys.stdin.read()
+        # First try to read the file if it exists
+        file = Path(file_path)
+        if file.exists() and file.is_file():
+            code = file.read_text()
+        else:
+            # Otherwise read from stdin
+            code = sys.stdin.read()
 
     valid, violations = hp.validate_code_before_write(file_path, code)
 
@@ -92,6 +97,49 @@ def stats():
         click.echo("\nRecent violations prevented:")
         for v in stats["recent_violations"][-5:]:
             click.echo(f"  - {v}")
+
+
+@prevent.command()
+@click.argument("feature_id")
+def lock_workflow(feature_id):
+    """Acquire exclusive lock for a workflow/feature."""
+    from .prevention import WorkflowLockManager
+    wlm = WorkflowLockManager()
+    
+    if wlm.acquire_lock(feature_id):
+        click.echo(f"✅ Acquired lock for {feature_id}")
+    else:
+        current = wlm.get_current_lock()
+        click.echo(f"❌ Lock failed - held by {current}")
+        sys.exit(1)
+
+
+@prevent.command()
+@click.argument("feature_id")
+def unlock_workflow(feature_id):
+    """Release lock for a workflow/feature."""
+    from .prevention import WorkflowLockManager
+    wlm = WorkflowLockManager()
+    
+    if wlm.release_lock(feature_id):
+        click.echo(f"✅ Released lock for {feature_id}")
+    else:
+        current = wlm.get_current_lock()
+        click.echo(f"❌ Cannot release - held by {current}")
+        sys.exit(1)
+
+
+@prevent.command()
+def workflow_status():
+    """Show current workflow lock status."""
+    from .prevention import WorkflowLockManager
+    wlm = WorkflowLockManager()
+    
+    current = wlm.get_current_lock()
+    if current:
+        click.echo(f"🔒 Locked by: {current}")
+    else:
+        click.echo("🔓 No active lock")
 
 
 @prevent.command()

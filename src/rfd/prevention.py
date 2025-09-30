@@ -87,7 +87,33 @@ class HallucinationPrevention:
         if violations:
             self.violations_prevented.extend(violations)
 
+        # Save to database
+        self._save_validation_to_db(file_path, violations)
+
         return (len(violations) == 0, violations)
+    
+    def _save_validation_to_db(self, file_path: str, violations: List[str]):
+        """Save validation results to database for persistence."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO prevention_stats (file_path, validation_type, violations, prevented, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                file_path,
+                'hallucination_check',
+                json.dumps(violations),
+                len(violations) > 0,
+                datetime.now().isoformat()
+            ))
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            # Log error but don't fail validation
+            print(f"Warning: Could not persist stats: {e}")
 
     def hook_into_file_operations(self):
         """Install hooks to validate all file writes in real-time."""
@@ -308,6 +334,50 @@ exit 0
         return (len(violations) == 0, violations)
 
 
+class WorkflowLockManager:
+    """Manage exclusive locks for workflow features."""
+    
+    def __init__(self, lock_dir: str = ".rfd"):
+        self.lock_dir = Path(lock_dir)
+        self.lock_file = self.lock_dir / "workflow.lock"
+    
+    def acquire_lock(self, feature_id: str) -> bool:
+        """Acquire exclusive lock for a feature."""
+        try:
+            # Check if lock already exists
+            if self.lock_file.exists():
+                current = self.lock_file.read_text().strip()
+                if current != feature_id:
+                    return False  # Lock held by different feature
+                return True  # Already have lock
+            
+            # Create lock
+            self.lock_file.write_text(feature_id)
+            return True
+        except Exception:
+            return False
+    
+    def release_lock(self, feature_id: str) -> bool:
+        """Release lock if held by this feature."""
+        try:
+            if not self.lock_file.exists():
+                return True
+            
+            current = self.lock_file.read_text().strip()
+            if current == feature_id:
+                self.lock_file.unlink()
+                return True
+            return False  # Lock held by different feature
+        except Exception:
+            return False
+    
+    def get_current_lock(self) -> str:
+        """Get current lock holder."""
+        if self.lock_file.exists():
+            return self.lock_file.read_text().strip()
+        return ""
+
+
 class ScopeDriftPrevention:
     """Prevent scope drift in real-time using file watchers and boundaries."""
 
@@ -347,16 +417,32 @@ class ScopeDriftPrevention:
 
         # Infer scope from feature id and description
         # Always allow main source directory for features
-        scope["allowed_dirs"].append("src/")
+        scope["allowed_dirs"].extend([
+            "src/",
+            "tests/",
+            ".rfd/",
+            "scripts/",
+            "docs/",  # Documentation
+            "./",  # Root files (pyproject.toml, etc.)
+        ])
         
-        # Always allow test directories
-        scope["allowed_dirs"].append("tests/")
-        
-        # Allow project files
-        scope["allowed_dirs"].append(".rfd/")
-        
-        # Allow scripts
-        scope["allowed_dirs"].append("scripts/")
+        # Allow specific root config files
+        scope["allowed_files"].extend([
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "requirements.txt",
+            "README.md",
+            "CHANGELOG.md",
+            ".gitignore",
+            ".pre-commit-config.yaml",
+            "CLAUDE.md",
+            "LICENSE",
+            "Makefile",
+            "tox.ini",
+            ".env",
+            ".env.example",
+        ])
 
         # Store boundaries
         self.scope_boundaries[feature_id] = scope
@@ -383,25 +469,30 @@ class ScopeDriftPrevention:
 
         scope = self.scope_boundaries.get(feature_id, {})
 
-        # Check allowed directories
-        allowed_dirs = scope.get("allowed_dirs", [])
-        
         # Always allow certain files
         allowed_patterns = ["coverage", ".coverage", "*.pyc", "__pycache__", "*.egg-info"]
         if any(pattern in file_path for pattern in allowed_patterns):
             return True, "Build/test artifact allowed"
         
+        # Check allowed directories
+        allowed_dirs = scope.get("allowed_dirs", [])
         if allowed_dirs:
+            # If file is in an allowed directory, it's allowed
             in_allowed_dir = any(file_path.startswith(dir_path) for dir_path in allowed_dirs)
-            if not in_allowed_dir:
-                return False, f"File {file_path} not in allowed directories: {allowed_dirs}"
-
-        # Check allowed files
+            if in_allowed_dir:
+                return True, "File is in allowed directory"
+        
+        # Check allowed files (for root-level files)
         allowed_files = scope.get("allowed_files", [])
-        if allowed_files and file_path not in allowed_files:
-            return False, f"File {file_path} not in allowed files list"
-
-        return True, "File is within scope"
+        if allowed_files and file_path in allowed_files:
+            return True, "File is in allowed files list"
+        
+        # If we have scope rules but file doesn't match any, it's out of scope
+        if allowed_dirs or allowed_files:
+            return False, f"File {file_path} not in allowed scope"
+        
+        # No scope rules defined, allow by default
+        return True, "No scope restrictions defined"
 
     def install_scope_guards(self) -> Dict[str, Any]:
         """Install scope guards to prevent drift."""
@@ -483,9 +574,13 @@ sys.exit(0)
         if not feature_id:
             return True, []  # No feature in session
 
-        # Get changed files
+        # Get changed files, excluding deletions
         try:
-            result = subprocess.run(["git", "diff", "--name-only", "HEAD"], capture_output=True, text=True, check=True)
+            # Use --diff-filter to exclude Deleted files
+            result = subprocess.run(
+                ["git", "diff", "--name-only", "--diff-filter=ACMRUXB", "HEAD"], 
+                capture_output=True, text=True, check=True
+            )
             changed_files = result.stdout.strip().split("\n") if result.stdout.strip() else []
         except subprocess.CalledProcessError:
             return True, []
