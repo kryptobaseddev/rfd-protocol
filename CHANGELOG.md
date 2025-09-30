@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v5.5.1 (2025-09-30)
+
+### Bug Fixes
+
+- Complete prevention system implementation with all features working
+  ([`714c222`](https://github.com/kryptobaseddev/rfd-protocol/commit/714c2222543e1ca7617f8fe06c42bd4e270e4b67))
+
+### Chores
+
+- Increase max_files limit to 75 for growing codebase
+  ([`3725e0c`](https://github.com/kryptobaseddev/rfd-protocol/commit/3725e0c38f3cfbdbfaa565233ea48255162ad5dd))
+
+- Sync versions to PyPI latest (5.5.0) to fix mismatch
+  ([`f63eeed`](https://github.com/kryptobaseddev/rfd-protocol/commit/f63eeed3b74ec7fa22ad3561f90e64b5a473a5d4))
+
+
 ## v5.5.0 (2025-09-30)
 
 ### Features
